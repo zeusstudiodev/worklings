@@ -84,7 +84,14 @@ packages `@fontsource/barlow` and `@fontsource/barlow-semi-condensed`.
 - **By** The Barlow Project Authors (designed by Jeremy Tribby), [github.com/jpt/barlow](https://github.com/jpt/barlow)
 - **Licence** SIL Open Font License 1.1 (the font files are not covered by the MIT licence in `LICENSE`; the full
   text is in `THIRD-PARTY-NOTICES.md`)
-- **Changed:** nothing; the files are used as Fontsource ships them.
+- **Changed:** nothing; the files are used as Fontsource ships them. The wordmark in `docs/launch/brand`
+  (`wordmark-*.svg` and the logos made from it) is "Worklings" set in Barlow Semi Condensed Bold and outlined to paths.
+
+## The mascot
+
+The Workling mascot in `docs/launch/brand` (`mascot-*.png` and the logos) is a render of the art above, made by
+`scripts/launch/mascot.mjs` with the office's own drawing code: KayKit's mannequin in its Waving clip, the office's
+desk and plant (made here, sampling the Furniture Bits atlas) and a laptop made the same way.
 
 ## Bundled code
 
