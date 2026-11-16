@@ -91,7 +91,7 @@ packages `@fontsource/barlow` and `@fontsource/barlow-semi-condensed`.
 
 The Workling, the green creature in a hard hat, is original artwork made for Worklings, not taken from a pack. Its
 source is `docs/launch/brand/workling.svg`; `scripts/launch/brand.mjs` renders the PNGs, the avatars and the logos from
-it.
+it, and the favicon in `web/index.html` and `web/site/index.html` is a simplified drawing of it.
 
 ## Bundled code
 
