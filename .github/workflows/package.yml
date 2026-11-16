@@ -1,0 +1,52 @@
+# The package as people get it, on Linux, macOS and Windows: scripts/check-package.mjs packs Worklings as npm publish
+# would, installs the tarball in a clean folder, and runs `npx worklings --version`, `worklings doctor`, the hub's lobby
+# with no command (and /c/demo on it) and `worklings demo`. It also runs the installed command with Node 20, which must
+# get a sentence saying Worklings needs Node 22, not a syntax error. It never needs Claude Code: the check points
+# WORKLINGS_CLAUDE at test/fake-claude.mjs, and nothing here signs in to anything.
+name: Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: npm pack and npx on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Node 20 first, only for the older-Node check at the end; the check itself runs on Node 22, the oldest supported.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+      - name: Note where Node 20 is
+        run: echo "OLD_NODE=$(node -p process.execPath)" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Pack, install in a clean folder and run it there
+        run: node scripts/check-package.mjs --old-node "$OLD_NODE"

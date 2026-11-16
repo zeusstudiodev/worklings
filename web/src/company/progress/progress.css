@@ -1,0 +1,922 @@
+/* The progress view (docs/design-v3.md, "Progress"; docs/design-hud.md for the tokens): one sheet of badge paper on the
+   left of the stage, holding content over the model as the side panel does (radius 16, the bevel and --lift-3), the
+   office standing in what it leaves. Rows, not cards. The highlighter marks only what is yours: your words and what
+   needs you. Phones: the sheet fills the room between the bar's views row and the talk bar. */
+
+.progress {
+  position: absolute;
+  top: calc(var(--stage-top) + var(--reconnect-h, 0px));
+  bottom: var(--dock-clear);
+  left: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  width: min(35rem, 42vw, 100cqw - var(--gutter) * 2);
+  min-height: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 16px;
+  box-shadow: var(--bevel), var(--lift-3);
+}
+
+.shell--phone .progress,
+.shell--short .progress {
+  right: var(--gutter);
+  bottom: var(--sheet-clear);
+  width: auto;
+}
+
+.progress__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 20px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.shell--phone .progress__scroll,
+.shell--short .progress__scroll {
+  padding: 12px 14px 24px;
+}
+
+/* --------------------------------------------------------------------------------------------------------------
+   The head: the title and stage, your words, how far along, the money */
+
+.progress__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.progress__title {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.progress__title:focus-visible {
+  outline-offset: 4px;
+}
+
+.progress__goal {
+  margin: 14px 0 0;
+}
+
+.progress__goal-label {
+  margin: 0 0 4px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* Your words, marked as yours: the highlighter bar on an ink line, as the view you are in is marked. */
+.progress__goal-words {
+  margin: 0;
+  padding: 2px 0 2px 16px;
+  background: linear-gradient(90deg, var(--ink) 0 1px, var(--highlighter) 1px 5px, transparent 5px) no-repeat;
+}
+
+.progress__goal-words > p {
+  margin: 0;
+  font-size: var(--text-16);
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.progress__goal-more {
+  margin-top: 4px;
+  font-size: var(--text-14);
+}
+
+.progress__goal-more > summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.progress__goal-more > p {
+  margin: 6px 0 0;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.progress__meter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  align-items: baseline;
+  margin: 16px 0 0;
+}
+
+.progress__figures {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.progress__spend {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* An 8 px bar, ink on the badge line, as the dashboards draw progress. */
+.meter {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 8px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.meter__fill {
+  display: block;
+  width: var(--share, 0%);
+  height: 100%;
+  background: var(--ink);
+  border-radius: inherit;
+  transition: width var(--t-refit) var(--ease-out);
+}
+
+.progress__since-lead {
+  margin: 14px 0 0;
+  padding: 8px 12px;
+  font-size: var(--text-14);
+  line-height: 1.45;
+  background: var(--note);
+  border-radius: 10px;
+}
+
+.progress__muted {
+  margin: 4px 0 0;
+  font-size: var(--text-14);
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.progress__more {
+  min-height: 32px;
+  margin-top: 6px;
+  font-size: var(--text-14);
+}
+
+.progress__note {
+  margin: 0 0 8px;
+  font-size: var(--text-14);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------------------------------------------
+   Sections */
+
+.progress__section {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.progress__section:focus {
+  outline: none;
+}
+
+.progress__h3 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.progress__h3-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: var(--text-13);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  background: var(--highlighter);
+  border-radius: 999px;
+}
+
+/* What needs you: rows with the highlighter bar, the action a line key at the foot. */
+.needs-rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.needs-row {
+  padding: 10px 12px 10px 18px;
+  background: linear-gradient(90deg, var(--ink) 0 1px, var(--highlighter) 1px 5px, transparent 5px) no-repeat, var(--badge);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.needs-row--stuck {
+  background: linear-gradient(90deg, var(--danger) 0 5px, transparent 5px) no-repeat, var(--badge);
+}
+
+.needs-row__kind {
+  margin: 0;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.needs-row--stuck .needs-row__kind {
+  color: var(--danger);
+}
+
+.needs-row__text {
+  margin: 2px 0 0;
+  font-size: var(--text-15);
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.needs-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 0;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+}
+
+/* A small line key (design-hud, "Keys and tiles"). */
+.needs-row__open {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--badge);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+  transition: background var(--t-hover);
+}
+
+.needs-row__open:hover {
+  background: var(--badge-hover);
+}
+
+.needs-row__open:active {
+  background: var(--badge-pressed);
+  box-shadow: var(--sunk);
+}
+
+/* --------------------------------------------------------------------------------------------------------------
+   The checklist (shared with the handover) */
+
+.checklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.check:last-child {
+  border-bottom: 0;
+}
+
+.check__mark {
+  margin-top: 1px;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.check__mark--met circle {
+  fill: var(--ok);
+}
+
+.check__mark--met path {
+  stroke: var(--badge);
+  stroke-width: 2.2;
+}
+
+.check__mark--partly circle {
+  stroke: var(--ok);
+}
+
+.check__mark--partly path {
+  fill: var(--ok);
+}
+
+.check__mark--not-met circle {
+  fill: var(--stuck-fill);
+  stroke: var(--danger);
+}
+
+.check__mark--not-met path {
+  stroke: var(--danger);
+}
+
+.check__mark--unchecked circle {
+  stroke: var(--ink-soft);
+  stroke-dasharray: 3 2.4;
+}
+
+.check__body {
+  min-width: 0;
+}
+
+.check__head {
+  display: flex;
+  gap: 4px 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.check__text {
+  min-width: 0;
+  font-size: var(--text-15);
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.check__word {
+  flex: none;
+  padding: 1px 8px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+.check__word--met {
+  color: var(--ok);
+}
+
+.check__word--not-met {
+  color: var(--danger);
+  background: var(--stuck-fill);
+}
+
+.check__word--unchecked {
+  color: var(--ink-soft);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.check__quote {
+  margin: 4px 0 0;
+  font-size: var(--text-13);
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.check__tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check__task {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  font-size: var(--text-13);
+}
+
+.check__task-link {
+  min-height: 24px;
+  font-weight: 500;
+}
+
+.check__none {
+  margin: 4px 0 0;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--waiting-ink);
+}
+
+.check__evidence {
+  margin-top: 6px;
+  font-size: var(--text-13);
+}
+
+.check__evidence > summary {
+  min-height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.check__evidence-body {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  line-height: 1.45;
+  background: var(--note);
+  border-radius: 10px;
+}
+
+.check__evidence-body > p {
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.check__evidence-body > p:last-child {
+  margin-bottom: 0;
+}
+
+.check__ran {
+  font-weight: 600;
+  color: var(--ok);
+}
+
+.check__ran--failed {
+  color: var(--danger);
+}
+
+.check__key {
+  margin: 6px 0 2px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.check__files {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.check__files code {
+  font-size: var(--text-12);
+  overflow-wrap: anywhere;
+}
+
+.check__by {
+  color: var(--ink-soft);
+}
+
+/* v0.3: fix rounds under way, and what the office saw when it opened the app. */
+.progress__fixing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: baseline;
+  margin: 0 0 10px;
+  font-size: var(--text-14);
+  line-height: 1.45;
+}
+
+.progress__seen {
+  margin: 0 0 12px;
+  padding: 8px 12px 8px 16px;
+  font-size: var(--text-14);
+  line-height: 1.45;
+  background: linear-gradient(90deg, var(--ink-soft) 0 3px, transparent 3px) no-repeat, var(--badge);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.progress__seen--done {
+  background: linear-gradient(90deg, var(--ok) 0 3px, transparent 3px) no-repeat, var(--badge);
+}
+
+.progress__seen--needs {
+  background: linear-gradient(90deg, var(--ink) 0 1px, var(--highlighter) 1px 5px, transparent 5px) no-repeat, var(--badge);
+}
+
+.progress__seen--error {
+  background: linear-gradient(90deg, var(--danger) 0 5px, transparent 5px) no-repeat, var(--badge);
+}
+
+.progress__seen-line,
+.progress__seen-detail {
+  margin: 0;
+}
+
+.progress__seen-detail {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A task in a word: a pill with the state's mark, as the state pill draws it. */
+.task-word {
+  display: inline-flex;
+  flex: none;
+  gap: 5px;
+  align-items: center;
+  padding: 1px 8px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+.task-word::before {
+  width: 6px;
+  height: 6px;
+  content: '';
+  background: var(--ink-soft);
+  border-radius: 50%;
+}
+
+.task-word--working::before {
+  background: var(--ok);
+}
+
+.task-word--done::before {
+  background: var(--ink);
+}
+
+.task-word--waiting::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.task-word--error {
+  color: var(--danger);
+}
+
+.task-word--error::before {
+  background: var(--danger);
+}
+
+.task-word--rest::before {
+  background: var(--rest);
+}
+
+.task-word--neutral {
+  color: var(--ink-soft);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.task-word--neutral::before {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------------------------------------------
+   Milestones */
+
+.milestones {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.milestone {
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.milestone--now {
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.milestone__head {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 12px;
+  list-style: none;
+}
+
+.milestone__head::-webkit-details-marker {
+  display: none;
+}
+
+.milestone__head:hover {
+  background: var(--badge-hover);
+}
+
+.milestone__number {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--pill);
+  border-radius: 50%;
+}
+
+.milestone--done .milestone__number {
+  color: var(--badge);
+  background: var(--ink);
+}
+
+.milestone--now .milestone__number {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.milestone__title {
+  min-width: 0;
+  font-size: var(--text-15);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.milestone__line {
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.milestone__bar {
+  grid-column: 2 / -1;
+  height: 4px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.milestone__bar > span {
+  display: block;
+  width: var(--share, 0%);
+  height: 100%;
+  background: var(--ink);
+}
+
+.milestone__tasks {
+  margin: 0;
+  padding: 0 12px 6px;
+  list-style: none;
+}
+
+.ptask {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 6px 34px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.ptask__main {
+  display: grid;
+  min-width: 0;
+}
+
+.ptask__title {
+  font-size: var(--text-14);
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ptask__title--button {
+  min-height: 24px;
+  padding: 0;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 500;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+}
+
+.ptask__title--button:hover {
+  text-decoration-color: currentColor;
+}
+
+.ptask__owner {
+  font-size: var(--text-12);
+  color: var(--ink-soft);
+}
+
+.ptask--dropped .ptask__title {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.milestone__extra {
+  margin: 0;
+  padding: 4px 12px 10px 46px;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+}
+
+.milestone__extra .link {
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------------------------------------------------------
+   Since you last looked */
+
+.since__group {
+  margin-top: 10px;
+}
+
+.since__h4 {
+  margin: 0 0 4px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.since__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.since__item {
+  border-top: 1px solid var(--badge-line);
+}
+
+.since__item:first-child {
+  border-top: 0;
+}
+
+.since__row,
+.since__item summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0;
+  padding: 6px 0;
+  font-size: var(--text-14);
+}
+
+.since__item summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.since__item summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A finished task with files folds them under it: a caret after its words says so, and turns when it opens. */
+.since__item summary .since__what::after {
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-left: 8px;
+  vertical-align: 0.15em;
+  content: '';
+  border-right: 1.5px solid var(--ink-soft);
+  border-bottom: 1.5px solid var(--ink-soft);
+  transform: rotate(-45deg);
+  transition: transform var(--t-quick);
+}
+
+.since__item details[open] summary .since__what::after {
+  transform: rotate(45deg);
+}
+
+.since__item details[open] {
+  padding-bottom: 6px;
+}
+
+.since__what {
+  min-width: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.since__meta {
+  font-size: var(--text-12);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.since__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 14px 0 0;
+}
+
+.since__facts dt {
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.since__facts dd {
+  margin: 2px 0 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-16);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.since__facts dd .link {
+  font-family: var(--font);
+  font-size: var(--text-14);
+}
+
+/* The loading shape: the column's paper with its title, while the view's code arrives. */
+.progress--loading .progress__scroll {
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter__fill,
+  .needs-row__open,
+  .since__item summary .since__what::after {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .progress__goal-words,
+  .progress__seen,
+  .needs-row {
+    border-left: 4px solid CanvasText;
+  }
+
+  .meter,
+  .milestone__bar {
+    border: 1px solid CanvasText;
+  }
+
+  .meter__fill,
+  .milestone__bar > span {
+    background: CanvasText;
+  }
+}
+
+/* Phones: every key 44 px, body 16 px. */
+@media (max-width: 720px), (max-height: 480px) {
+  .needs-row__open,
+  .progress__more,
+  .check__evidence > summary,
+  .check__task-link,
+  .ptask__title--button {
+    min-height: 44px;
+  }
+
+  .needs-row__text,
+  .check__text,
+  .progress__fixing,
+  .progress__seen {
+    font-size: var(--text-16);
+  }
+
+  .ptask {
+    padding-left: 0;
+  }
+
+  .milestone__extra {
+    padding-left: 12px;
+  }
+}

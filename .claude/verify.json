@@ -1,0 +1,1 @@
+{ "command": "npm run -s typecheck && npm run -s lint:library && npm test --silent", "timeout": 300, "extensions": [".ts", ".tsx", ".css", ".md", ".yaml", ".json"] }

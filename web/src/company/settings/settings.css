@@ -1,0 +1,8 @@
+/* An Always allow rule in the inbox's words, with the Claude Code rule it adds under them, quieter. */
+.rule-list__code {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}

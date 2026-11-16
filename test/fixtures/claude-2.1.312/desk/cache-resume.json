@@ -1,0 +1,14 @@
+{
+  "about": "Claude Code 2.1.312, claude-haiku-5-5, the office's own harness (claudeCode().start), run twice on a new session and resumed twice, 13 Nov 2026. Each row is one request, read from the session transcript: the usage Claude Code recorded and the API's own diagnostics.cache_miss_reason. 'before' names a fresh random scratch folder in every desk's appended prompt (worklings-desk-XXXXXX\scratch), 'after' keeps the folder's name for the person (HarnessPlan.stable). The tools (16.8k tokens) come before the system prompt, so a changed prompt still reads them from the cache and rewrites everything after.",
+  "cacheTtl": "1h (every cache write was ephemeral_1h; a desk left open 5.5 minutes read its whole prefix again)",
+  "before": [
+    { "turn": 1, "resume": false, "cache_read_input_tokens": 16842, "cache_creation_input_tokens": 34135, "cache_miss_reason": null },
+    { "turn": 2, "resume": true, "cache_read_input_tokens": 16842, "cache_creation_input_tokens": 34171, "cache_miss_reason": { "type": "system_changed", "cache_missed_input_tokens": 30616 } },
+    { "turn": 3, "resume": true, "cache_read_input_tokens": 16842, "cache_creation_input_tokens": 34212, "cache_miss_reason": { "type": "system_changed", "cache_missed_input_tokens": 30662 } }
+  ],
+  "after": [
+    { "turn": 1, "resume": false, "cache_read_input_tokens": 16842, "cache_creation_input_tokens": 34137, "cache_miss_reason": null },
+    { "turn": 2, "resume": true, "cache_read_input_tokens": 50979, "cache_creation_input_tokens": 144, "cache_miss_reason": null },
+    { "turn": 3, "resume": true, "cache_read_input_tokens": 51123, "cache_creation_input_tokens": 42, "cache_miss_reason": null }
+  ]
+}

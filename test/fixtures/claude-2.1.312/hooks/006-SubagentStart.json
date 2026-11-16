@@ -1,0 +1,9 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "f722b53f-149f-4257-9ddd-70de73660fe5",
+  "agent_id": "acc52a8892c7c742e",
+  "agent_type": "reviewer",
+  "hook_event_name": "SubagentStart"
+}

@@ -1,0 +1,20 @@
+{
+  "name": "worklings",
+  "version": "0.2.0",
+  "description": "Claude Code with an office around it: watch, approve and steer your own Claude Code from a 3D office, or staff any project with an AI studio (subagents, path rules, workflows and review gates fitted to the kind of project and its stack).",
+  "author": {
+    "name": "Zeus Studio"
+  },
+  "homepage": "https://github.com/zeusstudiodev/worklings",
+  "repository": "https://github.com/zeusstudiodev/worklings",
+  "license": "MIT",
+  "keywords": [
+    "company",
+    "subagents",
+    "studio",
+    "team",
+    "office",
+    "token usage",
+    "cost"
+  ]
+}

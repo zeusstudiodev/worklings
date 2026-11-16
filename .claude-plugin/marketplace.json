@@ -1,0 +1,14 @@
+{
+  "name": "worklings",
+  "description": "Worklings: Claude Code with an office around it, or an AI studio for any project.",
+  "owner": {
+    "name": "Zeus Studio"
+  },
+  "plugins": [
+    {
+      "name": "worklings",
+      "source": "./plugin",
+      "description": "Watch, approve and steer your own Claude Code from a 3D office (/worklings:hub), or staff a project with an AI studio."
+    }
+  ]
+}

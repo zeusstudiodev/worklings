@@ -1,0 +1,18 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "f722b53f-149f-4257-9ddd-70de73660fe5",
+  "permission_mode": "acceptEdits",
+  "agent_id": "acc52a8892c7c742e",
+  "agent_type": "reviewer",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/project/notes.txt"
+  },
+  "tool_use_id": "toolu_01G1WqJAhXrxr8o4937LBTZH"
+}

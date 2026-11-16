@@ -1,0 +1,20 @@
+id: browser-extension
+title: Browser extension
+summary: Chrome, Edge and Firefox extensions on Manifest V3.
+detect:
+  priority: 2
+  dependencies: [wxt, plasmo, "@crxjs/vite-plugin", webextension-polyfill, "@types/chrome", "@types/webextension-polyfill",
+    web-ext]
+  files: [wxt.config.ts]
+  json: { manifest.json: manifest_version }
+roles:
+  lean: [extension-engineer, ux-designer, qa-engineer, security-reviewer]
+  standard: [ui-designer, privacy-officer, copywriter, release-manager]
+  full: [product-manager, backend-engineer, code-reviewer, accessibility-specialist, performance-engineer,
+    localization-specialist]
+rules: [typescript, chrome-extension, react-web, web-ui, tests]
+skills: [plan-feature, fix-bug, ship, store-submission]
+gates:
+  lean: [security-gate]
+  standard: [code-gate, design-gate]
+  full: [a11y-gate, perf-gate, release-gate]

@@ -1,0 +1,17 @@
+id: web-game
+title: Web game
+summary: Browser games built with Phaser, PixiJS, Kaplay, Three.js or a similar web engine, for the web and game portals.
+detect:
+  priority: 2
+  dependencies: [phaser, pixi.js, kaplay, kaboom, excalibur, "@babylonjs/core", playcanvas, matter-js, howler]
+roles:
+  lean: [game-programmer, game-designer, art-director, qa-engineer]
+  standard: [level-designer, technical-artist, sound-designer, performance-engineer]
+  full: [producer, narrative-writer, ui-designer, accessibility-specialist, localization-specialist, analytics-engineer,
+    release-manager, 3d-artist]
+rules: [typescript, phaser-game, threejs, tests]
+skills: [plan-feature, fix-bug, ship, playtest]
+gates:
+  lean: [playtest-gate]
+  standard: [code-gate, perf-gate]
+  full: [a11y-gate, release-gate]

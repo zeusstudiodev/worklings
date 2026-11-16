@@ -1,0 +1,18 @@
+id: data-ml
+title: Data and ML
+summary: Data pipelines, notebooks, model training and evaluation, mostly in Python.
+detect:
+  priority: 2
+  files: [notebooks, dvc.yaml, dbt_project.yml, MLproject]
+  python: [torch, tensorflow, keras, scikit-learn, xgboost, lightgbm, jupyter, jupyterlab, mlflow, wandb,
+    dvc, dagster, prefect, apache-airflow, dbt-core, lightning, transformers]
+roles:
+  lean: [ml-engineer, data-engineer, code-reviewer, qa-engineer]
+  standard: [analytics-engineer, architect, devops-engineer, privacy-officer]
+  full: [product-manager, ai-engineer, performance-engineer, security-reviewer, docs-writer]
+rules: [python, ml-experiments, python-service, tests]
+skills: [plan-feature, fix-bug, run-evals, ship, standup]
+gates:
+  lean: [eval-gate]
+  standard: [code-gate, security-gate]
+  full: [perf-gate, release-gate]

@@ -1,0 +1,146 @@
+/* A face (design-hud, "Faces"): a disc with a 1.5 px badge ring (3 px at 64); a person's letter on their room's paper
+   until Portrait draws them; you, a room, a team, all hands and a visitor as a glyph on a disc. The letter is part of the
+   graphic, so it scales with the disc rather than with the text size. */
+.face {
+  --face: 32px;
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--face);
+  height: var(--face);
+  color: var(--ink);
+  background: var(--paper, var(--pill));
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--badge);
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.face--16 {
+  --face: 16px;
+}
+
+.face--20 {
+  --face: 20px;
+}
+
+.face--24 {
+  --face: 24px;
+}
+
+.face--28 {
+  --face: 28px;
+}
+
+.face--40 {
+  --face: 40px;
+}
+
+.face--64 {
+  --face: 64px;
+  box-shadow: 0 0 0 3px var(--badge);
+}
+
+.face__initial {
+  font-size: calc(var(--face) * 0.5);
+}
+
+.face__portrait {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.face__you {
+  font-size: calc(var(--face) * 0.34);
+}
+
+.face__glyph {
+  width: calc(var(--face) * 0.62);
+  height: calc(var(--face) * 0.62);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* You, a team and all hands: an ink disc. A room: its hue. A visitor: the no-hue disc. */
+.face--you,
+.face--team,
+.face--everyone {
+  color: var(--badge);
+  background: var(--ink);
+}
+
+.face--room {
+  background: var(--hue, var(--no-hue));
+}
+
+.face--visitor {
+  background: var(--no-hue);
+}
+
+/* Someone who needs you wears the highlighter ring, as their bubble turns yellow in the office. */
+.face--needs {
+  box-shadow:
+    0 0 0 1.5px var(--badge),
+    0 0 0 4px var(--highlighter);
+}
+
+/* The state mark at the foot: 11 px (16 at 64), a shape and a colour, with a badge ring. */
+.face__mark {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 11px;
+  height: 11px;
+  background: var(--ok);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--badge);
+}
+
+.face--64 .face__mark {
+  width: 16px;
+  height: 16px;
+}
+
+.face__mark--needs {
+  background: var(--highlighter);
+  box-shadow:
+    0 0 0 1px var(--ink-soft),
+    0 0 0 2.5px var(--badge);
+}
+
+.face__mark--waiting {
+  background: var(--badge);
+  box-shadow:
+    inset 0 0 0 2px var(--ink-soft),
+    0 0 0 1.5px var(--badge);
+}
+
+.face__mark--stuck {
+  background: var(--danger);
+}
+
+.face__mark--rest {
+  background: var(--rest);
+}
+
+@media (forced-colors: active) {
+  .face {
+    border: 1px solid CanvasText;
+  }
+
+  .face--needs {
+    outline: 2px solid Highlight;
+  }
+
+  .face__mark {
+    border: 1px solid CanvasText;
+  }
+}

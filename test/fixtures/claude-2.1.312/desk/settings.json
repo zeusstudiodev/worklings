@@ -1,0 +1,90 @@
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:58181/hooks/permission",
+            "timeout": 5,
+            "headers": {
+              "X-Worklings-Desk": "$WORKLINGS_DESK_TOKEN"
+            },
+            "allowedEnvVars": [
+              "WORKLINGS_DESK_TOKEN"
+            ]
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:58181/hooks/pre-tool-use",
+            "timeout": 5,
+            "headers": {
+              "X-Worklings-Desk": "$WORKLINGS_DESK_TOKEN"
+            },
+            "allowedEnvVars": [
+              "WORKLINGS_DESK_TOKEN"
+            ]
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:58181/hooks/event",
+            "timeout": 5,
+            "headers": {
+              "X-Worklings-Desk": "$WORKLINGS_DESK_TOKEN"
+            },
+            "allowedEnvVars": [
+              "WORKLINGS_DESK_TOKEN"
+            ]
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:58181/hooks/event",
+            "timeout": 5,
+            "headers": {
+              "X-Worklings-Desk": "$WORKLINGS_DESK_TOKEN"
+            },
+            "allowedEnvVars": [
+              "WORKLINGS_DESK_TOKEN"
+            ]
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:58181/hooks/event",
+            "timeout": 5,
+            "headers": {
+              "X-Worklings-Desk": "$WORKLINGS_DESK_TOKEN"
+            },
+            "allowedEnvVars": [
+              "WORKLINGS_DESK_TOKEN"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "about": "Where Worklings lives and who makes it: the one place to change them. After editing repository or demo, run `node scripts/set-home.mjs` to rewrite every reference, then `npm run check:public`.",
+  "repository": "zeusstudiodev/worklings",
+  "demo": "https://zeusstudiodev.github.io/worklings/",
+  "maker": "Zeus Studio",
+  "site": "https://zeusstudio.dev",
+  "legal": "https://zeusstudio.dev/legal/",
+  "email": "support@zeusstudio.dev"
+}

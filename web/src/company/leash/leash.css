@@ -1,0 +1,125 @@
+/* The leash (web/src/company/leash/): the badge beside a name, a person's leash, model and effort, a room's leash and the
+   overview for Settings. */
+
+/* An outline tag like "Their pick": ink on white with an ink-soft edge (6.3:1), never yellow, which means "needs you". */
+.leash-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+/* Checks with you gets a dashed edge, so the two read apart without colour. */
+.leash-badge--check {
+  border-style: dashed;
+}
+
+.leash-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.leash-controls .group-title {
+  margin-bottom: 0;
+}
+
+.leash-controls__field select {
+  min-width: 0;
+}
+
+.leash-controls__means,
+.leash-controls__applies,
+.room-leash__means,
+.leash-overview__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.leash-controls__save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.leash-controls__offline {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.leash-controls__failed {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.room-leash {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.room-leash__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 11rem) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-leash__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.leash-overview {
+  display: grid;
+  gap: 6px;
+}
+
+.leash-overview__rooms,
+.leash-overview__people {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leash-overview__rooms > li + li {
+  border-top: 1px solid var(--badge-line);
+}
+
+.leash-overview__people {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 720px) {
+  .room-leash__row {
+    grid-template-columns: 1fr;
+  }
+
+  .leash-controls .button,
+  .room-leash .button,
+  .leash-overview__people .link {
+    min-height: 44px;
+  }
+
+  .leash-overview__people .link {
+    display: inline-flex;
+    align-items: center;
+  }
+}

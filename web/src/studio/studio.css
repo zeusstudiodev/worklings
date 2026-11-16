@@ -1,0 +1,508 @@
+/* v0.3, the studio over many companies (web/src/studio/): the studio chat's card and conversation, portfolio cards and
+   their page and form. Built from the lobby's own pieces (rows, cards, notes, the highlighter for what is yours) so the
+   top level reads like the rest of the office. */
+
+.lobby-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 14px 0 0;
+}
+
+.lobby-group-head .group-title {
+  margin: 0;
+}
+
+.lobby-group-head .link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.lobby-portfolios__empty {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.lobby-loose {
+  margin: 16px 0 0;
+}
+
+/* The studio chat's entry: one row, on note paper, at the top of the list. */
+.studio-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  margin: 10px 0 2px;
+  padding: 12px 12px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.studio-card:hover {
+  background: color-mix(in srgb, var(--note) 70%, var(--badge-hover));
+}
+
+.studio-card__mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9375rem;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 8px;
+}
+
+.studio-card__main {
+  display: grid;
+  gap: 3px;
+}
+
+.studio-card__title {
+  font-size: 1rem;
+}
+
+.studio-card__line {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* A portfolio's card: a lobby card with a double marker, so a group reads apart from a company. */
+.portfolio-card__marker {
+  width: 10px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 6px);
+  border-radius: 2px;
+}
+
+.portfolio-card__line {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-card__money {
+  display: grid;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-card__money--warning {
+  font-weight: 600;
+}
+
+.portfolio-card__money--paused {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.portfolio-card__meter {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.portfolio-card__meter > span {
+  display: block;
+  width: var(--share, 0%);
+  height: 100%;
+  background: var(--ink-soft);
+  border-radius: inherit;
+}
+
+.portfolio-card__money--warning .portfolio-card__meter > span {
+  background: var(--highlighter);
+}
+
+.portfolio-card__money--paused .portfolio-card__meter > span {
+  background: var(--danger);
+}
+
+/* A portfolio's own page. */
+.portfolio {
+  display: grid;
+  gap: 8px;
+}
+
+.portfolio .panel-title {
+  margin: 4px 0 0;
+}
+
+.portfolio__line {
+  margin: 0;
+  font-weight: 500;
+}
+
+.portfolio__figures {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio__brief {
+  padding: 10px 12px;
+  background: var(--note);
+  border-radius: 12px;
+}
+
+.portfolio__brief .lobby-card__key {
+  margin: 0 0 2px;
+  font-size: 0.8125rem;
+}
+
+.portfolio__brief-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.portfolio__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.portfolio__actions .link {
+  min-height: 44px;
+}
+
+.portfolio__companies-title {
+  margin: 10px 0 0;
+}
+
+.portfolio__delete {
+  justify-self: start;
+  min-height: 44px;
+  margin-top: 10px;
+}
+
+.portfolio-form {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.portfolio-form__field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.portfolio-form__field .settings__note {
+  font-weight: 400;
+}
+
+.portfolio-form__members {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.portfolio-form__members legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.portfolio-form__member {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.9375rem;
+}
+
+.portfolio-form__member input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ink);
+}
+
+.portfolio-form__other {
+  color: var(--ink-soft);
+}
+
+.portfolio-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The studio chat. */
+.studio {
+  display: grid;
+  gap: 8px;
+}
+
+.studio .panel-title {
+  margin: 4px 0 0;
+}
+
+.studio__intro {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.studio__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.studio__model {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.studio__select {
+  width: auto;
+  min-height: 36px;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
+
+.studio__spent {
+  font-variant-numeric: tabular-nums;
+}
+
+.studio__budget,
+.studio__budget label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.studio__budget-input {
+  width: 6.5em;
+  min-height: 36px;
+  font-variant-numeric: tabular-nums;
+}
+
+.studio__meta .link {
+  min-height: 36px;
+  font-size: 0.8125rem;
+}
+
+.studio__empty p {
+  margin: 8px 0 6px;
+  color: var(--ink-soft);
+}
+
+.studio__starters {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio__starter {
+  width: 100%;
+  min-height: 44px;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+}
+
+.studio__log {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-line {
+  display: grid;
+  gap: 3px;
+  max-width: 92%;
+  padding: 9px 12px;
+  background: var(--badge);
+  border: 1px solid var(--badge-line);
+  border-radius: 14px;
+}
+
+.studio-line p {
+  margin: 0;
+}
+
+.studio-line__lead {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.studio-line__age {
+  font-weight: 400;
+}
+
+.studio-line__text {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.studio-line__cost {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Your words on the right, on the highlighter's soft fill: yours. */
+.studio-line--you {
+  justify-self: end;
+  background: var(--highlighter-soft);
+  border-color: transparent;
+}
+
+.studio-line--studio {
+  background: var(--note);
+  border-color: transparent;
+}
+
+/* What it sent the CEOs, and each CEO's answer: a company's own words, edged in ink. */
+.studio-line--relay {
+  max-width: 100%;
+  padding: 4px 0 4px 12px;
+  background: none;
+  border: 0;
+  border-left: 3px solid var(--ink-soft);
+  border-radius: 0;
+}
+
+.studio-line--relay .studio-line__text {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.studio-line--reply {
+  border-left: 4px solid var(--ink);
+}
+
+.studio-line__open {
+  justify-self: start;
+  min-height: 32px;
+  font-size: 0.8125rem;
+}
+
+.studio-line--note {
+  max-width: 100%;
+  padding: 2px 0;
+  background: none;
+  border: 0;
+}
+
+.studio-line--note .studio-line__text {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.studio__end {
+  height: 0;
+}
+
+.studio__thinking {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.studio__waiting {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* The box stays in reach at the foot of the panel. */
+.studio__compose {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 8px;
+  align-items: end;
+  margin-top: 6px;
+  padding: 10px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--badge);
+  border-top: 1px solid var(--badge-line);
+}
+
+.studio__box {
+  min-height: 48px;
+  resize: vertical;
+  font-size: 1rem;
+}
+
+.studio__send {
+  min-height: 48px;
+}
+
+.studio__hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-card,
+  .studio-line {
+    transition: none;
+  }
+}
+
+/* The sticky box covers what scrolls under it to the panel's foot, and the newest line stops above it. */
+.studio__compose {
+  box-shadow: 0 24px 0 var(--badge);
+}
+
+.studio__end {
+  scroll-margin-bottom: 150px;
+}
+
+/* Phones: a portfolio's still is a stack of cards, the size of a company's theme still. */
+.office--phone .portfolio-card .portfolio-card__marker {
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  margin: 2px 4px 0 0;
+  background: var(--note);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--badge), 6px 6px 0 var(--ink);
+}

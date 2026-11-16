@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in Worklings does not work as described
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. A security problem does not belong here: see [SECURITY.md](https://github.com/zeusstudiodev/worklings/blob/main/SECURITY.md).
+        Do not paste a link that contains `?token=`, an API key or a sign-in. Delete those parts first.
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part
+      options:
+        - The office (the 3D view and its panels)
+        - A company or the hub (the lobby, people, tasks, approvals)
+        - The studio generator (worklings new, hire, tailor, adopt)
+        - The Claude Code plugin
+        - The library (roles, rules, domains)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The command you ran or what you clicked, in order.
+      placeholder: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: input
+    id: worklings
+    attributes:
+      label: Worklings version
+      description: Output of `worklings --version`.
+    validations:
+      required: true
+  - type: input
+    id: claude
+    attributes:
+      label: Claude Code version
+      description: Output of `claude --version`, or "not installed" if you only used the demo.
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: Output of `node --version`.
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and browser
+      placeholder: Windows 11, Chrome 140
+  - type: textarea
+    id: output
+    attributes:
+      label: Anything printed in the terminal, or a screenshot
+      description: Run `worklings doctor` and paste its output if the problem is about setup.
+      render: text

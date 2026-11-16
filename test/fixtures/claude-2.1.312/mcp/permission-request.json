@@ -1,0 +1,31 @@
+{
+  "session_id": "ed975912-0c59-42c0-896d-f2cd8a345932",
+  "transcript_path": "<home>\\.claude\\projects\\<neutral as a project folder>\\ed975912-0c59-42c0-896d-f2cd8a345932.jsonl",
+  "cwd": "<neutral>",
+  "prompt_id": "75f8781a-ffcb-4f7f-af9d-292b9c0bb42d",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "mcp__org__post_status",
+  "tool_input": {
+    "text": "Starting the approval check."
+  },
+  "permission_suggestions": [
+    {
+      "type": "addRules",
+      "rules": [
+        {
+          "toolName": "mcp__org__post_status"
+        }
+      ],
+      "behavior": "allow",
+      "destination": "localSettings"
+    }
+  ],
+  "mcp_server": {
+    "name": "org",
+    "source": "dynamic"
+  }
+}

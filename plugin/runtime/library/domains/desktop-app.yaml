@@ -1,0 +1,19 @@
+id: desktop-app
+title: Desktop app
+summary: Desktop apps for Windows, macOS and Linux built with Electron or Tauri.
+detect:
+  priority: 2
+  dependencies: [electron, electron-builder, "@electron-forge/cli", electron-vite, electron-updater, "@tauri-apps/api",
+    "@tauri-apps/cli"]
+  files: [src-tauri, electron-builder.yml, electron-builder.json, forge.config.js, forge.config.ts]
+roles:
+  lean: [desktop-engineer, ux-designer, qa-engineer, security-reviewer]
+  standard: [frontend-engineer, ui-designer, release-manager]
+  full: [product-manager, architect, accessibility-specialist, performance-engineer, privacy-officer, devops-engineer,
+    copywriter]
+rules: [typescript, desktop-shell, react-web, web-ui, tests]
+skills: [plan-feature, fix-bug, ship, store-submission, standup]
+gates:
+  lean: [code-gate]
+  standard: [security-gate, design-gate, release-gate]
+  full: [a11y-gate, perf-gate]

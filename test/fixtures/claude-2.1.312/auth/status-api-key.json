@@ -1,0 +1,9 @@
+{
+  "loggedIn": true,
+  "authMethod": "api_key",
+  "apiProvider": "firstParty",
+  "analyticsDisabled": false,
+  "projectsDirectory": "C:\\Users\\you\\.claude\\projects",
+  "configDirectory": "C:\\Users\\you\\.claude",
+  "apiKeySource": "ANTHROPIC_API_KEY"
+}

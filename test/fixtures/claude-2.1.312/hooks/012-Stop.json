@@ -1,0 +1,23 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "f722b53f-149f-4257-9ddd-70de73660fe5",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "last_assistant_message": "Steps 1 and 2 are in progress. `notes.txt` was created with `hello`. The reviewer agent is reading it in the background, and I'll run steps 3 and 4 once its result comes back, so the order holds.",
+  "background_tasks": [
+    {
+      "id": "acc52a8892c7c742e",
+      "type": "subagent",
+      "status": "running",
+      "description": "Read notes.txt contents",
+      "agent_type": "reviewer"
+    }
+  ],
+  "session_crons": []
+}

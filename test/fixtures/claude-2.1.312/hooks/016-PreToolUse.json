@@ -1,0 +1,17 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "bdb68bbf-d312-4d62-ac89-c8c0c02a43b0",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "node --version",
+    "description": "Show Node version"
+  },
+  "tool_use_id": "toolu_01XuDK7pNEJ8HJoPF5v4hKCm"
+}

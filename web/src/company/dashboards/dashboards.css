@@ -1,0 +1,1254 @@
+/* The Dashboards board (docs/design-v3.md, "Dashboards at full width", the widget table) on design.md's tokens and scales: text at 12
+   (ticks, notes), 13 (meta, section titles), 14 (rows) and 28 px Semi Condensed (figures); space in 4 px steps; marks in
+   ink, room hues only for bars that are rooms; gridlines one step off the badge. The quiet fill and the grey below are
+   styles.css's --note and --no-hue. */
+/* The foot of a CEO's dashboard: Ask the CEO to change it, and Remove this dashboard with Undo in place. */
+.board-ceo__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin-top: 20px;
+}
+
+.board-ceo__foot > .link {
+  margin-top: 0;
+}
+
+.board-ceo__problem {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.board--removing .undo-line {
+  margin-top: 10px;
+}
+
+.board-refused {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  background: var(--board-soft);
+  border-left: 3px solid var(--danger);
+  border-radius: 8px;
+}
+
+.board-refused__at {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* The board's own notes: a refusal, a removal, a dashboard that went. */
+.board-gone {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+}
+
+/* Sections and their words */
+.board-section {
+  margin-top: 20px;
+}
+
+.board-section__title {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.board-empty {
+  margin: 16px 0 0;
+  color: var(--ink-soft);
+}
+
+.board-quiet {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.board-goal {
+  margin: 0;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.board-range {
+  margin-top: 16px;
+}
+
+/* Two columns in the wide view */
+/* Figures */
+.board-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.board-stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The title comes first for screen readers and shows under the figure. */
+.board-stat__figure {
+  order: -1;
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.board-stat__unit {
+  font-family: var(--font);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.board-stat__title {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.board-stat__note {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* It waits on you: the inbox's highlighter rule down its edge. */
+.board-stat--needs {
+  padding-left: 9px;
+  border-left: 3px solid var(--highlighter);
+}
+
+/* A progress bar: 8 px, ink on the badge's line colour, the words beside it */
+.board-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-meter__track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 8px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.board-meter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill);
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+.board-meter__words {
+  flex: none;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.board-milestones {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-milestone {
+  display: grid;
+  gap: 4px;
+}
+
+.board-milestone__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Horizontal bars: label left, value right, 12 px marks from one baseline, a 4 px round end */
+.board-bars__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-bars__row {
+  display: grid;
+  grid-template-columns: minmax(5.5em, 36%) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 28px;
+  font-size: 0.875rem;
+}
+
+.board-bars__label {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.board-bars__track {
+  position: relative;
+  height: 12px;
+}
+
+.board-bars__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--start);
+  width: var(--size);
+  background: var(--hue);
+  border-radius: 0 4px 4px 0;
+}
+
+.board-bars__bar.is-negative {
+  border-radius: 4px 0 0 4px;
+}
+
+.board-bars__bar.has-value {
+  min-width: 2px;
+}
+
+.board-bars__value {
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.board-bars__more,
+.board-widget__more {
+  min-height: 24px;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+}
+
+/* "Show the numbers": v2's quiet summary over v2's ledger table */
+.board-numbers {
+  margin-top: 6px;
+}
+
+.board-numbers > summary {
+  width: fit-content;
+  padding: 2px 0;
+  line-height: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.board-numbers > summary:hover,
+.board-numbers[open] > summary {
+  color: var(--ink);
+}
+
+.board-numbers__table {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+}
+
+/* Over time: the plot, its ticks on the left, its labels underneath; room above for a value or the readout */
+.board-chart {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: var(--board-plot) auto;
+  column-gap: 8px;
+  margin-top: 4px;
+  padding-top: 20px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* Evenly spaced ticks, each centred on its gridline: the column reaches half a line past the plot at both ends. */
+.board-chart__ticks {
+  display: flex;
+  flex-direction: column-reverse;
+  grid-row: 1;
+  grid-column: 1;
+  justify-content: space-between;
+  margin: -6px 0;
+  line-height: 12px;
+  text-align: right;
+}
+
+.board-chart__tick {
+  white-space: nowrap;
+}
+
+.board-chart__grid,
+.board-chart__plot {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.board-chart__grid {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  stroke: var(--badge-line);
+  stroke-width: 1;
+}
+
+.board-chart__plot {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.board-chart__x {
+  position: relative;
+  grid-row: 2;
+  grid-column: 2;
+  height: 16px;
+  margin-top: 4px;
+}
+
+/* An end label stays inside the chart: placed at its point and pulled back by as much of itself. */
+.board-chart__xlabel {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  max-width: 34%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(calc(var(--x) * -1));
+}
+
+.board-chart__cols {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+/* Each column fills its slot less 2 px of air, at most 24 px wide, square at the baseline and round at its end. */
+.board-chart__col {
+  display: flex;
+  flex: 1 1 0;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+  padding: 0 1px;
+}
+
+.board-chart__col::before {
+  width: 100%;
+  max-width: 24px;
+  height: var(--h);
+  content: '';
+  background: var(--ink);
+  border-radius: 4px 4px 0 0;
+}
+
+.board-chart__cols.is-hovering .board-chart__col:not(.is-hovered)::before {
+  opacity: 0.4;
+}
+
+.board-chart__peak {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  transform: translate(calc(var(--x) * -1), calc(-100% - 4px));
+}
+
+.board-chart__line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.board-chart__cross {
+  stroke: var(--ink-soft);
+  stroke-width: 1;
+}
+
+/* An 8 px dot with a 2 px ring of the badge, so it reads where it crosses the line. */
+.board-chart__marker {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: var(--ink);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--badge);
+}
+
+.board-chart__end {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  transform: translate(calc(var(--x) * -1), calc(-100% - 6px));
+}
+
+.board-chart__end.is-high {
+  transform: translate(calc(var(--x) * -1), 8px);
+}
+
+.board-chart__readout {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  z-index: 1;
+  max-width: 100%;
+  padding: 2px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--badge);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(10, 24, 18, 0.2);
+  transform: translate(calc(var(--x) * -1), calc(-100% - 2px));
+}
+
+.board-chart__words {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+/* Blocked tasks, with who and why */
+.board-blocked {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-blocked__item {
+  display: grid;
+  gap: 2px;
+  padding-left: 10px;
+  border-left: 3px solid var(--danger);
+}
+
+.board-blocked__title {
+  justify-self: start;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+/* Links that stand on their own get a 24 px target (44 px on phones); those inside a sentence keep its line. */
+.board-stat__note .link,
+.board-blocked__title,
+.board-payroll th .link,
+.advice__who .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.board-blocked__who {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.board-blocked__why {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.board-payroll {
+  margin-top: 0;
+}
+
+/* The Timeline: v2's story lines under sticky hour headings; status lines a step quieter than what they lead to */
+.board-timeline__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 14px 0 4px;
+}
+
+.board-timeline__who {
+  display: flex;
+  flex: 1 1 14em;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.board-timeline__who select {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 36px;
+}
+
+.board-timeline__status {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.board-timeline__status input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+.board-timeline__group {
+  margin-top: 4px;
+}
+
+/* Sticky at the very top of what scrolls it: the panel's body has 6 px of padding above its content, the wide
+   view's body 16 px, and a heading that sticks below them lets lines show through above it. */
+.board-timeline__hour {
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+  margin: 0;
+  padding: 12px 0 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  background: var(--badge);
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.board-timeline__lines {
+  margin: 0;
+}
+
+.board-timeline__line--status .story__head {
+  color: var(--ink-soft);
+}
+
+.board-timeline__line--milestone .story__head {
+  font-weight: 600;
+}
+
+.board-timeline__fold {
+  grid-column: 2 / -1;
+  margin-top: 2px;
+}
+
+.board-timeline__more {
+  min-height: 24px;
+  font-size: 0.8125rem;
+}
+
+.board-timeline__earlier {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 2px;
+  padding: 0;
+  list-style: none;
+}
+
+.board-timeline__earlier li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.board-timeline__time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.board-timeline__page {
+  margin-top: 16px;
+}
+
+/* The CEO's dashboards */
+.board-ceo__title {
+  margin: 20px 0 0;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.board-ceo__made {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.board-widgets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 16px;
+  margin-top: 16px;
+}
+
+.board-widget {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.board-widget--stat {
+  grid-column: auto;
+}
+
+/* A stat with no stat beside it takes the row, so its note doesn't wrap in half the width. */
+.board-widget--alone {
+  grid-column: 1 / -1;
+}
+
+.board-widget__title {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.board-widget__note {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.board-widget__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+/* A wide table scrolls sideways in its own region, reachable by keyboard while it does. */
+.board-widget__scroll {
+  overflow-x: auto;
+  border-radius: 4px;
+}
+
+.board-widget__table {
+  margin-top: 0;
+  font-size: 0.8125rem;
+}
+
+.board-widget__table th,
+.board-widget__table td {
+  overflow-wrap: anywhere;
+}
+
+/* Phones: 44 px targets, the box at 16 px so iOS doesn't zoom */
+@media (max-width: 720px) {
+  .board-timeline__who select,
+  .board-timeline__status {
+    min-height: 44px;
+  }
+
+  .board-ceo__ask,
+  .board-ceo__remove,
+  .board-bars__more,
+  .board-widget__more,
+  .board-timeline__more {
+    min-height: 44px;
+  }
+
+  .board-numbers > summary {
+    padding-block: 12px;
+  }
+
+  .board-stat__note .link,
+  .board-blocked__title,
+  .board-payroll th .link,
+  .advice__who .link {
+    min-height: 44px;
+  }
+}
+
+/* Forced colours drop backgrounds, and the marks are backgrounds: draw them in the text colour. */
+@media (forced-colors: active) {
+  .board-bars__bar,
+  .board-chart__col::before,
+  .board-meter__fill,
+  .board-chart__marker {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .board-chart__line {
+    stroke: CanvasText;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   The board over the map: a rail, then a grid of cards on the mat. The board's own width decides the form (a container
+   named db): 12 columns from 1100 px, 8 under it with the rail as a row, 4 under 640 with the picker in the rail's place. */
+
+.db-scroll {
+  container: db / inline-size;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px var(--gutter) var(--dock-clear) 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 16px var(--dock-clear);
+}
+
+.db {
+  --board-soft: var(--note);
+  --board-grey: var(--no-hue);
+  --board-plot: 120px;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  color: var(--mat-ink);
+}
+
+.db-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.db-side {
+  position: sticky;
+  top: 0;
+  min-width: 0;
+}
+
+/* The rail: a tile of keys, the current one pressed with its highlighter bar. */
+.db-rail {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.db-rail__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.db-rail__group {
+  margin: 10px 4px 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.db-key {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+}
+
+.db-key:hover {
+  background: var(--badge-hover);
+}
+
+.db-key[aria-current='page'] {
+  background: var(--badge-hover);
+  box-shadow: inset 0 -3px 0 var(--highlighter);
+}
+
+.db-key--ask {
+  margin-top: 10px;
+  background: var(--badge);
+  border: 1.5px solid var(--ink);
+}
+
+/* A line key on the mat: Ask the CEO to change it, Remove this dashboard. */
+.db-key--line {
+  display: inline-flex;
+  min-height: 36px;
+  color: var(--mat-ink);
+  background: transparent;
+  border: 1.5px solid var(--mat-ink);
+}
+
+.db-key--line:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.db-key--line[aria-disabled='true'] {
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.db-picker {
+  display: none;
+}
+
+/* Cards */
+.db-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
+.db-grid > * {
+  grid-column: 1 / -1;
+}
+
+.db-card {
+  min-width: 0;
+  padding: 14px 16px 16px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.db-grid .board-section {
+  margin: 0;
+}
+
+.db-card .board-section__title,
+.db-card .board-widget__title {
+  margin: 0 0 10px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.db-card .board-empty {
+  margin: 0;
+}
+
+.db-grid > .db-c3 {
+  grid-column: span 3;
+}
+.db-grid > .db-c4 {
+  grid-column: span 4;
+}
+.db-grid > .db-c5 {
+  grid-column: span 5;
+}
+.db-grid > .db-c6 {
+  grid-column: span 6;
+}
+.db-grid > .db-c7 {
+  grid-column: span 7;
+}
+.db-grid > .db-c8 {
+  grid-column: span 8;
+}
+.db-grid > .db-c12 {
+  grid-column: 1 / -1;
+}
+
+.db-grid > .board-range {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin: 0;
+}
+
+/* The stats: each its own card, three columns (the CEO's too); two or one of them take more. */
+.db-grid > .board-stats {
+  display: contents;
+}
+
+.db-grid > .board-stats > .board-stat {
+  grid-column: span 3;
+  padding: 14px 16px 16px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.db-grid > .board-stats:has(> :nth-child(2):last-child) > .board-stat,
+.db-grid > .board-stats > .board-stat:only-child {
+  grid-column: span 6;
+}
+
+.db-grid .board-stat__title {
+  font-size: var(--text-14);
+}
+
+.db-grid .board-stat__note {
+  font-size: var(--text-13);
+}
+
+/* It waits on you: the figure takes the highlighter stroke. */
+.db-grid .board-stat--needs {
+  padding-left: 16px;
+  border-left: 0;
+}
+
+.db-grid .board-stat--needs .board-stat__figure {
+  align-self: flex-start;
+  background: linear-gradient(transparent 62%, var(--highlighter) 62%);
+}
+
+/* The CEO's dashboards: its title and who made it on the mat, then the grid. */
+.board--ceo .board-ceo__title {
+  margin: 0;
+  color: var(--mat-ink);
+}
+
+.board--ceo .board-ceo__made {
+  margin: 2px 0 12px;
+  color: var(--mat-ink);
+}
+
+.board--ceo .board-widgets {
+  margin-top: 0;
+  gap: 16px;
+}
+
+.board--ceo .board-widget--progress,
+.board--ceo .board-widget--bars,
+.board--ceo .board-widget--list {
+  grid-column: span 6;
+}
+
+.board--ceo .board-widget--line {
+  grid-column: span 8;
+}
+
+.board--ceo .board-widget--table {
+  grid-column: 1 / -1;
+}
+
+.board--ceo .board-widget--stat {
+  grid-column: span 3;
+}
+
+.board--removing .board-ceo__title {
+  margin-bottom: 10px;
+}
+
+.board--removing .undo-line {
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 10px;
+}
+
+.board-ceo__foot {
+  margin-top: 4px;
+}
+
+.board-ceo__problem {
+  padding: 8px 12px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 10px;
+}
+
+/* Notes on the mat: a refused dashboard, a removed one. */
+.db-note {
+  margin: 0;
+  padding: 10px 14px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 10px;
+  box-shadow: var(--lift-1);
+}
+
+.db-note.board-refused {
+  border-left: 4px solid var(--danger);
+}
+
+/* A list with its filters in a column beside it: Timeline and Decisions. */
+.db-split {
+  display: grid;
+  grid-template-columns: minmax(0, 760px) 280px;
+  gap: 16px;
+  align-items: start;
+}
+
+.db-split > .db-split__list {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.db-split > .db-split__side {
+  position: sticky;
+  top: 0;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.db-split__side.board-timeline__filters,
+.db-split__side.decisions__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  margin: 0;
+}
+
+.db-split__side .board-timeline__who {
+  display: grid;
+  flex: none;
+  gap: 4px;
+}
+
+.db-split__side .decisions__count {
+  margin: 0;
+}
+
+.db-split__list .board-empty {
+  margin: 0;
+}
+
+.db-split__list .board-timeline__group:first-child {
+  margin-top: 0;
+}
+
+/* Under 1100 px of board: 8 columns, the stats two across and the rest the whole width; the rail is a row. */
+@container db (max-width: 68.7488rem) {
+  .db {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .db-side {
+    position: static;
+  }
+
+  .db-rail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+
+  .db-rail__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .db-rail__group {
+    margin: 0 0 0 8px;
+  }
+
+  .db-key--ask {
+    margin: 0 0 0 auto;
+  }
+
+  .db-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .db-grid > .db-c3,
+  .db-grid > .db-c4,
+  .db-grid > .db-c5,
+  .db-grid > .db-c6,
+  .db-grid > .db-c7,
+  .db-grid > .db-c8,
+  .db-grid > .db-c12,
+  .board--ceo .board-widget--progress,
+  .board--ceo .board-widget--bars,
+  .board--ceo .board-widget--list,
+  .board--ceo .board-widget--line,
+  .board--ceo .board-widget--table {
+    grid-column: 1 / -1;
+  }
+
+  .db-grid > .board-stats > .board-stat,
+  .board--ceo .board-widget--stat {
+    grid-column: span 2;
+  }
+
+  .db-grid > .board-stats:has(> :nth-child(2):last-child) > .board-stat,
+  .db-grid > .board-stats > .board-stat:only-child {
+    grid-column: span 4;
+  }
+
+  .db-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .db-split > .db-split__list,
+  .db-split > .db-split__side {
+    position: static;
+    grid-column: 1;
+  }
+
+  .db-split > .db-split__side {
+    grid-row: 1;
+  }
+
+  .db-split > .db-split__list {
+    grid-row: 2;
+  }
+
+  .db-split__side.board-timeline__filters,
+  .db-split__side.decisions__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 8px 16px;
+  }
+
+  .db-split__side .decisions__filter,
+  .db-split__side .board-timeline__who {
+    flex: 1 1 11em;
+  }
+}
+
+/* Under 640 px of board: the picker in the rail's place, four columns, the stats two to a row. */
+@container db (max-width: 39.9988rem) {
+  .db-rail {
+    display: none;
+  }
+
+  .db-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    align-items: center;
+  }
+
+  .db-picker__label {
+    font-size: var(--text-13);
+    font-weight: 600;
+    color: var(--mat-ink);
+  }
+
+  .db-picker__select {
+    flex: 1 1 10em;
+    min-width: 0;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .db-picker .db-key--ask {
+    flex: 1 1 100%;
+    justify-content: center;
+    min-height: 44px;
+    margin: 0;
+    color: var(--mat-ink);
+    background: transparent;
+    border-color: var(--mat-ink);
+  }
+
+  .db-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .db-grid > .board-stats > .board-stat,
+  .board--ceo .board-widget--stat,
+  .db-grid > .board-stats:has(> :nth-child(2):last-child) > .board-stat,
+  .db-grid > .board-stats > .board-stat:only-child {
+    grid-column: span 2;
+  }
+
+  .db-split__side.board-timeline__filters,
+  .db-split__side.decisions__filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .db-key--line {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 720px) {
+  .board-timeline__who select {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .db-key {
+    transition: background-color 120ms;
+  }
+}
+
+@media (forced-colors: active) {
+  .db-key[aria-current='page'] {
+    outline: 2px solid CanvasText;
+  }
+
+  .db-card,
+  .db-rail {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* A phone on its side: the frame scrolls the board as one (frame.css) and the sheet already clears the talk bar. */
+@media (max-height: 400px) {
+  .db-scroll {
+    padding-bottom: 12px;
+    overflow-y: visible;
+  }
+}

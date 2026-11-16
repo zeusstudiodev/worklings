@@ -1,0 +1,190 @@
+/* The live strip (docs/design-hud.md, "The live strip"): bubbles over the model, left-aligned to the talk bar and
+   stacked upward from it 4 px apart, the model showing between them. One button around them. */
+
+.livestrip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  max-width: 100%;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 14px;
+  transition: opacity var(--t-fade) var(--ease-in-out);
+}
+
+/* Five quiet minutes: the lines fade away, so a quiet office is clean. */
+.livestrip.is-quiet {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.livestrip__line {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 3px 12px 4px 4px;
+  font-size: var(--text-13);
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--lift-1);
+  transition:
+    transform var(--t-hover),
+    background var(--t-hover);
+  animation: livestrip-rise var(--t-quick) var(--ease-out);
+}
+
+@keyframes livestrip-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.livestrip__line--empty {
+  padding-left: 12px;
+  color: var(--ink-soft);
+}
+
+.livestrip__who,
+.livestrip__faces {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  align-items: center;
+}
+
+.livestrip__faces .face + .face {
+  margin-left: -8px;
+}
+
+.livestrip__hop,
+.livestrip__mark {
+  color: var(--ink-soft);
+}
+
+.livestrip__words {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.livestrip__words b {
+  font-weight: 600;
+}
+
+.livestrip__age {
+  flex: none;
+  font-size: var(--text-12);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* What needs you is on the highlighter; someone stuck in the danger tint (stuck-ink on stuck-fill, 8.3:1). */
+.livestrip__line--needs {
+  background: var(--highlighter);
+}
+
+.livestrip__line--needs .livestrip__age,
+.livestrip__line--needs .livestrip__hop,
+.livestrip__line--needs .livestrip__mark {
+  color: var(--ink);
+}
+
+.livestrip__line--stuck {
+  color: var(--stuck-ink);
+  background: var(--stuck-fill);
+}
+
+.livestrip__line--stuck .livestrip__age {
+  color: var(--stuck-ink);
+}
+
+.livestrip:hover .livestrip__line {
+  background: #fff;
+  transform: translateY(-2px);
+}
+
+.livestrip:hover .livestrip__line--needs {
+  background: var(--highlighter-hover);
+}
+
+.livestrip:focus-visible {
+  outline-offset: 4px;
+}
+
+/* Phones: one line, always there, the button 44 px tall around it, Feed's count at its end. */
+.livestrip--phone {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.livestrip--phone .livestrip__line {
+  width: 100%;
+  min-height: 36px;
+}
+
+.livestrip--phone .livestrip__words {
+  flex: 1 1 auto;
+}
+
+.livestrip__count {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 999px;
+  transform: translateY(-50%);
+}
+
+.livestrip--phone:has(.livestrip__count) .livestrip__line {
+  padding-right: 40px;
+}
+
+/* Reduced motion and Still office: lines come and go without fading or moving. */
+.dock[data-still] .livestrip,
+.dock[data-still] .livestrip__line {
+  transition: none;
+  animation: none;
+}
+
+.dock[data-still] .livestrip:hover .livestrip__line {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .livestrip,
+  .livestrip__line {
+    transition: none;
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .livestrip__line {
+    border: 1px solid CanvasText;
+  }
+}

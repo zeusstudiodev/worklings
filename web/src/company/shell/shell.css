@@ -1,0 +1,1134 @@
+/* The company's shell, the stage and dock (docs/design-v3.md, "Stage and dock", "The shell"; docs/design-hud.md): every
+   piece a tile of badge paper one gutter in from the window and from the others, with the 3D office showing between them.
+   The main view is the window less the side panel and its two gutters (`--main-right`), a CSS container named `main`
+   whose width sets how its pieces fold. Layers: the stage, the caption and map keys, the main view (a board, the dock),
+   the side panel, the bar, then sheets; lists and menus in the top layer. */
+
+.shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  /* What a phone's sheet keeps clear at the foot: the talk bar and the strip's line above it, above the safe area. */
+  --sheet-clear: calc(var(--gutter) + var(--talk-now) + 8px + 44px + 8px + env(safe-area-inset-bottom));
+}
+
+.shell--short {
+  --sheet-clear: calc(var(--gutter) * 2 + var(--talk-now) + env(safe-area-inset-bottom));
+}
+
+/* -----------------------------------------------------------------------------------------------------------------
+   The company bar */
+
+.cbar {
+  position: absolute;
+  top: var(--gutter);
+  left: var(--gutter);
+  right: var(--gutter);
+  z-index: var(--z-bar);
+  pointer-events: none;
+}
+
+/* While one of its menus is open (Views, Company) the bar lies over a sheet, which sits above it otherwise. */
+.cbar:has(.cbar__menu) {
+  z-index: var(--z-top);
+}
+
+.cbar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--gutter);
+  min-width: 0;
+  height: var(--bar-h);
+}
+
+.cbar__row > *,
+.cbar__views-row {
+  pointer-events: auto;
+}
+
+.cbar__tile {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: var(--bar-h);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.cbar__id {
+  flex: 0 1 auto;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 14px 3px 4px;
+}
+
+.cbar__lobby,
+.cbar__view,
+.cbar__key,
+.cbar__item {
+  display: inline-flex;
+  flex: none;
+  gap: 7px;
+  align-items: center;
+  font-size: var(--text-15);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  transition: background var(--t-hover);
+}
+
+.cbar__lobby {
+  height: 36px;
+  padding: 0 10px;
+}
+
+.cbar__lobby:hover,
+.cbar__view:hover,
+.cbar__key:hover,
+.cbar__item:hover {
+  background: var(--badge-hover);
+}
+
+.cbar__divider {
+  flex: none;
+  width: 1px;
+  height: 24px;
+  background: var(--badge-line);
+}
+
+.cbar__name {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The state as a dot, in the state pill's colours, where the pill gives way (phones, the bar's last step). */
+.cbar__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: var(--ink-soft);
+  border-radius: 50%;
+}
+
+.cbar__dot--working {
+  background: var(--ok);
+}
+
+/* Needs you: the pill's own yellow, a little larger, with an ink-soft hairline for its edge (6.1:1 on the badge). */
+.cbar__dot--needs {
+  width: 12px;
+  height: 12px;
+  background: var(--highlighter);
+  box-shadow: inset 0 0 0 1px var(--ink-soft);
+}
+
+.cbar__dot--waiting {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.cbar__dot--error {
+  background: var(--danger);
+}
+
+.cbar__dot--rest {
+  background: var(--rest);
+}
+
+.cbar__dot--done {
+  background: var(--ink);
+}
+
+.cbar__views {
+  gap: 2px;
+  padding: 0 4px 3px;
+}
+
+.cbar__view {
+  position: relative;
+  height: 36px;
+  padding: 0 12px;
+}
+
+/* The view you are in: pressed in, with the highlighter bar on an ink line under its words. More takes the same mark
+   while one of its views (the org chart, the dashboards, the decision log) is the main view. */
+.cbar__view[aria-current='page'],
+.cbar__inbox[aria-current='true'],
+.cbar__key[aria-current='true'],
+.cbar__standing[aria-current='true'] {
+  background: var(--badge-pressed);
+  box-shadow: var(--sunk);
+}
+
+.cbar__key[aria-current='true'],
+.cbar__standing[aria-current='true'] {
+  position: relative;
+}
+
+.cbar__view[aria-current='page']::after,
+.cbar__inbox[aria-current='true']::after,
+.cbar__key[aria-current='true']::after,
+.cbar__standing[aria-current='true']::after {
+  position: absolute;
+  right: 10px;
+  bottom: 3px;
+  left: 10px;
+  height: 3px;
+  content: '';
+  background: var(--highlighter);
+  border-bottom: 1px solid var(--ink);
+}
+
+.cbar__gap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cbar__meter {
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 14px 3px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.cbar__meter:hover {
+  background: #fff;
+}
+
+.cbar__meter-text {
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* The share of the budget spent, under the figure: ink-soft, the waiting ink near the budget, the stuck ink at it. */
+.cbar__meter-bar {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, var(--ink-soft) var(--share, 0%), var(--badge-line) var(--share, 0%));
+  border-radius: 2px;
+}
+
+.cbar__meter--warning .cbar__meter-bar {
+  background: linear-gradient(to right, var(--waiting-ink) var(--share, 0%), var(--badge-line) var(--share, 0%));
+}
+
+.cbar__meter--paused .cbar__meter-text {
+  color: var(--stuck-ink);
+}
+
+.cbar__meter--paused .cbar__meter-bar {
+  background: var(--stuck-ink);
+}
+
+/* Inbox stands alone: the one that needs you. */
+.cbar__inbox {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  height: var(--bar-h);
+  padding: 0 14px 3px;
+  font-size: var(--text-15);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+  transition: background var(--t-hover), transform var(--t-press);
+}
+
+.cbar__inbox:hover {
+  background: #fff;
+}
+
+.cbar__inbox:active {
+  transform: translateY(2px);
+}
+
+.cbar__inbox[aria-current='true'] {
+  box-shadow: var(--sunk), var(--lift-1);
+}
+
+/* Their own shadows would drop the house ring's highlighter, leaving ink alone on the dark mat (1.62:1). */
+.cbar__inbox[aria-current='true']:focus-visible {
+  box-shadow: var(--ring), var(--sunk), var(--lift-1);
+}
+
+.cbar__keys {
+  gap: 2px;
+  padding: 0 4px 3px;
+}
+
+.cbar__key {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.cbar__key--icon {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+}
+
+.cbar__key[aria-expanded='true'] {
+  background: var(--badge-pressed);
+}
+
+.cbar__caret {
+  transition: transform var(--t-quick);
+}
+
+.cbar__key[aria-expanded='true'] .cbar__caret {
+  transform: rotate(180deg);
+}
+
+.cbar__menu-wrap {
+  position: relative;
+  display: flex;
+}
+
+.cbar__menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: var(--z-top);
+  display: grid;
+  gap: 2px;
+  min-width: 15rem;
+  /* More holds the figures, the views and the office's choices: taller than a phone, it scrolls inside the window. */
+  max-height: calc(100vh - 96px);
+  max-height: calc(100dvh - 96px);
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--lift-3);
+}
+
+.cbar__item {
+  min-height: 40px;
+  padding: 0 12px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.cbar__item[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.cbar__item[aria-current='page'] {
+  background: var(--badge-pressed);
+  box-shadow: inset 3px 0 0 var(--highlighter), inset 4px 0 0 var(--ink);
+}
+
+/* More's Views group: its title small and soft, a rule under the group before the office's own choices. */
+.cbar__group {
+  display: grid;
+  gap: 2px;
+}
+
+.cbar__group-title {
+  margin: 2px 12px 2px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.cbar__group-rule {
+  display: block;
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--badge-line);
+}
+
+.cbar__check--off {
+  visibility: hidden;
+}
+
+/* More's figures: who is at work, waiting for a desk and the burn, in a row of small figures over the money. */
+.cbar__figures {
+  display: flex;
+  gap: 0;
+  margin: 2px 0 4px;
+}
+
+.cbar__fig {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 0 12px;
+}
+
+.cbar__fig + .cbar__fig {
+  border-left: 1px solid var(--badge-line);
+}
+
+.cbar__fig dd {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.cbar__fig dt {
+  font-size: var(--text-12);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.cbar__item--money {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  white-space: normal;
+}
+
+.cbar__item-note {
+  display: block;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: underline;
+}
+
+/* The palette's shortcut beside "Find an action". */
+.cbar__item-keys {
+  margin-left: auto;
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--badge-line);
+  border-radius: 6px;
+}
+
+/* The bar at each step, laid out at its natural width and never seen, to measure. */
+.cbar__ruler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.cbar__row--ruler {
+  width: max-content;
+}
+
+/* Phones: Lobby, the name and its dot, Inbox, Actions and Company; the views as a row under them. */
+.cbar--phone .cbar__id {
+  flex: 1 1 auto;
+}
+
+.cbar__standing {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--bar-h);
+  height: var(--bar-h);
+  padding: 0 10px 3px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+  transition: background var(--t-hover), transform var(--t-press);
+}
+
+.cbar__standing:hover {
+  background: #fff;
+}
+
+.cbar__standing:active {
+  transform: translateY(2px);
+}
+
+.cbar__standing[aria-expanded='true'] {
+  background: var(--badge-pressed);
+  box-shadow: var(--sunk), var(--lift-1);
+}
+
+.cbar--phone .cbar__inbox {
+  justify-content: center;
+  min-width: var(--bar-h);
+  padding: 0 10px 3px;
+}
+
+.cbar--phone .cbar__lobby {
+  height: var(--bar-h);
+  padding: 0 8px;
+}
+
+.cbar--phone .cbar__menu {
+  position: fixed;
+  top: calc(var(--gutter) * 2 + var(--bar-h));
+  right: var(--gutter);
+  left: var(--gutter);
+  min-width: 0;
+}
+
+.cbar--phone .cbar__item {
+  min-height: 48px;
+  font-size: var(--text-16);
+}
+
+.cbar__views-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(max-content, 1fr));
+  gap: 2px;
+  height: var(--views-h);
+  margin-top: var(--gutter);
+  padding: 4px 4px 8px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.cbar__views-row .cbar__view {
+  justify-content: center;
+  height: 44px;
+  min-width: 0;
+  gap: 6px;
+  padding: 0 6px;
+  font-size: var(--text-15);
+}
+
+/* Under 360 px the views keep their words and drop their glyphs, so nothing scrolls sideways at 320. */
+@media (max-width: 22.4375em) {
+  .cbar__views-row .shell-icon {
+    display: none;
+  }
+}
+
+.shell-icon {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* While the office reconnects: a row under the bar, across the main view. */
+.shell-reconnecting {
+  position: absolute;
+  top: calc(var(--stage-top) - 6px);
+  right: calc(var(--main-right) + var(--gutter));
+  left: var(--gutter);
+  z-index: var(--z-bar);
+  margin: 0;
+  padding: 8px 14px;
+  font-size: var(--text-14);
+  background: var(--note);
+  border-radius: 10px;
+  box-shadow: var(--lift-1);
+}
+
+/* -----------------------------------------------------------------------------------------------------------------
+   The main view: the office or a board, the caption and the map keys, the dock */
+
+.shell-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shell-stage > .stage {
+  pointer-events: auto;
+}
+
+.shell-main {
+  position: absolute;
+  top: 0;
+  right: var(--main-right, 0px);
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-dock);
+  pointer-events: none;
+  container: main / size;
+}
+
+.shell-main > * {
+  pointer-events: auto;
+}
+
+.shell-main--top {
+  z-index: var(--z-caption);
+}
+
+.shell-main--top > * {
+  pointer-events: none;
+}
+
+.shell-main--top > * > * {
+  pointer-events: auto;
+}
+
+/* The caption at the left and the map keys at the right of one row, never over each other: with too little room for
+   both, the keys go under the caption. */
+.shell-top {
+  position: absolute;
+  top: var(--stage-top);
+  right: var(--gutter);
+  left: var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gutter);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+/* The caption: v2's headline, its first sentence a link to the inbox. */
+.shell-caption-wrap {
+  flex: 1 1 15rem;
+  min-width: 0;
+  max-width: 32.5rem;
+}
+
+.shell-caption {
+  display: -webkit-box;
+  margin: 0;
+  padding: 10px 14px;
+  overflow: hidden;
+  font-size: var(--text-14);
+  font-weight: 500;
+  line-height: 1.45;
+  background: var(--badge);
+  border-bottom: 10px solid var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--lift-1);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.shell-caption__needs {
+  color: var(--ink);
+  background: linear-gradient(transparent 58%, var(--highlighter) 58%, var(--highlighter) 92%, transparent 92%);
+  text-decoration: underline;
+  text-decoration-color: var(--ink);
+  text-underline-offset: 3px;
+}
+
+.shell-mapkeys-wrap {
+  flex: none;
+  margin-left: auto;
+}
+
+.shell-mapkeys {
+  display: flex;
+  gap: var(--gutter);
+}
+
+.shell-mapkeys__tile {
+  display: flex;
+  gap: 2px;
+  padding: 2px 2px 5px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.shell-mapkey {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  transition: background var(--t-hover);
+}
+
+.shell-mapkey:hover {
+  background: var(--badge-hover);
+}
+
+.shell-mapkey--icon {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+}
+
+.shell-mapkey--standing {
+  height: 40px;
+  padding: 0 14px 3px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.shell-mapkey--standing:hover {
+  background: #fff;
+}
+
+/* A board fills the main view under the bar; today's panels stand in for boards not built yet. */
+.shell-board {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shell-board > * {
+  pointer-events: auto;
+}
+
+/* Today's panels inside a board's frame until their boards land: on their own paper, as in the side panel. */
+/* Today's panel inside a board's frame until its board lands: paper with ink words (the frame writes mat-ink), and its own
+   scroller, since the frame's body leaves scrolling to the board. The paper ends above the talk bar, so nothing in it
+   can sit under the dock. */
+.legacy-paper {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 60rem;
+  margin: 0 var(--gutter) var(--dock-clear);
+  padding: 4px 20px 20px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+/* -----------------------------------------------------------------------------------------------------------------
+   The side panel: docked, floating, or a phone's sheet */
+
+.side-panel {
+  position: absolute;
+  z-index: var(--z-panel);
+}
+
+.side-panel:focus {
+  outline: none;
+}
+
+.side-panel--docked {
+  top: var(--stage-top);
+  right: var(--gutter);
+  bottom: var(--gutter);
+  width: var(--side-w);
+}
+
+.side-panel--docked.is-hidden {
+  width: 0;
+}
+
+.side-panel--floating {
+  top: var(--stage-top);
+  right: var(--gutter);
+  bottom: calc(var(--gutter) * 2 + var(--talk-now));
+  width: 300px;
+}
+
+/* Over a board, a floating side panel ends above the mini-map's thumbnail. */
+.shell--board .side-panel--floating {
+  bottom: calc(var(--gutter) * 3 + var(--talk-now) + 67px);
+}
+
+.side-panel--floating.is-hidden,
+.side-panel--phone.is-hidden,
+.side-panel--short.is-hidden {
+  display: none;
+}
+
+.side-panel__paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--badge);
+  border-radius: 16px;
+  box-shadow: var(--lift-3);
+  animation: side-panel-in var(--t-move) var(--ease-out);
+}
+
+@keyframes side-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+.side-panel__head {
+  position: relative;
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  min-height: 56px;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.side-panel__title {
+  min-width: 0;
+}
+
+.side-panel__h2 {
+  width: fit-content;
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.side-panel__sentence {
+  margin: 2px 0 0;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+}
+
+.side-panel__gap {
+  flex: 1 1 auto;
+}
+
+.side-panel__key {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  height: 36px;
+  padding: 0 10px;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+}
+
+.side-panel__key:hover {
+  background: var(--badge-hover);
+}
+
+.side-panel__key--icon {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+}
+
+.side-panel__back {
+  margin-left: -8px;
+}
+
+/* A person: their ID badge's band in their room's hue, the keys translucent on it, their face over its foot. */
+.side-panel__head--band {
+  align-items: flex-start;
+  min-height: 72px;
+  margin-bottom: 28px;
+  padding-top: 6px;
+  background: var(--hue, var(--no-hue));
+  border-bottom: 0;
+}
+
+.side-panel__head--band .side-panel__key {
+  color: var(--ink-deep);
+  background: rgb(252 251 247 / 0.55);
+}
+
+.side-panel__head--band .side-panel__key:hover {
+  background: rgb(252 251 247 / 0.8);
+}
+
+.side-panel__face {
+  position: absolute;
+  bottom: -28px;
+  left: 16px;
+}
+
+.side-panel__body {
+  flex: 1 1 auto;
+  padding: 4px 16px 16px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 12px;
+}
+
+/* The separator: the side panel's left edge, an 8 px band (16 on touch screens) with its grip always shown. */
+.side-panel__separator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -10px;
+  z-index: var(--z-separator);
+  display: grid;
+  place-items: center;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+@media (pointer: coarse) {
+  .side-panel__separator {
+    left: -14px;
+    width: 16px;
+  }
+}
+
+.side-panel__handle {
+  width: 6px;
+  height: 44px;
+  background: var(--badge);
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  box-shadow: 0 2px 0 rgb(10 24 18 / 0.28);
+  transition: height var(--t-hover);
+}
+
+.side-panel__separator:hover .side-panel__handle,
+.side-panel__separator:focus-visible .side-panel__handle {
+  height: 60px;
+}
+
+.side-panel__separator:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.side-panel__separator:focus-visible .side-panel__handle {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: var(--ring);
+}
+
+/* Hidden: the same control, collapsed into the pull on the window's right edge, with the inbox's count. */
+.side-panel__separator--pull {
+  top: 50%;
+  bottom: auto;
+  left: auto;
+  right: calc(-1 * var(--gutter));
+  width: 24px;
+  height: 64px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.side-panel__separator--pull .side-panel__handle {
+  display: grid;
+  gap: 4px;
+  place-items: center;
+  width: 24px;
+  height: 64px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 10px 0 0 10px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.side-panel__separator--pull:hover .side-panel__handle,
+.side-panel__separator--pull:focus-visible .side-panel__handle {
+  width: 28px;
+  height: 64px;
+  box-shadow: var(--bevel), var(--lift-3);
+}
+
+.side-panel__separator--pull:focus-visible .side-panel__handle {
+  box-shadow: var(--ring), var(--bevel), var(--lift-3);
+}
+
+/* Phones: a sheet between the views row and the strip's line above the talk bar, at 78% of that room (half for Customize,
+   Settings and "Show the office"); in short windows the whole of it. */
+.side-panel--phone,
+.side-panel--short {
+  position: fixed;
+  right: var(--gutter);
+  bottom: var(--sheet-clear);
+  left: var(--gutter);
+  z-index: var(--z-sheet);
+  height: calc((100dvh - var(--stage-top) - var(--sheet-clear)) * var(--sheet-share, 0.78));
+}
+
+.side-panel--short {
+  top: var(--stage-top);
+  height: auto;
+}
+
+.side-panel--phone .side-panel__paper,
+.side-panel--short .side-panel__paper {
+  animation-name: side-panel-up;
+}
+
+@keyframes side-panel-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.side-panel__grabber {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 100%;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.side-panel__grip {
+  width: 40px;
+  height: 5px;
+  background: var(--rule);
+  border-radius: 999px;
+}
+
+.side-panel--phone .side-panel__head,
+.side-panel--short .side-panel__head {
+  min-height: 52px;
+  padding-top: 0;
+}
+
+/* A swipe down on the grabber or the head closes the sheet, so the browser doesn't take that gesture to scroll. */
+.side-panel--phone .side-panel__grabber,
+.side-panel--short .side-panel__grabber,
+.side-panel--phone .side-panel__head,
+.side-panel--short .side-panel__head {
+  touch-action: none;
+}
+
+.side-panel--phone .side-panel__key,
+.side-panel--short .side-panel__key {
+  height: 44px;
+}
+
+.side-panel--phone .side-panel__key--icon,
+.side-panel--short .side-panel__key--icon {
+  width: 44px;
+}
+
+.side-panel--phone .side-panel__head--band,
+.side-panel--short .side-panel__head--band {
+  min-height: 80px;
+}
+
+/* A phone's office with the sheet only peeking: its grip, head and first line, over the strip's line. A press or a swipe up
+   on it opens the sheet; nothing in it takes focus on its own. */
+.side-panel--peek {
+  height: calc(20px + 56px);
+}
+
+.side-panel--peek .side-panel__paper {
+  padding-top: 20px;
+  animation-name: side-panel-up;
+}
+
+.side-panel--peek .side-panel__head {
+  min-height: 0;
+  padding: 0 16px 8px;
+  border-bottom: 0;
+}
+
+.side-panel--peek .side-panel__sentence {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.side-panel__peek-key {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: start center;
+  padding: 7px 0 0;
+  cursor: pointer;
+  touch-action: none;
+  background: transparent;
+  border: 0;
+  border-radius: 16px;
+}
+
+.side-panel__peek-key:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+}
+
+/* "Show the office" on the office above the sheet. */
+.shell-show-office {
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(var(--sheet-clear) + (100dvh - var(--stage-top) - var(--sheet-clear)) * var(--sheet-share, 0.78) + var(--gutter));
+  z-index: var(--z-sheet);
+  height: 44px;
+  padding: 0 16px 3px;
+  font-size: var(--text-16);
+  font-weight: 600;
+  color: var(--ink);
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.shell--short .shell-show-office {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .cbar__tile,
+  .cbar__inbox,
+  .side-panel__paper,
+  .side-panel__handle,
+  .shell-caption,
+  .shell-mapkeys__tile,
+  .shell-mapkey--standing {
+    border: 1px solid CanvasText;
+  }
+
+  .cbar__view[aria-current='page']::after,
+  .cbar__inbox[aria-current='true']::after {
+    background: Highlight;
+  }
+
+  /* The dot keeps a shape where its fill is dropped. */
+  .cbar__dot {
+    border: 1px solid CanvasText;
+  }
+}

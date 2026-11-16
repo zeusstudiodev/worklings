@@ -1,0 +1,80 @@
+{
+  "name": "worklings",
+  "version": "0.2.0",
+  "description": "Claude Code with an office around it: watch, approve and steer your own Claude Code from a 3D office, or staff any project with an AI studio.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/zeusstudiodev/worklings#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeusstudiodev/worklings.git"
+  },
+  "bugs": "https://github.com/zeusstudiodev/worklings/issues",
+  "bin": {
+    "worklings": "dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "!dist/site",
+    "library",
+    "CREDITS.md",
+    "THIRD-PARTY-NOTICES.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "prepack": "npm run notices && npm run clean && npm run build",
+    "notices": "node scripts/third-party-notices.ts",
+    "check:notices": "node scripts/third-party-notices.ts --check",
+    "check:package": "node scripts/check-package.mjs",
+    "check:public": "node scripts/check-public.mjs",
+    "release:squash": "node scripts/release-squash.ts",
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build:node && npm run build:web",
+    "build:node": "tsc -p tsconfig.node.json",
+    "build:web": "vite build",
+    "build:site": "vite build --mode site",
+    "typecheck": "tsc -p tsconfig.json && tsc -p web/tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "e2e": "npm run build && playwright test",
+    "lint:library": "node src/cli.ts lint-library",
+    "build:plugin": "npm run build:web && node scripts/build-plugin.mjs"
+  },
+  "dependencies": {
+    "smol-toml": "^1.9.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-semi-condensed": "^5.3.0",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "@playwright/test": "^1.64.1",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "@react-three/postprocessing": "^3.2.2",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "meshoptimizer": "^1.3.0",
+    "postprocessing": "^6.39.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.187.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  }
+}

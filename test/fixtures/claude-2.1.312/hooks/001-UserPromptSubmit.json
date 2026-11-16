@@ -1,0 +1,9 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "f722b53f-149f-4257-9ddd-70de73660fe5",
+  "permission_mode": "acceptEdits",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "Do these steps in order. 1) Use the Write tool to create notes.txt containing the word hello. 2) Use the Agent tool with subagent_type reviewer to read notes.txt and report its contents. 3) Run the bash command: echo done. 4) Run the bash command: node --version. Then reply with the single word: finished."
+}

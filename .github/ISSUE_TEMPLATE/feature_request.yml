@@ -1,0 +1,37 @@
+name: Feature request
+description: An idea for Worklings
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [roadmap](https://github.com/zeusstudiodev/worklings/blob/main/ROADMAP.md) first: it lists what is planned and what is not planned. For an open-ended idea or a question, [Discussions](https://github.com/zeusstudiodev/worklings/discussions) is a better place.
+  - type: textarea
+    id: task
+    attributes:
+      label: What are you trying to do?
+      description: The task, not the feature. For example, "I want to see which person used the most tokens today."
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: What happens today?
+    validations:
+      required: true
+  - type: textarea
+    id: instead
+    attributes:
+      label: What would you like instead?
+  - type: textarea
+    id: considered
+    attributes:
+      label: Anything you tried or considered
+  - type: dropdown
+    id: help
+    attributes:
+      label: Would you like to build it?
+      options:
+        - No, I am only suggesting it
+        - Yes, with some guidance
+        - Yes, I have a plan

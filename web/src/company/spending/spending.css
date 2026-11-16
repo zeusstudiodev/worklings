@@ -1,0 +1,525 @@
+/* The spending plan (SpendingPlan.tsx), its budget fields (BudgetFields.tsx), the loads fields (LoadsFields.tsx) and the
+   budget's marks in the company bar, Settings and the Spend dashboard. Tokens: docs/design-v3.md and docs/design-hud.md.
+   State is never colour alone: a warning has its words and a bar, the selected preset has a filled ring and a heavier edge. */
+
+.spend-plan {
+  margin-top: 12px;
+  padding-top: 4px;
+}
+
+.spend-sub {
+  margin: 18px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--badge-line);
+}
+
+.spend-sub__title {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.spend-note,
+.spend-done,
+.spend-problem {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.spend-done {
+  color: var(--ok);
+}
+
+.spend-problem {
+  color: var(--danger);
+}
+
+.spend-note[role='note'] {
+  padding: 10px 12px;
+  color: var(--ink);
+  background: var(--warn-fill);
+  border-radius: 10px;
+}
+
+/* Presets: a radio group of cards. The input is the real control; its label stretches over the whole card. */
+.spend-presets {
+  min-width: 0;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.spend-presets__cards {
+  display: grid;
+  gap: 8px;
+}
+
+.preset-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  align-items: start;
+  padding: 12px;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.preset-card--on {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.preset-card:has(.preset-card__input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.preset-card__input {
+  position: relative;
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 1;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  appearance: none;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 50%;
+}
+
+.preset-card__input:checked {
+  background: radial-gradient(circle, var(--ink) 4.5px, #fff 5px);
+  border-color: var(--ink);
+}
+
+.preset-card__input:focus-visible {
+  outline: none;
+}
+
+.preset-card__input[aria-disabled='true'] {
+  border-color: var(--badge-line);
+}
+
+.preset-card__name {
+  grid-row: 1;
+  grid-column: 2;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.preset-card__name::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.preset-card__tag {
+  grid-row: 1;
+  grid-column: 3;
+  padding: 1px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.preset-card__summary {
+  grid-column: 2 / -1;
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.preset-card__facts {
+  grid-column: 2 / -1;
+  display: grid;
+  gap: 2px;
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.preset-card__fact,
+.spend-estimate__row {
+  display: grid;
+  grid-template-columns: minmax(6.5em, 36%) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.preset-card__facts dt,
+.spend-estimate dt {
+  color: var(--ink-soft);
+}
+
+.preset-card__facts dd,
+.spend-estimate dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Models: two to a row, or four rows of words when ANTHROPIC_MODEL runs everyone. */
+.spend-models {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.spend-models--fixed {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+}
+
+.spend-models__row {
+  display: grid;
+  grid-template-columns: minmax(5em, 30%) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.spend-models__row dt {
+  color: var(--ink-soft);
+}
+
+.spend-models__row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.select-input[aria-disabled='true'] {
+  color: var(--ink-soft);
+}
+
+.spend-estimate {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.spend-estimate dd {
+  font-weight: 600;
+}
+
+.spend-details {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+}
+
+.spend-details summary {
+  min-height: 32px;
+  cursor: pointer;
+}
+
+/* Budget fields: a dollar sign inside the box, Save and Clear beside it. */
+.spend-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.spend-field {
+  display: grid;
+  gap: 4px;
+}
+
+.spend-field__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.spend-field__box {
+  position: relative;
+  flex: 1 1 8em;
+  max-width: 14em;
+}
+
+.spend-field__sign {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  transform: translateY(-50%);
+}
+
+.spend-field__input {
+  padding-left: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.spend-field__note,
+.spend-field__problem,
+.spend-field__done {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.spend-field__problem {
+  color: var(--danger);
+}
+
+.spend-field__done {
+  color: var(--ok);
+}
+
+/* What each person loads, in the overview. */
+.spend-loads {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spend-loads__row {
+  display: grid;
+  gap: 1px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.spend-loads__who {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.spend-loads__title {
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.spend-loads__tokens,
+.spend-loads__extra {
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* A person's loads, in their card (LoadsFields.tsx). */
+.loads {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid var(--badge-line);
+}
+
+.loads__legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.loads__legend + * {
+  clear: both;
+}
+
+.loads__group {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.loads__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.loads__tag {
+  padding: 0 7px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border: 1px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.loads__hint,
+.loads__problem,
+.loads__total {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.loads__problem {
+  color: var(--danger);
+}
+
+.loads__total {
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+
+.loads__checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+}
+
+.loads__checks--one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  min-height: 32px;
+  padding: 5px 0;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--ink);
+}
+
+.loads__server {
+  overflow-wrap: anywhere;
+}
+
+.loads__add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.loads__cost {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.loads__parts summary {
+  min-height: 28px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.loads__list {
+  margin: 4px 0 6px;
+  padding-left: 18px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* Settings: the budget raised from where the company says it is paused. */
+.spend-paused {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: var(--stuck-fill);
+  border-radius: 10px;
+}
+
+.spend-paused p {
+  margin: 0;
+  color: var(--stuck-ink);
+}
+
+.spend-preset-readout {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+}
+
+/* The Spend dashboard: the live rate and the budget's progress. */
+.spend-meter {
+  display: grid;
+  gap: 6px;
+}
+
+.spend-meter__track {
+  height: 10px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.spend-meter__fill {
+  height: 100%;
+  background: var(--ink-soft);
+  border-radius: 999px;
+}
+
+.spend-meter--warning .spend-meter__fill {
+  background: var(--waiting-ink);
+}
+
+.spend-meter--paused .spend-meter__fill {
+  background: var(--stuck-ink);
+}
+
+.spend-meter__words {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.spend-meter__sub {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px) {
+  .check {
+    min-height: 36px;
+  }
+
+  .spend-models {
+    gap: 8px;
+  }
+
+  .loads__add .button {
+    flex: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spend-meter__fill {
+    transition: width 200ms ease-out;
+  }
+}
+
+.loads__summary {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}

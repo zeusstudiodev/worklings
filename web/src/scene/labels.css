@@ -1,0 +1,134 @@
+/* What the label layer adds over a company's office (LabelLayer.tsx; docs/game-feel.md, sections 2, 4 and 6): the front
+   desk's sign, the bubbles of those who wait there as buttons, the line over the door at night and the office screen. */
+
+/* The labels lie over the canvas, so the front desk's sign and the waiters' bubbles take a tap; everywhere else the tap
+   passes through to the office. Only within the stage's own box: everything over the main view stays on top. */
+.labels--office {
+  z-index: 2;
+}
+
+/* The front desk's sign on the counter's front, centred under its anchor (stack.ts hangs it "below"). Yellow is the
+   house's "needs you"; it stays put, and bubbles move clear of it. */
+.label--front-desk {
+  z-index: 1990;
+}
+
+.front-desk-sign {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  font-family: var(--font-narrow);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--highlighter);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: inset 0 -2px 0 rgba(24, 36, 31, 0.16), 0 6px 14px -10px rgba(0, 0, 0, 0.7);
+  transform: translate(-50%, 0);
+  translate: calc(var(--shift, 0) * 1px) calc(var(--lift, 0) * -1px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .front-desk-sign:hover {
+    background: var(--highlighter-hover);
+  }
+}
+
+.front-desk-sign:focus-visible {
+  box-shadow: var(--ring), inset 0 -2px 0 rgba(24, 36, 31, 0.16), 0 6px 14px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Pressed: it sinks into the counter, light from above, and keeps its yellow. */
+.front-desk-sign:active {
+  box-shadow: inset 0 2px 0 rgba(24, 36, 31, 0.2);
+}
+
+/* Phones: the sign is the 44 px target (game-feel.md, section 2). */
+@media (max-width: 720px), (pointer: coarse) {
+  .front-desk-sign {
+    min-height: 44px;
+    padding: 0 16px;
+  }
+}
+
+/* Someone at the front desk: their bubble opens their item, and looks as it did when it only said so. */
+.bubble-button {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  text-align: inherit;
+  pointer-events: auto;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bubble-button:hover .bubble {
+    box-shadow: inset 0 0 0 1.5px var(--ink), 0 8px 16px -10px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Pressed with any pointer: it sinks, as the front desk's sign does. */
+.bubble-button:active .bubble {
+  box-shadow: inset 0 2px 0 rgba(24, 36, 31, 0.2), inset 0 0 0 1.5px var(--ink);
+}
+
+/* Phones: the bubble is 21 px tall (12 px type at 1.25 and 3 px padding, styles.css), under the 24 px a target needs
+   (WCAG 2.5.8). The button reaches 1.5 px past it above and below and its margins give that back, so the bubble looks
+   as before and the label's measured box, which stack.ts stacks, keeps its height; the stack's 4 px gap leaves 1 px
+   between two such targets. The phone's 44 px target is the front desk's sign (game-feel.md, section 2). */
+@media (max-width: 720px) {
+  .bubble-button {
+    padding-block: 1.5px;
+    margin-block: -1.5px;
+  }
+}
+
+/* The line over the street door while the company rests: the top bar's pill, lit like the front desk's lamp. Where it
+   meets the front desk's sign it moves up clear of it (stack.ts sets --lift). */
+.label--night {
+  z-index: 1990;
+}
+
+.night-line {
+  transform: translate(-50%, -100%);
+  translate: calc(var(--shift, 0) * 1px) calc(var(--lift, 0) * -1px);
+}
+
+.night-line .state-pill {
+  font-size: 0.875rem;
+  background: var(--badge);
+  box-shadow: 0 0 0 1px rgba(95, 115, 145, 0.35), 0 10px 24px -10px rgba(8, 14, 30, 0.85);
+}
+
+/* The office screen: laid over the 3D screen's face by a matrix from its corners (labels.tsx), under every other label.
+   No will-change, so the browser draws it again at each size instead of stretching a small picture of it. The pointer
+   passes through to the canvas, so the camera pans and zooms over it; labels.tsx matches a press to the screen and sets
+   data-hover while the mouse is on it. */
+.label--screen {
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  transform-origin: 0 0;
+  will-change: auto;
+}
+
+/* The overlay is shrunk with the screen, so its rings are drawn thicker by the same factor to look the same on screen;
+   keyboard focus last, so it wins over the hover ring. */
+.label--screen[data-hover] .preview-screen__open {
+  box-shadow: inset 0 0 0 calc(2px / var(--screen-scale, 1)) var(--highlighter);
+}
+
+.label--screen .preview-screen__open:focus-visible {
+  outline-width: calc(3px / var(--screen-scale, 1));
+  outline-offset: calc(-3px / var(--screen-scale, 1));
+  box-shadow: inset 0 0 0 calc(6px / var(--screen-scale, 1)) var(--highlighter);
+}

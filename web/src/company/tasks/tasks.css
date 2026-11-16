@@ -1,0 +1,737 @@
+/* Tasks (web/src/company/tasks/Tasks.tsx) and a task's diff in the wide view (TaskDiff.tsx). */
+
+.tasks__goal {
+  margin: 4px 0;
+}
+
+.tasks__goal-text {
+  margin: 0 0 12px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.milestones {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.milestone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+}
+
+.milestone__title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* An 8 px bar, ink on the badge line; the words beside it carry the figure. */
+.milestone__bar {
+  height: 8px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.milestone__bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+.milestone__line {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.tasks__empty,
+.tasks__all-done {
+  margin: 14px 0 4px;
+  font-size: 0.9375rem;
+}
+
+/* By status or by room: the shell's Segmented (ui/Segmented.tsx); only its place in the tab is set here. */
+.tasks__by {
+  margin: 18px 0 6px;
+}
+
+.tasks__count {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.tasks__room-title {
+  padding-left: 8px;
+  border-left: 4px solid var(--hue, #8c948f);
+}
+
+.task-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-row {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  margin-inline-start: calc(var(--depth, 0) * 16px);
+  padding: 9px 8px 10px;
+  border-radius: 9px;
+}
+
+/* The title, two lines; its link covers the row. */
+.task-row__link {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.task-row__link::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: 9px;
+}
+
+.task-row__link:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.task-row__link:focus-visible::after {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 6px var(--highlighter);
+}
+
+.task-row__line {
+  display: -webkit-box;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.task-row--blocked .task-row__line {
+  color: var(--ink);
+}
+
+.task-row__answer {
+  position: relative;
+  z-index: 1;
+  min-height: 24px;
+  padding: 2px 0;
+  font-size: 0.8125rem;
+}
+
+/* A task's page */
+.task-page {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+
+.task-page > p,
+.task-page > ul,
+.task-page > h2,
+.task-page > h3 {
+  margin: 0;
+  max-width: 100%;
+}
+
+.task-page__title {
+  margin-top: 4px;
+  font-family: var(--font-narrow);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.task-page__title:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.task-page__who,
+.task-page__part {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.task-page > .task-page__sub {
+  margin-top: 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.task-page__brief,
+.task-page__text {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.task-page__text > p {
+  margin: 0 0 8px;
+}
+
+.task-page > .task-page__files,
+.task-page > .task-page__changed {
+  padding-left: 18px;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.task-page__counts {
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.task-page .task-rows {
+  width: 100%;
+}
+
+.task-page > .task-page__message {
+  margin-top: 16px;
+}
+
+/* The diff: the one place colour isn't department. Added on green, removed on red, both at 10%, with + and −. */
+.diff {
+  display: grid;
+  gap: 10px;
+}
+
+.diff__summary {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.diff__status p {
+  margin: 0 0 10px;
+}
+
+.diff-file {
+  min-width: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--badge-line);
+  border-radius: 10px;
+}
+
+.diff-file__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  background: #f6f4ee;
+}
+
+.diff-file[open] > .diff-file__head {
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.diff-file__path {
+  min-width: 0;
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.diff-file__change {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.diff-file__counts {
+  margin-inline-start: auto;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Long lines scroll sideways inside their file, never the page. */
+.diff-file__body {
+  overflow-x: auto;
+}
+
+.diff-file__body:focus-visible {
+  outline-offset: -3px;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.7812rem;
+  line-height: 1.5;
+}
+
+.diff-line td {
+  padding: 0 8px;
+  vertical-align: top;
+  white-space: pre;
+}
+
+.diff-line__num {
+  width: 1%;
+  min-width: 4ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  user-select: none;
+}
+
+.diff-line .diff-line__sign {
+  width: 1%;
+  padding-inline: 2px;
+  font-weight: 700;
+  text-align: center;
+  user-select: none;
+}
+
+.diff-line__code {
+  width: 100%;
+}
+
+.diff-line--add {
+  background: color-mix(in srgb, var(--ok) 10%, #fff);
+}
+
+.diff-line--del {
+  background: color-mix(in srgb, var(--danger) 10%, #fff);
+}
+
+.diff-line--hunk td {
+  padding-block: 3px;
+  color: var(--ink-soft);
+  background: #f1eee6;
+}
+
+.diff-line--note td {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.diff-file__binary {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.diff-file__more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  border-top: 1px solid var(--badge-line);
+}
+
+.diff-file__command {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* Unavailable controls keep full opacity, as everywhere in the panel. */
+.tasks .button[aria-disabled='true'],
+.task-page .button[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: none;
+  border-color: var(--badge-line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .task-row:hover {
+    background: var(--badge-hover);
+  }
+
+  .diff-file__head:hover {
+    background: var(--badge-hover);
+  }
+}
+
+@media (max-width: 720px) {
+  .task-row__answer,
+  .task-page .button,
+  .diff-file__head {
+    min-height: 44px;
+  }
+
+  .task-row__answer {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Steering the board (Board.tsx): the plan's line, adding a task, the priority list and a task's own controls. */
+.tasks__plan {
+  margin: 4px 0 14px;
+}
+
+.tasks__plan > .group-title {
+  margin-top: 10px;
+}
+
+.tasks__plan-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.tasks__plan-row .link {
+  min-height: 24px;
+  font-size: 0.875rem;
+}
+
+.tasks__plan-line {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.tasks__new {
+  margin: 14px 0 4px;
+}
+
+.board-created {
+  margin: 10px 0 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.board-created:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.board-new__files {
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+.board__note {
+  margin: 4px 0 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.board__problem {
+  margin: 6px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.board-area.is-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A priority row: the handle, its place, the title and line, then Up and Down. */
+.board-row {
+  grid-template-columns: 24px 2em minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2px 6px;
+  padding-left: 0;
+}
+
+.board-row__main {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.board-row__grip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-self: stretch;
+  justify-items: center;
+  padding-top: 4px;
+  color: var(--ink-soft);
+  cursor: grab;
+  border-radius: 6px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.board-row.is-lifted .board-row__grip {
+  cursor: grabbing;
+}
+
+.board-row__dots {
+  width: 10px;
+  height: 16px;
+  background-image: radial-gradient(circle, currentColor 1.5px, transparent 1.75px);
+  background-size: 5px 5.33px;
+}
+
+.board-row__number {
+  padding-top: 1px;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.board-row__moves {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+}
+
+.board-row__move {
+  min-width: 44px;
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 8px;
+}
+
+.board-row__move[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: none;
+  border-color: var(--badge-line);
+}
+
+.board-row__undo {
+  position: relative;
+  z-index: 1;
+  grid-column: 3 / -1;
+}
+
+/* In a narrow row the sentence wraps beside its mark rather than dropping under it. */
+.board-row__undo .undo-line {
+  flex-wrap: nowrap;
+  align-items: baseline;
+}
+
+.board-row__undo .undo-line__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.board-row__undo .undo-line__undo {
+  flex: none;
+}
+
+.board-row.is-lifted {
+  z-index: 2;
+  background: #fff;
+  box-shadow: var(--shadow-panel);
+}
+
+/* The drop line: 3 px of ink along the top of the row it would land before, or under the last. */
+.board-row.is-drop-before::before,
+.board-end.is-drop-end::before {
+  position: absolute;
+  inset-inline: 0;
+  top: -2px;
+  z-index: 3;
+  height: 3px;
+  content: '';
+  background: var(--ink);
+  border-radius: 2px;
+}
+
+.board-end {
+  position: relative;
+  height: 10px;
+}
+
+.task-row--paused .task-row__line {
+  color: var(--ink);
+}
+
+/* A task's own controls, on its page */
+.task-page > .task-steer {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  width: 100%;
+  margin: 8px 0 0;
+}
+
+.task-steer > .task-page__sub {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.task-steer__state {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  background: #f4f1e9;
+  border-radius: 8px;
+}
+
+.task-steer__state p {
+  margin: 0 0 4px;
+}
+
+.task-steer__state:focus-visible {
+  outline-offset: 2px;
+}
+
+.task-steer__branch {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.task-steer__sub {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.task-steer__list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.task-steer__place {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+}
+
+.task-steer__line {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.task-steer__moves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+.task-steer__moves .link {
+  min-height: 28px;
+  font-size: 0.8125rem;
+}
+
+.task-steer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.task-steer__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.task-steer__form {
+  width: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .board-row__grip:hover {
+    color: var(--ink);
+    background: #e9e5da;
+  }
+
+  .board-row__move:not([aria-disabled='true']):hover {
+    background: var(--badge-hover);
+  }
+
+  .board-row.is-lifted:hover {
+    background: #fff;
+  }
+}
+
+@media (max-width: 720px) {
+  .board-row {
+    grid-template-columns: 32px 1.6em minmax(0, 1fr);
+  }
+
+  .board-row__grip {
+    grid-row: span 2;
+    padding-top: 10px;
+  }
+
+  /* Up and Down go under the line on a phone, 44 px tall. */
+  .board-row__moves {
+    grid-column: 3;
+  }
+
+  .board-row__move,
+  .tasks__plan-row .link,
+  .task-steer__moves .link {
+    min-height: 44px;
+  }
+
+  .tasks__plan-row .link,
+  .task-steer__moves .link {
+    display: inline-flex;
+    align-items: center;
+  }
+}

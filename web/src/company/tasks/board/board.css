@@ -1,0 +1,1618 @@
+/* The task board (docs/design-hud.md, "The task board"; docs/design-v3.md, "The task board"): columns as opaque trays on
+   the mat, sticky notes in the owner's room colour, a landing line, columns that sink when they refuse a drag, lanes,
+   and the phone's one column at a time. Every class here starts with tb-; words on the mat are mat-ink. */
+
+.tb {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  color: var(--mat-ink);
+}
+
+.tb-empty {
+  max-width: 34rem;
+  margin: 24px 20px;
+  padding: 16px 18px;
+  font-size: var(--text-15);
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.tb-empty p {
+  margin: 0;
+}
+
+.tb-empty p + p,
+.tb-empty p + a {
+  margin-top: 10px;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Columns, without lanes: the board scrolls sideways under the column heads, each column scrolls in itself. */
+
+.tb-scroll {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 14px;
+  align-items: stretch;
+  min-height: 0;
+  /* The board's scrollers end above the dock (the strip's line and the talk bar), not under it. */
+  margin-bottom: var(--dock-strip, var(--dock-clear));
+  padding: 0 12px 0 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 20px 12px;
+}
+
+.tb-col {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 248px;
+  min-height: 0;
+  background: var(--lane-fill);
+  border-radius: 14px;
+  transition: background-color var(--t-quick) var(--ease-out), box-shadow var(--t-quick) var(--ease-out);
+}
+
+.tb-col--narrow {
+  width: 168px;
+}
+
+/* A column that would take the card in the hand: its tray lit and a 2 px edge. */
+.tb-col--lit,
+.tb-tray--lit {
+  background: var(--lane-lit);
+  box-shadow: inset 0 0 0 2px rgb(252 251 247 / 0.7);
+}
+
+/* A column that refuses it sinks: the tray goes, a faint outline keeps its place, and its notes lie flat. Nothing is
+   veiled, so every word keeps its contrast. */
+.tb-col--sunk,
+.tb-tray--sunk {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgb(252 251 247 / 0.16);
+}
+
+.tb-col--sunk .tb-note,
+.tb-cell--sunk .tb-note {
+  box-shadow: none;
+}
+
+.tb-col--sunk .tb-note::after,
+.tb-cell--sunk .tb-note::after {
+  display: none;
+}
+
+.tb-col__head {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  margin: 0;
+  padding: 10px 10px 4px;
+  font: inherit;
+}
+
+/* A heading takes focus only when the card that had it left the board; it shows the ring then. */
+.tb-col__head:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 8px var(--highlighter);
+  border-radius: 14px 14px 0 0;
+}
+
+.tb-sign {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 3px 10px 3px 9px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  white-space: nowrap;
+  background: var(--badge);
+  border-radius: 4px;
+  box-shadow: 0 6px 14px -10px rgb(0 0 0 / 0.7);
+}
+
+/* Waiting for you: the highlighter's rule where a room's sign has its colour, while it has cards. */
+.tb-sign--you {
+  border-left: 6px solid var(--highlighter);
+  padding-left: 8px;
+}
+
+/* The status's mark: a ring for Queued, the ok dot for Working, two bars for Paused, the danger dot for Blocked. */
+.tb-mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--ink-soft);
+  border-radius: 50%;
+}
+
+.tb-mark--queued,
+.tb-mark--review {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.tb-mark--working {
+  background: var(--ok);
+}
+
+.tb-mark--paused {
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--ink-soft) 35%, transparent 35% 65%, var(--ink-soft) 65%);
+}
+
+.tb-mark--blocked {
+  background: var(--danger);
+}
+
+.tb-mark--done {
+  background: var(--ink);
+}
+
+.tb-mark--cancelled {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ink-soft);
+}
+
+.tb-count {
+  flex: none;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--mat-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Why a sunk column refuses the card, under its sign. */
+.tb-why {
+  margin: 0 10px 6px;
+  font-size: var(--text-13);
+  line-height: 1.3;
+  color: var(--mat-ink);
+}
+
+.tb-col__body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px 8px calc(12px + var(--dock-over, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-padding-block: 8px calc(12px + var(--dock-over, 0px));
+}
+
+.tb-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tb-item {
+  position: relative;
+  min-width: 0;
+}
+
+.tb-col__empty {
+  margin: 4px 4px 0;
+  font-size: var(--text-13);
+  line-height: 1.35;
+  color: var(--mat-ink);
+}
+
+/* "And 22 more": a key lying on the mat across the column. */
+.tb-more {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 10px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.tb-more:hover {
+  background: #fff;
+}
+
+/* Cancelled starts as a 52 px rail with its count; a press, or a card carried over it, opens it. */
+.tb-rail {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  width: 52px;
+  padding: 12px 0 14px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--mat-ink);
+  cursor: pointer;
+  background: var(--lane-fill);
+  border: 0;
+  border-radius: 14px 14px 0 0;
+}
+
+.tb-rail:hover,
+.tb-rail.is-over {
+  background: var(--lane-lit);
+}
+
+.tb-rail__word {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.tb-rail__count {
+  font-family: var(--font-narrow);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   A sticky note */
+
+.tb-note {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 10px 10px;
+  color: var(--ink);
+  text-align: left;
+  cursor: grab;
+  background: var(--paper);
+  border-radius: 3px 3px 4px 4px;
+  box-shadow: 0 1px 0 rgb(10 24 18 / 0.3), 0 5px 8px -5px rgb(10 24 18 / 0.55);
+  -webkit-touch-callout: none;
+  user-select: none;
+  transition: transform var(--t-hover) var(--ease-out), box-shadow var(--t-hover) var(--ease-out);
+}
+
+.tb-note--still {
+  cursor: default;
+}
+
+/* The corner lifting off the mat. */
+.tb-note::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  content: '';
+  background: linear-gradient(135deg, transparent 50%, rgb(10 24 18 / 0.1) 50%);
+  border-radius: 0 0 4px 0;
+}
+
+@media (hover: hover) {
+  .tb-note:hover:not(.is-lifted, .is-open) {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 0 rgb(10 24 18 / 0.25), 0 12px 16px -8px rgb(10 24 18 / 0.55);
+  }
+}
+
+.tb-note__band {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 26px;
+  margin: 0 -10px;
+  padding: 0 6px 0 10px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-deep);
+  background: var(--paper-band);
+  border-radius: 3px 3px 0 0;
+}
+
+.tb-note__room {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tb-note__end {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+}
+
+/* New, or moved column or owner, since you last left the board. */
+.tb-note__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+
+/* Its place in line, counted over every open task: "4th". */
+.tb-note__place {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: var(--text-12);
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-note__title {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: var(--text-14);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* The title's link is the note's press target: stretched over the whole note. */
+.tb-note__link {
+  color: inherit;
+  text-decoration: none;
+  -webkit-user-drag: none;
+}
+
+.tb-note__link::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: '';
+  border-radius: 3px 3px 4px 4px;
+}
+
+/* Focus: v2's ring, the highlighter 8 px out so it reads on the mat. The outline stays (transparent) for forced colours. */
+.tb-note__link:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: none;
+}
+
+.tb-note__link:focus-visible::before {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter);
+}
+
+.tb-note__part {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-13);
+}
+
+.tb-note__part span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tb-note__segs {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+}
+
+.tb-note__segs i {
+  width: 8px;
+  height: 6px;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.tb-note__segs i.is-done {
+  background: var(--ink);
+}
+
+.tb-note__line {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-13);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Add a task is a link drawn as the frame's key. */
+.tb-addtask {
+  text-decoration: none;
+}
+
+/* Its owner stuck: the trouble tag. */
+.tb-note__stuck {
+  justify-self: start;
+  padding: 1px 7px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--stuck-ink);
+  background: var(--stuck-fill);
+  border-radius: 999px;
+}
+
+.tb-note__foot {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  font-size: var(--text-13);
+  font-weight: 500;
+}
+
+.tb-note__owner {
+  flex: none;
+  max-width: 50%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tb-note__ms {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  min-width: 0;
+  margin-left: auto;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+}
+
+.tb-note__ms span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tb-glyph {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The note's one key, and Move: above the stretched link, so a press on them is theirs. */
+.tb-note__key,
+.tb-move {
+  position: relative;
+  z-index: 1;
+}
+
+.tb-note__key {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft), var(--bevel);
+}
+
+.tb-note__key--ink {
+  color: var(--badge);
+  background: var(--ink);
+  box-shadow: var(--bevel-ink);
+}
+
+.tb-note__key--ink:hover {
+  background: var(--ink-hover);
+}
+
+.tb-note__key:not(.tb-note__key--ink):hover {
+  background: #fff;
+}
+
+.tb-note__key[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: var(--badge);
+  box-shadow: inset 0 0 0 1.5px var(--badge-line);
+}
+
+/* The plan's Open the plan is the note's own link, drawn as its key. */
+.tb-note__key--drawn {
+  pointer-events: none;
+}
+
+/* Move: a 28 x 24 key on the band, shown on hover and focus and always on touch screens; otherwise transparent,
+   never display: none, so a screen reader finds it on every open task's note. It follows the title's link in the page,
+   so Tab reaches it after the card, and is drawn at the band's end, the place in line making room for it. */
+.tb-note__move {
+  position: absolute;
+  top: 1px;
+  right: 4px;
+  z-index: 1;
+}
+
+.tb-move {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgb(255 255 255 / 0.75);
+  border: 0;
+  border-radius: 6px;
+}
+
+.tb-move:hover {
+  background: #fff;
+}
+
+.tb-note:is(:hover, :focus-within) .tb-note__end,
+.tb-note:has(.tb-move[aria-expanded='true']) .tb-note__end {
+  padding-right: 30px;
+}
+
+/* Unseen at rest, but in its place at its full size: a pointer or a test aiming at it lands on it (a clipped 1 px key
+   was under the stretched link, and a click on it went to the card). It shows with the pointer over the note. */
+.tb-note:not(:hover, :focus-within) .tb-move:not([aria-expanded='true']) {
+  opacity: 0;
+}
+
+@media (pointer: coarse) {
+  .tb-note .tb-note__end {
+    padding-right: 30px;
+  }
+
+  .tb-note .tb-move,
+  .tb-note:not(:hover, :focus-within) .tb-move:not([aria-expanded='true']) {
+    position: relative;
+    width: 28px;
+    height: 24px;
+    opacity: 1;
+  }
+}
+
+/* Waiting for you: the glue band turns highlighter and says what for. */
+.tb-note--you .tb-note__band {
+  color: var(--ink);
+  background: var(--highlighter);
+}
+
+.tb-note--done {
+  background: var(--badge);
+}
+
+.tb-note--done .tb-note__band {
+  background: var(--badge-line);
+}
+
+.tb-tick {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: var(--ink);
+  background: var(--highlighter);
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.tb-tick svg {
+  width: 10px;
+  height: 10px;
+  stroke-width: 3;
+}
+
+.tb-note--cancelled {
+  background: var(--badge);
+}
+
+.tb-note--cancelled .tb-note__band {
+  color: var(--ink-soft);
+  background: var(--pill);
+}
+
+.tb-note--cancelled .tb-note__title {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+/* Open in the side panel: flat on the mat, a 2 px ink edge and the highlighter bar on an ink line at its foot. */
+.tb-note.is-open {
+  box-shadow: inset 0 0 0 2px var(--ink), inset 0 -6px 0 var(--ink), inset 0 -4px 0 2px var(--highlighter);
+}
+
+.tb-note.is-open::after {
+  display: none;
+}
+
+/* Lifted by the keyboard: in the hand where it lies, while the landing line shows where it would go. */
+.tb-note.is-lifted {
+  z-index: 3;
+  cursor: grabbing;
+  transform: rotate(-2.5deg) scale(1.03);
+  box-shadow: var(--lift-4);
+}
+
+/* Where a carried note came from keeps a hatched outline. */
+.tb-item.is-origin > .tb-note {
+  visibility: hidden;
+}
+
+.tb-item.is-origin::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: repeating-linear-gradient(-45deg, rgb(252 251 247 / 0.05) 0 6px, transparent 6px 12px);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px rgb(252 251 247 / 0.55);
+}
+
+/* The note in the hand under the pointer: a copy that follows it, above everything, never catching the pointer. */
+.tb-avatar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-top);
+  margin: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.tb-avatar__note {
+  rotate: -2.5deg;
+  scale: 1.03;
+  box-shadow: var(--lift-4);
+  animation: tb-lift var(--t-hover) var(--ease-out);
+}
+
+/* Picked up: it tilts, grows and lifts off the mat. */
+@keyframes tb-lift {
+  from {
+    rotate: 0deg;
+    scale: 1;
+    box-shadow: 0 1px 0 rgb(10 24 18 / 0.3), 0 5px 8px -5px rgb(10 24 18 / 0.55);
+  }
+}
+
+.tb-avatar__note .tb-move {
+  display: none;
+}
+
+/* Where it would land: a light line with round ends and an ink edge (ink alone is 1.6:1 on the mat). */
+.tb-landing {
+  position: absolute;
+  right: 2px;
+  left: 2px;
+  z-index: 2;
+  height: 4px;
+  pointer-events: none;
+  background: var(--mat-ink);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+.tb-landing--before {
+  top: -7px;
+}
+
+.tb-landing--after {
+  bottom: -7px;
+}
+
+.tb-landing--top {
+  position: relative;
+  top: 0;
+  margin: 2px 0 8px;
+}
+
+.tb-landing::before,
+.tb-landing::after {
+  position: absolute;
+  top: -3px;
+  width: 10px;
+  height: 10px;
+  content: '';
+  background: var(--mat-ink);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+.tb-landing::before {
+  left: -4px;
+}
+
+.tb-landing::after {
+  right: -4px;
+}
+
+/* A drop form (cancel, reassign): today's form on a badge tile under the note. */
+.tb-form {
+  position: relative;
+  z-index: 2;
+  margin-top: 8px;
+  padding: 12px 14px 14px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.tb-form .edit-form {
+  margin: 0;
+}
+
+/* The note waiting in the column it was dropped on, until its form's button is pressed. */
+.tb-pending {
+  display: grid;
+  gap: 0;
+}
+
+.tb-pending > .tb-note {
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Lanes: one grid, the column heads sticky on top, trays behind every lane, a ribbon starting each lane. */
+
+.tb-grid {
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  column-gap: 14px;
+  align-content: start;
+  min-height: 0;
+  margin-bottom: var(--dock-strip, var(--dock-clear));
+  padding: 0 12px calc(12px + var(--dock-over, 0px)) 20px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding: 48px 12px calc(12px + var(--dock-over, 0px)) 20px;
+}
+
+.tb-tray {
+  grid-row: 1 / -1;
+  background: var(--lane-fill);
+  border-radius: 14px;
+  transition: background-color var(--t-quick) var(--ease-out), box-shadow var(--t-quick) var(--ease-out);
+}
+
+.tb-headband {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  grid-row: 1;
+  grid-column: 1 / -1;
+  margin: 0 -12px 0 -20px;
+  background: var(--mat-shade);
+}
+
+.tb-colhead {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  grid-row: 1;
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.tb-colhead .tb-col__head {
+  background: var(--lane-fill);
+  border-radius: 14px 14px 0 0;
+}
+
+.tb-colhead--lit .tb-col__head {
+  background: var(--lane-lit);
+}
+
+.tb-colhead--sunk .tb-col__head {
+  background: var(--mat-shade);
+}
+
+.tb-colhead .tb-why {
+  margin: 0;
+  padding: 0 10px 6px;
+  background: inherit;
+}
+
+.tb-colhead--sunk .tb-why,
+.tb-colhead--lit .tb-why {
+  background: var(--mat-shade);
+}
+
+.tb-lanehead {
+  position: relative;
+  z-index: 2;
+  grid-column: 1 / -1;
+  margin: 10px 0 8px;
+  font: inherit;
+}
+
+/* A lane's ribbon is its toggle: a caret, the face or the room's sign, and its name with its open tasks. */
+.tb-ribbon {
+  position: sticky;
+  left: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px 2px 10px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.tb-ribbon:hover {
+  background: #fff;
+}
+
+.tb-ribbon__caret {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-soft);
+  transition: transform var(--t-quick) var(--ease-out);
+}
+
+.tb-ribbon[aria-expanded='false'] .tb-ribbon__caret {
+  transform: rotate(-90deg);
+}
+
+.tb-ribbon__words {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tb-ribbon__here {
+  flex: none;
+  margin-left: auto;
+  font-size: var(--text-13);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.tb-ribbon__why {
+  flex: none;
+  margin-left: auto;
+  font-size: var(--text-13);
+  font-weight: 500;
+}
+
+/* A room lane's sign: the room's name on its hue. */
+.tb-roomsign {
+  flex: none;
+  padding: 1px 8px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink-deep);
+  background: var(--paper-band);
+  border-radius: 4px;
+}
+
+.tb-cell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  padding: 0 8px 4px;
+}
+
+.tb-cell > .tb-list {
+  gap: 10px;
+}
+
+.tb-cell--counts {
+  justify-items: center;
+  padding-bottom: 2px;
+}
+
+/* A closed lane's count under a column: a plain count, ink on badge with an ink-soft edge. */
+.tb-cellcount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-cell--sunk {
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1.5px rgb(252 251 247 / 0.16);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Filters: chips that hold their own native select, Find, the count and Show all. */
+
+.tb-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.tb-chip {
+  position: relative;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px 2px 12px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  background: var(--badge);
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 rgb(24 36 31 / 0.12), 0 1px 0 rgb(10 24 18 / 0.3);
+}
+
+.tb-chip:hover {
+  background: #fff;
+}
+
+.tb-chip.is-on {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.tb-chip__label {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* The chip's select fills it: the native control keeps its keys, its list and its name. */
+.tb-chip select {
+  max-width: 12rem;
+  min-height: 34px;
+  padding: 0 18px 0 0;
+  font: inherit;
+  color: inherit;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 8l4 4 4-4' fill='none' stroke='%2318241f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right center / 16px 16px;
+  border: 0;
+  appearance: none;
+}
+
+.tb-chip:has(select:focus-visible) {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter);
+}
+
+.tb-chip select:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: none;
+}
+
+.tb-find {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 120px;
+}
+
+.tb-find svg {
+  position: absolute;
+  left: 10px;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+.tb-find input {
+  width: 160px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px 0 32px;
+  font: inherit;
+  font-size: var(--text-14);
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.tb-find input::placeholder {
+  color: var(--ink-soft);
+}
+
+.tb-found {
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--mat-ink);
+  white-space: nowrap;
+}
+
+.tb-found:empty {
+  display: none;
+}
+
+.tb-showall {
+  min-height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--mat-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+/* The filters folded into one key (a narrow board) and the panel it opens. */
+.tb-filterkey {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px 2px;
+  font: inherit;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 rgb(24 36 31 / 0.12), 0 1px 0 rgb(10 24 18 / 0.3);
+}
+
+.tb-filterkey.is-on {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.tb-filterkey svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tb-pop {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 14px;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: var(--lift-3);
+}
+
+.tb-pop .tb-filters {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.tb-pop .tb-chip {
+  justify-content: space-between;
+}
+
+.tb-pop .tb-find input {
+  width: 100%;
+}
+
+.tb-pop .tb-found,
+.tb-pop .tb-showall {
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Move's menu, in the top layer beside its key; on phones an action sheet. */
+
+.tb-menu {
+  position: fixed;
+  inset: auto;
+  min-width: 13rem;
+  margin: 0;
+  padding: 6px;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--lift-3);
+}
+
+.tb-menu__title {
+  margin: 4px 10px 6px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.tb-menu__why {
+  margin: 0 10px 6px;
+  font-size: var(--text-13);
+  color: var(--ink);
+}
+
+.tb-menu__item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--text-15);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+}
+
+.tb-menu__item:hover,
+.tb-menu__item:focus-visible {
+  background: var(--badge-hover);
+}
+
+.tb-menu__item--danger {
+  color: var(--danger);
+}
+
+.tb-menu__item[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.tb-menu__item svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tb-sheet {
+  width: 100%;
+  max-width: none;
+  max-height: calc(100dvh - 16px);
+  margin: auto 0 0;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -2px 0 rgb(10 24 18 / 0.2), 0 -18px 30px -18px rgb(10 24 18 / 0.6);
+}
+
+.tb-sheet::backdrop {
+  background: rgb(11 18 14 / 0.45);
+}
+
+.tb-sheet__grab {
+  width: 40px;
+  height: 5px;
+  margin: 6px auto 10px;
+  background: var(--rule);
+  border-radius: 999px;
+}
+
+.tb-sheet .tb-menu__item {
+  min-height: 48px;
+  font-size: var(--text-16);
+}
+
+.tb-sheet__close {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+  font: inherit;
+  font-size: var(--text-16);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 12px;
+}
+
+.tb-sheet .tb-filters {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 6px 6px;
+}
+
+.tb-sheet .tb-chip {
+  justify-content: space-between;
+  min-height: 48px;
+  font-size: var(--text-16);
+}
+
+.tb-sheet .tb-chip select {
+  max-width: 60%;
+  font-size: var(--text-16);
+}
+
+.tb-sheet .tb-find input {
+  width: 100%;
+  min-height: 48px;
+  font-size: var(--text-16);
+}
+
+.tb-sheet .tb-found,
+.tb-sheet .tb-showall {
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Phones: one column at a time under its chips; a sideways swipe moves to the next. */
+
+.tb-phone {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.tb-tabs {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  margin: 0;
+  padding: 0 8px 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-padding-inline: 8px;
+}
+
+.tb-tab {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px 2px;
+  font: inherit;
+  font-size: var(--text-15);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 rgb(24 36 31 / 0.12), 0 1px 0 rgb(10 24 18 / 0.3);
+}
+
+.tb-tab[aria-selected='true'] {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.tb-tab__count {
+  font-family: var(--font-narrow);
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-tab__count--you {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: var(--highlighter);
+  border-radius: 999px;
+}
+
+/* Filter, Add a task and Plan in one row: at 320 px they fit as they are; anything narrower scrolls sideways in the row. */
+.tb-sub {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding: 2px 8px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tb-sub .tb-filterkey,
+.tb-sub .tb-subkey {
+  min-height: 44px;
+  font-size: var(--text-15);
+}
+
+.tb-subkey {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  padding: 0 12px 2px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 rgb(24 36 31 / 0.12), 0 1px 0 rgb(10 24 18 / 0.3);
+}
+
+.tb-panels {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: var(--dock-strip, var(--dock-clear));
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.tb-panel {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px 12px;
+  overflow-y: auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  scroll-padding-bottom: 12px;
+}
+
+.tb-panel .tb-list {
+  gap: 10px;
+}
+
+.tb-panel .tb-note__title {
+  font-size: var(--text-16);
+}
+
+.tb-panel .tb-move {
+  width: auto;
+  min-width: 64px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0 0 0 auto;
+  padding: 0 14px;
+  font: inherit;
+  font-size: var(--text-15);
+  font-weight: 600;
+  background: var(--badge);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft), var(--bevel);
+}
+
+.tb-panel .tb-note__key {
+  min-height: 44px;
+}
+
+.tb-panel .tb-ribbon {
+  position: relative;
+  margin: 4px 0 10px;
+  font-size: var(--text-16);
+}
+
+.tb-panel .tb-col__empty {
+  margin: 8px 4px;
+  font-size: var(--text-15);
+}
+
+/* A phone on its side (under 400 px tall): the frame scrolls the head, the chips and the column as one (frame.css), so
+   the phone board takes its height from its column. A column that isn't current folds to nothing, so the sheet is as
+   tall as the one in view. */
+@media (max-height: 400px) {
+  .tb-phone {
+    height: auto;
+  }
+
+  .tb-panels {
+    flex: none;
+    margin-bottom: 0;
+  }
+
+  .tb-panel {
+    overflow-y: visible;
+  }
+
+  /* Chips and keys one size down (36 px), so a card shows under them without scrolling. */
+  .tb-tab {
+    min-height: 36px;
+  }
+
+  .tb-tabs {
+    padding-bottom: 4px;
+  }
+
+  .tb-sub {
+    padding-bottom: 6px;
+  }
+
+  .tb-sub .tb-filterkey,
+  .tb-sub .tb-subkey {
+    min-height: 36px;
+  }
+
+  .tb-panel[inert] {
+    height: 0;
+    padding-block: 0;
+    overflow: hidden;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Motion: with reduced motion or Still office nothing tilts or grows (styles.css stops every transition); a carried
+   card still follows the hand, since its position is the pointer's, not a transition. */
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-note.is-lifted {
+    transform: none;
+  }
+
+  .tb-avatar__note {
+    rotate: none;
+    scale: none;
+  }
+}
+
+html[data-still='on'] .tb-note.is-lifted {
+  transform: none;
+}
+
+html[data-still='on'] .tb-avatar__note {
+  rotate: none;
+  scale: none;
+}
+
+@media (forced-colors: active) {
+  .tb-note,
+  .tb-col,
+  .tb-tray,
+  .tb-rail,
+  .tb-ribbon,
+  .tb-chip,
+  .tb-more,
+  .tb-form,
+  .tb-menu {
+    border: 1px solid CanvasText;
+  }
+
+  .tb-note.is-open {
+    outline: 2px solid Highlight;
+  }
+
+  .tb-landing,
+  .tb-landing::before,
+  .tb-landing::after {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .tb-col--lit,
+  .tb-tray--lit {
+    outline: 2px solid Highlight;
+  }
+
+  .tb-tab[aria-selected='true'] {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* The plan, the board's sub-view: its own scroller, lined up with the head, keeping the dock's band clear. */
+.tb-plan {
+  container: tb-plan / inline-size;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: var(--dock-strip, var(--dock-clear));
+  padding: 0 var(--gutter) calc(12px + var(--dock-over, 0px)) 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 16px calc(12px + var(--dock-over, 0px));
+}
+
+/* Every task done: the board's sentence, on the mat above the columns. */
+.tb-done-line {
+  margin: 0 0 10px 20px;
+  font-size: var(--text-15);
+  font-weight: 600;
+  color: var(--mat-ink);
+}
+
+.tb-sheet__count {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 4px 6px 0;
+  color: var(--ink);
+}
+
+.tb-sheet__count .tb-found,
+.tb-sheet__count .tb-showall {
+  color: var(--ink);
+}
+
+/* The tag of an integration or check task, on its card. */
+.kind-tag--note {
+  margin-left: 0;
+}

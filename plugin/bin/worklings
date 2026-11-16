@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# The Worklings CLI, bundled with the plugin; Claude Code puts this folder on the Bash tool's PATH.
+if ! command -v node >/dev/null 2>&1; then
+  echo "Worklings needs Node.js 22 or later, and there is no node on this PATH. Install it from https://nodejs.org/, then start Claude Code again." >&2
+  exit 1
+fi
+exec node "$(dirname "$0")/../scripts/worklings.mjs" "$@"

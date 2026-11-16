@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question or share an idea
+    url: https://github.com/zeusstudiodev/worklings/discussions
+    about: How do I...? Does Worklings work with...? Questions and open-ended ideas belong in Discussions.
+  - name: Report a security problem
+    url: https://github.com/zeusstudiodev/worklings/security/advisories/new
+    about: Please do not open a public issue. Use private vulnerability reporting; see SECURITY.md.

@@ -1,0 +1,17 @@
+id: mobile-app
+title: Mobile app
+summary: iOS and Android apps built with Expo or React Native.
+detect:
+  priority: 2
+  dependencies: [expo, react-native, expo-router]
+  files: [eas.json, app.config.ts, app.config.js]
+roles:
+  lean: [mobile-engineer, ux-designer, qa-engineer]
+  standard: [ui-designer, release-manager, accessibility-specialist, copywriter]
+  full: [producer, architect, performance-engineer, security-reviewer, privacy-officer, analytics-engineer]
+rules: [typescript, react-native-expo, tests]
+skills: [plan-feature, fix-bug, ship, store-submission]
+gates:
+  lean: [code-gate]
+  standard: [design-gate, a11y-gate]
+  full: [security-gate, release-gate]

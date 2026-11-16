@@ -1,0 +1,13 @@
+id: generic
+title: Software project
+summary: Any other kind of software project; a small, stack-neutral studio to tailor once the code takes shape.
+roles:
+  lean: [architect, code-reviewer, qa-engineer]
+  standard: [ux-designer, security-reviewer, docs-writer, devops-engineer]
+  full: [producer, product-manager, performance-engineer, privacy-officer, release-manager]
+rules: [typescript, python, database-migrations, docs-markdown, tests]
+skills: [plan-feature, fix-bug, ship, standup]
+gates:
+  lean: [code-gate]
+  standard: [security-gate]
+  full: [perf-gate, release-gate]

@@ -1,0 +1,1044 @@
+/* The plan (web/src/company/plan/Plan.tsx); the Plan approval setting has planApproval.css. Tokens: docs/design.md; the house's
+   undo line, callouts, edit forms and links come from styles.css. */
+
+.plan {
+  padding-bottom: 12px;
+}
+
+.plan__title {
+  width: fit-content;
+  max-width: 100%;
+  margin: 4px 0 6px;
+  font-family: var(--font-narrow);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.plan__title:focus-visible,
+.plan-state:focus-visible,
+.plan-ms__title:focus-visible,
+.plan-changes .callout__title:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.plan a.button {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* Where it stands */
+.plan-state {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+
+.plan-state__line {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.plan-state__line + .plan-state__line {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 8px 0;
+}
+
+.plan-note {
+  margin: 4px 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.plan-problem {
+  margin: 6px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.plan-link {
+  min-height: 24px;
+  padding: 2px 0;
+  font-size: 0.875rem;
+}
+
+/* Approve */
+.plan-approve {
+  margin: 4px 0 12px;
+}
+
+.plan-approve .button--large {
+  max-width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.plan-approve__more > summary {
+  min-height: 32px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plan-approve__choices {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+
+.plan-approve__choices .button {
+  max-width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+/* Your changes */
+.plan-changes {
+  display: grid;
+  gap: 8px;
+}
+
+.plan-changes > p,
+.plan-changes .plan-actions {
+  margin: 0;
+}
+
+.plan-changes__dropped p,
+.plan-changes__problems p {
+  margin: 0 0 4px;
+}
+
+.plan-changes__problems-title {
+  font-weight: 600;
+}
+
+.plan-changes__problems {
+  color: var(--ink);
+}
+
+.plan-changes__diff > summary {
+  min-height: 32px;
+  padding: 4px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plan-changes__diff[open] > summary {
+  margin-bottom: 6px;
+}
+
+/* Sections */
+.plan-section {
+  margin: 18px 0 0;
+}
+
+.plan-section > .group-title {
+  margin-top: 0;
+}
+
+/* v0.2: the checklist, between the goal and the milestones (Checklist.tsx). */
+.plan-checklist__items {
+  margin: 8px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-check {
+  padding: 8px 0 8px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.plan-check:first-child {
+  border-top: 0;
+}
+
+.plan-check__text {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.plan-check__number {
+  flex: none;
+  min-width: 1.25rem;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.plan-check__quote,
+.plan-check__covers,
+.plan-check .plan-task__actions {
+  margin-left: calc(1.25rem + 8px);
+}
+
+.plan-check__covers {
+  margin-top: 4px;
+}
+
+.plan-check__gone {
+  margin: 4px 0;
+}
+
+.plan-goal__text {
+  margin: 0 0 4px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.plan-revision__summary {
+  min-height: 32px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plan-find {
+  margin-top: 16px;
+}
+
+/* Milestones and their tasks */
+.plan-milestones {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.plan-milestones.is-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.plan-ms {
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.plan-ms__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.plan-ms__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.plan-ms__number {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.plan-ms__done,
+.plan-ms__progress,
+.plan-ms__empty {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.plan-ms__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  margin: 4px 0 2px;
+}
+
+.plan-ms__actions .link,
+.plan-task__actions .link {
+  min-height: 28px;
+  padding: 2px 0;
+  font-size: 0.8125rem;
+}
+
+.plan-ms__fold > summary {
+  min-height: 32px;
+  padding: 6px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plan-ms__add {
+  margin: 0 0 8px;
+}
+
+.plan-ms--gone {
+  padding: 8px 0;
+  border-top: 1px solid var(--badge-line);
+}
+
+.plan-tasks {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-task {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 7px 6px 8px 0;
+  border-radius: 9px;
+}
+
+.plan-task--gone {
+  display: block;
+  padding: 2px 6px;
+}
+
+/* The drop line: 3 px of ink along the top of the row it would land before (or the milestone's end). */
+.plan-task.is-drop-before::before,
+.plan-tasks__end.is-drop-end::before {
+  position: absolute;
+  inset-inline: 0;
+  top: -2px;
+  height: 3px;
+  content: '';
+  background: var(--ink);
+  border-radius: 2px;
+}
+
+.plan-tasks__end {
+  position: relative;
+  height: 8px;
+}
+
+.plan-task.is-lifted {
+  z-index: 2;
+  background: #fff;
+  box-shadow: var(--shadow-panel);
+}
+
+/* The handle holds the drag: no scrolling or text selection starts from it. */
+.plan-task__grip {
+  display: grid;
+  flex: none;
+  align-self: stretch;
+  justify-items: center;
+  width: 24px;
+  padding-top: 9px;
+  color: var(--ink-soft);
+  cursor: grab;
+  border-radius: 6px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.plan-task.is-lifted .plan-task__grip {
+  cursor: grabbing;
+}
+
+.plan-task__dots {
+  width: 10px;
+  height: 16px;
+  background-image: radial-gradient(circle, currentColor 1.5px, transparent 1.75px);
+  background-size: 5px 5.33px;
+}
+
+.plan-task__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-task__head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+
+.plan-task__number {
+  flex: none;
+  min-width: 1.6em;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.plan-task__toggle {
+  min-width: 0;
+  min-height: 24px;
+  padding: 1px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+}
+
+/* A chevron that turns as the details open; the words and aria-expanded carry it. */
+.plan-task__toggle::after {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 8px;
+  vertical-align: 2px;
+  content: '';
+  border-right: 1.5px solid var(--ink-soft);
+  border-bottom: 1.5px solid var(--ink-soft);
+  transform: rotate(-45deg);
+}
+
+.plan-task__toggle[aria-expanded='true']::after {
+  vertical-align: 4px;
+  transform: rotate(45deg);
+}
+
+.plan-task__owner {
+  margin: 1px 0 0;
+  padding-left: calc(1.6em + 6px);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.plan-task__owner.is-missing {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.plan-task__meta {
+  margin: 2px 0 0;
+  padding-left: calc(1.6em + 6px);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.plan-task__key {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.plan-task__files {
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.plan-task__done {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.plan-task__details {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 2px calc(1.6em + 6px);
+  padding: 10px 12px;
+  background: #f4f1e9;
+  border-radius: 10px;
+}
+
+.plan-task__details .edit-form {
+  margin: 4px 0 0;
+  background: #fff;
+}
+
+.plan-task__sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.plan-task__brief {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.plan-task__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+}
+
+.plan-task .undo-line {
+  margin-left: calc(1.6em + 6px);
+}
+
+/* In a narrow row the sentence wraps beside its mark rather than dropping under it. */
+.plan .undo-line {
+  flex-wrap: nowrap;
+  align-items: baseline;
+}
+
+.plan .undo-line__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.plan .undo-line__undo {
+  flex: none;
+}
+
+.plan-add-milestone {
+  margin: 14px 0 4px;
+}
+
+/* Forms in the plan */
+.plan-form .text-input,
+.plan-form .select-input,
+.plan-form .prose-input {
+  min-width: 0;
+}
+
+.plan-form__files {
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+.plan-form__waits {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.plan-form__wait-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-form__wait-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.plan-form__wait-list .link {
+  min-height: 24px;
+  font-size: 0.8125rem;
+}
+
+.plan-form__wait-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.plan-form__wait-add .select-input {
+  flex: 1;
+}
+
+/* Comments */
+.plan-comments {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-comment {
+  padding: 1px 0 1px 10px;
+  border-left: 3px solid #cfc9bc;
+}
+
+.plan-comment__sign {
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.plan-comment__text {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.plan-all-comments {
+  margin-top: 12px;
+}
+
+/* Versions */
+.plan-versions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-version {
+  padding: 6px 0 7px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.plan-version:last-child {
+  border-bottom: 0;
+}
+
+.plan-version__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.plan-version__name {
+  font-weight: 600;
+}
+
+.plan-version.is-shown .plan-version__name {
+  padding-left: 8px;
+  border-left: 3px solid var(--highlighter);
+}
+
+.plan-version__tag {
+  padding: 0 7px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.plan-version__line {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* What changed: the words carry it; a rule on the left backs them up (added on --ok, cut on --danger). */
+.plan-diff {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+.plan-diff__summary {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.plan-diff__section {
+  padding-left: 10px;
+  border-left: 3px solid #cfc9bc;
+}
+
+.plan-diff__section--added {
+  border-left-color: var(--ok);
+}
+
+.plan-diff__section--cut {
+  border-left-color: var(--danger);
+}
+
+.plan-diff__title {
+  margin: 0 0 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.plan-diff__items {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-diff__text {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.plan-diff__parts {
+  display: grid;
+  gap: 4px;
+  margin: 3px 0 0;
+  font-size: 0.8125rem;
+}
+
+.plan-diff__parts dt {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.plan-diff__parts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.plan-diff__was,
+.plan-diff__now {
+  display: inline-block;
+  min-width: 2.6em;
+  font-weight: 600;
+}
+
+.plan-diff__was {
+  color: var(--ink-soft);
+}
+
+.plan-diff__long > summary {
+  min-height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plan-diff__long p {
+  margin: 4px 0;
+  white-space: pre-line;
+}
+
+/* Unsaved changes, pinned to the foot of the panel while you work further down the plan. */
+.plan-bar {
+  position: sticky;
+  bottom: -28px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 20px -16px -28px;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--badge);
+  border-top: 1px solid var(--badge-line);
+  box-shadow: 0 -10px 18px -14px rgba(10, 24, 18, 0.45);
+}
+
+.plan-bar__line {
+  flex: 1 1 12em;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.plan-bar__not {
+  font-weight: 600;
+}
+
+.plan-bar .link {
+  min-height: 32px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .plan-task:hover:not(.is-lifted) {
+    background: var(--badge-hover);
+  }
+
+  .plan-task__grip:hover {
+    color: var(--ink);
+    background: #e9e5da;
+  }
+
+  .plan-task__toggle:hover {
+    text-decoration: underline;
+    text-decoration-color: #c4bdae;
+    text-underline-offset: 3px;
+  }
+}
+
+@media (max-width: 720px) {
+  .plan-link,
+  .plan-ms__actions .link,
+  .plan-task__actions .link,
+  .plan-form__wait-list .link,
+  .plan-approve__more > summary,
+  .plan-revision__summary,
+  .plan-ms__fold > summary,
+  .plan-changes__diff > summary,
+  .plan-diff__long > summary,
+  .plan-bar .link,
+  .plan-task__toggle {
+    min-height: 44px;
+  }
+
+  .plan-task__toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .plan-task__grip {
+    width: 32px;
+    padding-top: 15px;
+  }
+
+  .plan .button {
+    min-height: 44px;
+  }
+
+  .plan-approve .button--large {
+    width: 100%;
+  }
+
+  .plan-form__wait-add {
+    flex-wrap: wrap;
+  }
+
+  /* The keyboard is up, or a form is open: the bar would sit over what you type, and coming back the moment a field let
+     go it took the press meant for the form's own keys (a checklist item's Add went nowhere). It waits for the form. */
+  .plan:has(:is(input, textarea, select):focus, .plan-form) .plan-bar {
+    display: none;
+  }
+}
+
+/* Narrow phones and 200% zoom: a task's details and forms take the row's full width. */
+@media (max-width: 26.25em) {
+  .plan-task__details {
+    margin-left: 0;
+    padding: 10px;
+  }
+
+  .plan-task__details .edit-form {
+    padding: 10px;
+  }
+}
+
+/* The plan as the task board's sub-view (docs/design-v3.md, "The task board"): on the mat, in an 880 px reading column
+   of badge paper with its approve bar kept in view; where the board is wide, the comments, the versions and the Plan
+   approval setting in a column at its right. The board's scroller (.tb-plan) is the container. */
+.plan--board {
+  color: var(--ink);
+}
+
+.plan--board > .plan__title {
+  margin: 0 0 10px;
+  color: var(--mat-ink);
+}
+
+.plan--board > .plan__title:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter);
+}
+
+.plan-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 880px);
+  gap: 16px;
+  align-items: start;
+}
+
+.plan-main,
+.plan-side {
+  min-width: 0;
+  padding: 16px 20px 20px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+/* The approve bar stays in view while the plan scrolls under it. */
+.plan--board .plan-approve {
+  position: sticky;
+  top: -16px;
+  z-index: 4;
+  margin: 4px -20px 12px;
+  padding: 10px 20px;
+  background: var(--badge);
+  border-bottom: 1px solid var(--badge-line);
+}
+
+/* Short windows: a bar that sticks would take most of the plan's height (67 px of scroller at 720 x 450). */
+@media (max-width: 720px) and (max-height: 600px), (max-height: 480px) {
+  .plan--board .plan-approve {
+    position: static;
+  }
+}
+
+/* The bar of unsaved changes stays above the talk bar and the mini-map's corner, not under them. */
+.plan--board .plan-bar {
+  bottom: max(0px, calc(var(--dock-over, 0px) - 20px));
+  margin: 20px -20px -20px;
+  border-radius: 0 0 14px 14px;
+}
+
+@container tb-plan (min-width: 77.5rem) {
+  .plan-cols {
+    grid-template-columns: minmax(0, 880px) minmax(17rem, 22rem);
+  }
+
+  .plan-side {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* A task's kind (Integration, Check) and the plan's contracts (contractsModel.ts). Words first: the tag never relies on colour. */
+.kind-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  vertical-align: middle;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.plan-contracts {
+  margin-top: 20px;
+}
+
+.plan-contracts__list {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-contract {
+  padding: 10px 12px;
+  background: var(--note);
+  border-radius: 10px;
+}
+
+.plan-contract p {
+  margin: 0;
+}
+
+.plan-contract__title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.plan-contract__file {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.plan-contract__summary {
+  margin-top: 4px;
+  font-size: 0.875rem;
+}
+
+/* The result of a check, on the plan, the task page and the board's cards: its words say it; colour only backs the words. */
+.kind-tag--passed {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.kind-tag--failed {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.kind-tag--running,
+.kind-tag--pending {
+  color: var(--waiting-ink);
+  border-color: var(--waiting-ink);
+}
+
+.kind-tag--unrunnable {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.kind-tag + .kind-tag {
+  margin-left: 6px;
+}
+
+.plan-task__code {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.task-page__tail {
+  max-height: 14em;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  overflow: auto;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--note);
+  border-radius: 8px;
+}
+
+.plan-summary {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.plan-summary .group-title {
+  margin-top: 0;
+}
+
+.plan-summary__words {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}

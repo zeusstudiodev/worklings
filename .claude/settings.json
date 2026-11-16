@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run -s typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm run -s lint)",
+      "Bash(npm run lint:library)",
+      "Bash(npm run -s lint:library)",
+      "Bash(npm test *)",
+      "Bash(npm test)",
+      "Bash(npx vitest run *)",
+      "Bash(npm run build)",
+      "Bash(npm run build:plugin)",
+      "Bash(npm run e2e)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ]
+  },
+  "worktree": { "symlinkDirectories": ["node_modules"] }
+}

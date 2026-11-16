@@ -1,0 +1,116 @@
+{
+  "prompt": "A tip calculator.",
+  "preset": "balanced",
+  "org": {
+    "size": "small",
+    "sizing": "Balanced: one mobile-first page around a small pure calculation core, so one frontend engineer designs, builds and tests it, and I check the result against your words at the end.",
+    "people": [
+      {
+        "id": "ceo",
+        "title": "CEO",
+        "level": "ceo",
+        "reportsTo": null,
+        "model": "opus"
+      },
+      {
+        "id": "frontend-engineer",
+        "title": "Frontend engineer (design and build)",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      }
+    ]
+  },
+  "plan": {
+    "version": 1,
+    "versions": 1,
+    "goal": "A portfolio/client-grade, mobile-first tip calculator web page (Vite + TypeScript): bill, preset + custom tip %, split between people, round up; currency and number formats follow the browser's locale (Intl) with a currency picker; the last tip % and currency are remembered (localStorage); every state is designed.",
+    "milestones": [
+      {
+        "id": "ms-1",
+        "title": "Calculation, locale and memory core tested"
+      },
+      {
+        "id": "ms-2",
+        "title": "Designed page working on phone and desktop"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "p-1",
+        "title": "Scaffold the project and build the tested tip maths",
+        "owner": "frontend-engineer",
+        "files": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "vite.config.ts",
+          ".gitignore",
+          "src/core/calc.ts",
+          "src/core/calc.test.ts"
+        ],
+        "check": "npm run build && npm test",
+        "after": [],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-2",
+        "title": "Locale parsing, currency picker data and remembered settings",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/core/money.ts",
+          "src/core/money.test.ts",
+          "src/core/currency.ts",
+          "src/core/currency.test.ts",
+          "src/core/storage.ts",
+          "src/core/storage.test.ts"
+        ],
+        "check": "npm run build && npm test",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-3",
+        "title": "Design and build the calculator page",
+        "owner": "frontend-engineer",
+        "files": [
+          "index.html",
+          "src/ui",
+          "src/styles",
+          "docs/checks.md"
+        ],
+        "check": "npm run build && npm test",
+        "after": [
+          "p-2"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      }
+    ],
+    "contracts": 0
+  },
+  "refusals": {
+    "org": [
+      {
+        "at": 1794584676608,
+        "count": 1,
+        "errors": [
+          "people[1].notes[3]: up to 300 characters, got 332"
+        ]
+      }
+    ],
+    "plan": [
+      {
+        "at": 1794584727355,
+        "count": 1,
+        "errors": [
+          "“Design and build the calculator page” (p-3) is too big for one context: its files span 6 areas (the project root, src, src/ui, src/styles, public, docs). Split it by area into tasks that each own one area with its own tests and check (never one task to build and another to test), keeping each to 4 areas, 2400 characters of brief and 6 requirements."
+        ]
+      }
+    ]
+  }
+}

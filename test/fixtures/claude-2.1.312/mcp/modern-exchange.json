@@ -1,0 +1,561 @@
+[
+  {
+    "at": 0,
+    "desk": "ada",
+    "era": "modern",
+    "request": {
+      "method": "POST",
+      "path": "/mcp",
+      "headers": {
+        "accept": "application/json, text/event-stream",
+        "accept-encoding": "identity",
+        "authorization": "Bearer <desk token: ada>",
+        "content-type": "application/json",
+        "user-agent": "claude-code/2.1.312 (sdk-cli)",
+        "mcp-method": "server/discover",
+        "mcp-protocol-version": "2026-07-28",
+        "connection": "keep-alive",
+        "host": "127.0.0.1:<org port>"
+      },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": "server-discover-probe-1",
+        "method": "server/discover",
+        "params": {
+          "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              "name": "claude-code",
+              "title": "Claude Code",
+              "version": "2.1.312",
+              "description": "Anthropic's agentic coding tool",
+              "websiteUrl": "https://claude.com/claude-code"
+            },
+            "io.modelcontextprotocol/clientCapabilities": {
+              "roots": {
+                "listChanged": true
+              },
+              "elicitation": {
+                "form": {},
+                "url": {}
+              },
+              "extensions": {
+                "io.modelcontextprotocol/tasks": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "jsonrpc": "2.0",
+        "id": "server-discover-probe-1",
+        "result": {
+          "resultType": "complete",
+          "supportedVersions": [
+            "2026-07-28"
+          ],
+          "capabilities": {
+            "tools": {}
+          },
+          "instructions": "Worklings org tools for Ada, UI designer, who reports to Grace. Post a status line with post_status when you start, finish, change step or get stuck; report to Grace with report when your task is done or blocked. Desk code: <desk code: ada>.",
+          "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+              "name": "worklings-org",
+              "version": "0.0.0-check"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "at": 36,
+    "desk": "ada",
+    "era": "modern",
+    "request": {
+      "method": "POST",
+      "path": "/mcp",
+      "headers": {
+        "accept": "application/json, text/event-stream",
+        "accept-encoding": "identity",
+        "authorization": "Bearer <desk token: ada>",
+        "content-type": "application/json",
+        "user-agent": "claude-code/2.1.312 (sdk-cli)",
+        "mcp-method": "tools/list",
+        "mcp-protocol-version": "2026-07-28",
+        "connection": "keep-alive",
+        "host": "127.0.0.1:<org port>"
+      },
+      "body": {
+        "method": "tools/list",
+        "jsonrpc": "2.0",
+        "id": 0,
+        "params": {
+          "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              "name": "claude-code",
+              "title": "Claude Code",
+              "version": "2.1.312",
+              "description": "Anthropic's agentic coding tool",
+              "websiteUrl": "https://claude.com/claude-code"
+            },
+            "io.modelcontextprotocol/clientCapabilities": {
+              "roots": {
+                "listChanged": true
+              },
+              "elicitation": {
+                "form": {},
+                "url": {}
+              },
+              "extensions": {
+                "io.modelcontextprotocol/tasks": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "result": {
+          "resultType": "complete",
+          "tools": [
+            {
+              "name": "post_status",
+              "title": "Post a status line",
+              "description": "Post one plain sentence about your work when you start, finish, change step or get stuck. The office shows it on the Now board. No tool names or file paths.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "One sentence, as you would say it to a colleague."
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "report",
+              "title": "Report to your manager",
+              "description": "Report on your task to your manager: what you did, and whether it is done or blocked. Closes or blocks the task.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "description": "What you did, what changed and anything your manager should know."
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "done",
+                      "blocked"
+                    ],
+                    "description": "done closes the task; blocked asks your manager for help."
+                  }
+                },
+                "required": [
+                  "summary",
+                  "outcome"
+                ],
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+              }
+            }
+          ],
+          "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+              "name": "worklings-org",
+              "version": "0.0.0-check"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "at": 70,
+    "desk": "lin",
+    "era": "modern",
+    "request": {
+      "method": "POST",
+      "path": "/mcp",
+      "headers": {
+        "accept": "application/json, text/event-stream",
+        "accept-encoding": "identity",
+        "authorization": "Bearer <desk token: lin>",
+        "content-type": "application/json",
+        "user-agent": "claude-code/2.1.312 (sdk-cli)",
+        "mcp-method": "server/discover",
+        "mcp-protocol-version": "2026-07-28",
+        "connection": "keep-alive",
+        "host": "127.0.0.1:<org port>"
+      },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": "server-discover-probe-1",
+        "method": "server/discover",
+        "params": {
+          "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              "name": "claude-code",
+              "title": "Claude Code",
+              "version": "2.1.312",
+              "description": "Anthropic's agentic coding tool",
+              "websiteUrl": "https://claude.com/claude-code"
+            },
+            "io.modelcontextprotocol/clientCapabilities": {
+              "roots": {
+                "listChanged": true
+              },
+              "elicitation": {
+                "form": {},
+                "url": {}
+              },
+              "extensions": {
+                "io.modelcontextprotocol/tasks": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "jsonrpc": "2.0",
+        "id": "server-discover-probe-1",
+        "result": {
+          "resultType": "complete",
+          "supportedVersions": [
+            "2026-07-28"
+          ],
+          "capabilities": {
+            "tools": {}
+          },
+          "instructions": "Worklings org tools for Lin, copywriter, who reports to Grace. Post a status line with post_status when you start, finish, change step or get stuck; report to Grace with report when your task is done or blocked. Desk code: <desk code: lin>.",
+          "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+              "name": "worklings-org",
+              "version": "0.0.0-check"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "at": 81,
+    "desk": "lin",
+    "era": "modern",
+    "request": {
+      "method": "POST",
+      "path": "/mcp",
+      "headers": {
+        "accept": "application/json, text/event-stream",
+        "accept-encoding": "identity",
+        "authorization": "Bearer <desk token: lin>",
+        "content-type": "application/json",
+        "user-agent": "claude-code/2.1.312 (sdk-cli)",
+        "mcp-method": "tools/list",
+        "mcp-protocol-version": "2026-07-28",
+        "connection": "keep-alive",
+        "host": "127.0.0.1:<org port>"
+      },
+      "body": {
+        "method": "tools/list",
+        "jsonrpc": "2.0",
+        "id": 0,
+        "params": {
+          "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              "name": "claude-code",
+              "title": "Claude Code",
+              "version": "2.1.312",
+              "description": "Anthropic's agentic coding tool",
+              "websiteUrl": "https://claude.com/claude-code"
+            },
+            "io.modelcontextprotocol/clientCapabilities": {
+              "roots": {
+                "listChanged": true
+              },
+              "elicitation": {
+                "form": {},
+                "url": {}
+              },
+              "extensions": {
+                "io.modelcontextprotocol/tasks": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "result": {
+          "resultType": "complete",
+          "tools": [
+            {
+              "name": "post_status",
+              "title": "Post a status line",
+              "description": "Post one plain sentence about your work when you start, finish, change step or get stuck. The office shows it on the Now board. No tool names or file paths.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "One sentence, as you would say it to a colleague."
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+              }
+            },
+            {
+              "name": "report",
+              "title": "Report to your manager",
+              "description": "Report on your task to your manager: what you did, and whether it is done or blocked. Closes or blocks the task.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "description": "What you did, what changed and anything your manager should know."
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "done",
+                      "blocked"
+                    ],
+                    "description": "done closes the task; blocked asks your manager for help."
+                  }
+                },
+                "required": [
+                  "summary",
+                  "outcome"
+                ],
+                "additionalProperties": false
+              },
+              "annotations": {
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false
+              }
+            }
+          ],
+          "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+              "name": "worklings-org",
+              "version": "0.0.0-check"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "at": 7206,
+    "desk": "lin",
+    "era": "modern",
+    "request": {
+      "method": "POST",
+      "path": "/mcp",
+      "headers": {
+        "accept": "application/json, text/event-stream",
+        "accept-encoding": "identity",
+        "authorization": "Bearer <desk token: lin>",
+        "content-type": "application/json",
+        "user-agent": "claude-code/2.1.312 (sdk-cli)",
+        "mcp-method": "tools/call",
+        "mcp-name": "report",
+        "mcp-protocol-version": "2026-07-28",
+        "connection": "keep-alive",
+        "host": "127.0.0.1:<org port>"
+      },
+      "body": {
+        "method": "tools/call",
+        "params": {
+          "name": "report",
+          "arguments": {
+            "summary": "Checked the org tools; nothing to fix.",
+            "outcome": "done"
+          },
+          "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              "name": "claude-code",
+              "title": "Claude Code",
+              "version": "2.1.312",
+              "description": "Anthropic's agentic coding tool",
+              "websiteUrl": "https://claude.com/claude-code"
+            },
+            "io.modelcontextprotocol/clientCapabilities": {
+              "roots": {
+                "listChanged": true
+              },
+              "elicitation": {
+                "form": {},
+                "url": {}
+              }
+            },
+            "claudecode/toolUseId": "toolu_01B6hZqi7iyqTwNSxGVmgEzH",
+            "progressToken": 1
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "resultType": "complete",
+          "content": [
+            {
+              "type": "text",
+              "text": "Report filed with Grace; the task is closed. Receipt R-47CB39."
+            }
+          ],
+          "isError": false,
+          "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+              "name": "worklings-org",
+              "version": "0.0.0-check"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "at": 7956,
+    "desk": "ada",
+    "era": "modern",
+    "request": {
+      "method": "POST",
+      "path": "/mcp",
+      "headers": {
+        "accept": "application/json, text/event-stream",
+        "accept-encoding": "identity",
+        "authorization": "Bearer <desk token: ada>",
+        "content-type": "application/json",
+        "user-agent": "claude-code/2.1.312 (sdk-cli)",
+        "mcp-method": "tools/call",
+        "mcp-name": "post_status",
+        "mcp-protocol-version": "2026-07-28",
+        "connection": "keep-alive",
+        "host": "127.0.0.1:<org port>"
+      },
+      "body": {
+        "method": "tools/call",
+        "params": {
+          "name": "post_status",
+          "arguments": {
+            "text": "Reading the brief for the org tools check."
+          },
+          "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              "name": "claude-code",
+              "title": "Claude Code",
+              "version": "2.1.312",
+              "description": "Anthropic's agentic coding tool",
+              "websiteUrl": "https://claude.com/claude-code"
+            },
+            "io.modelcontextprotocol/clientCapabilities": {
+              "roots": {
+                "listChanged": true
+              },
+              "elicitation": {
+                "form": {},
+                "url": {}
+              }
+            },
+            "claudecode/toolUseId": "toolu_01DB9nkkeMJbr2NS181NB17F",
+            "progressToken": 1
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "resultType": "complete",
+          "content": [
+            {
+              "type": "text",
+              "text": "Posted for Ada. Receipt R-CDF73C."
+            }
+          ],
+          "isError": false,
+          "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+              "name": "worklings-org",
+              "version": "0.0.0-check"
+            }
+          }
+        }
+      }
+    }
+  }
+]

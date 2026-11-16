@@ -1,0 +1,512 @@
+/* The preview (docs/design-v3.md, "Preview") on design.md's tokens: the bar, the frame that keeps its place in every
+   state, the screenshots column (240 px) and a screenshot enlarged in place; and the office's screen, in --screen-off
+   (scene/palette.ts SCREEN_OFF). */
+.preview {
+  --preview-soft: var(--note);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The bar */
+.preview__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview__path {
+  display: flex;
+  flex: 1 1 12em;
+  min-width: 8em;
+}
+
+.preview__path-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 8px;
+}
+
+.preview__path-input:focus-visible {
+  border-color: var(--ink);
+}
+
+/* Unavailable keeps full opacity: ink-soft words on a light edge (design.md's rule for waiting controls). */
+.preview__path-input:disabled {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: var(--preview-soft);
+  border-color: var(--badge-line);
+}
+
+.preview__tool {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* Unavailable and pressed both outrank v2's .button:hover, which a tap leaves stuck on touch screens. */
+.preview .preview__tool[aria-disabled='true'],
+.preview .preview__tool[aria-disabled='true']:hover,
+.preview .preview__state .button[aria-disabled='true'],
+.preview .preview__state .button[aria-disabled='true']:hover {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: #fff;
+  border-color: var(--badge-line);
+}
+
+.preview .preview__tool[aria-pressed='true'],
+.preview .preview__tool[aria-pressed='true']:hover {
+  color: var(--badge);
+  background: var(--ink);
+}
+
+.preview__problem {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+
+.preview__quiet {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.preview__offline {
+  margin-top: 8px;
+}
+
+/* The app and the screenshots beside it */
+.preview__main {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 16px;
+  min-height: 0;
+  margin-top: 12px;
+}
+
+.preview__stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.preview__stage[hidden] {
+  display: none;
+}
+
+.preview__stage.has-device {
+  padding: 12px;
+  background: var(--preview-soft);
+  border-radius: 14px;
+}
+
+.preview__full {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--badge-line);
+  border-radius: 14px;
+}
+
+.app-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 0;
+}
+
+.preview__device-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview__device {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px var(--badge-line),
+    0 12px 28px -14px rgba(10, 24, 18, 0.45);
+}
+
+.preview__device-inner {
+  transform-origin: 0 0;
+}
+
+.preview__frame-words {
+  margin: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* The states table, over the empty frame */
+.preview__state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.preview__line {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 34em;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* The running mark: the highlighter dot with its halo, still with reduced motion. */
+.preview__mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--highlighter-soft);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.preview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.preview__command {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.preview__command code {
+  padding: 1px 6px;
+  color: var(--ink);
+  background: var(--preview-soft);
+  border-radius: 4px;
+}
+
+.preview__opening {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--ink-soft);
+  pointer-events: none;
+  background: #fff;
+}
+
+/* Full screen: the browser's own, or the whole window where there is none (iPhones) */
+.preview__exit {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  min-height: 36px;
+  padding: 6px 12px;
+  background: var(--badge);
+  box-shadow: var(--shadow-panel);
+}
+
+.preview__stage:fullscreen {
+  padding: 16px;
+  background: var(--badge);
+}
+
+/* Filling the window where the browser refused full screen: the main view's container is the fixed stage's containing
+   block, so while the stage fills, the main view drops it, reaches the window's right edge and lies over the bar and the
+   side panel. The iframe stays where it is, so the app is not reloaded. */
+.shell-main:has(.preview__stage.is-filling) {
+  right: 0;
+  z-index: var(--z-top);
+  container-type: normal;
+}
+
+.preview__stage.is-filling {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--badge);
+}
+
+/* Screenshots: newest first, a thumbnail, who and when, the caption as text */
+.preview__shots {
+  flex: none;
+  width: 252px;
+  min-height: 0;
+  padding: 0 6px 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.preview__shots-title {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.preview__shot-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preview-shot {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 6px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+
+/* The one enlarged: selected, so the highlighter, with an ink edge. */
+.preview-shot.is-open {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--highlighter);
+}
+
+.preview-shot__img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  background: var(--preview-soft);
+  border-radius: 8px;
+}
+
+.preview-shot__who {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.preview-shot__caption {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* A screenshot enlarged in the frame's place */
+.preview-large {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+.preview-large__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.preview-large__back {
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+.preview-large__who {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.preview-large__picture {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+  background: var(--preview-soft);
+  border-radius: 14px;
+}
+
+.preview-large__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.preview-large__caption {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .preview-shot:hover {
+    background: var(--badge-hover);
+  }
+
+  .preview__tool:not([aria-disabled='true']):not([aria-pressed='true']):hover,
+  .preview-large__back:hover {
+    background: var(--badge-hover);
+  }
+}
+
+/* Pressed with any pointer, a step darker than hover (styles.css, --badge-pressed). */
+.preview-shot:active,
+.preview__tool:not([aria-disabled='true']):not([aria-pressed='true']):active,
+.preview-large__back:active {
+  background: var(--badge-pressed);
+}
+
+/* Phones: the bar wraps under the path, controls are 44 px, the screenshots fill the screen when shown */
+@media (max-width: 720px) {
+  .preview__path {
+    flex-basis: 100%;
+  }
+
+  .preview__path-input {
+    height: 44px;
+    font-size: 1rem;
+  }
+
+  .preview__tool,
+  .preview-large__back,
+  .preview__exit {
+    min-height: 44px;
+  }
+
+  .preview__main {
+    margin-top: 10px;
+  }
+
+  .preview__shots {
+    flex: 1 1 auto;
+    width: auto;
+    padding: 0;
+  }
+
+  .preview__shot-list {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+/* The office's screen: fills the box it is put in */
+.preview-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--screen-ink);
+  background: var(--screen-off);
+  border-radius: inherit;
+}
+
+.preview-screen__app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transform-origin: 0 0;
+}
+
+.preview-screen__shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.preview-screen__line {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 8px;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.preview-screen__open {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+}
+
+.preview-screen__open:focus-visible {
+  outline-offset: -3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .preview-screen__open:hover {
+    box-shadow: inset 0 0 0 2px var(--highlighter);
+  }
+}
+
+/* The preview over the map: one sheet of paper on the mat; the app and its bar fill it, the dock stays clear. */
+.pv-paper {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0 var(--gutter) var(--dock-clear) 20px;
+  padding: 12px 16px 16px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}

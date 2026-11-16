@@ -1,0 +1,267 @@
+{
+  "prompt": "A team task tracker: sign-up and sign-in, workspaces with roles (owner, member, guest), projects with tasks, assignees, due dates and comments, a REST API, a responsive web UI with a board view, email-style notifications stored in the database, CSV export, and an admin page; SQLite; with tests for the API and the UI.",
+  "preset": "balanced",
+  "org": {
+    "size": "medium",
+    "sizing": "Balanced: one web app with three distinct parts (the API and data, the web UI, and its visual system), so three makers flat under me, and I do the one final review.",
+    "people": [
+      {
+        "id": "ceo",
+        "title": "CEO",
+        "level": "ceo",
+        "reportsTo": null,
+        "model": "opus"
+      },
+      {
+        "id": "backend-engineer",
+        "title": "Backend engineer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      },
+      {
+        "id": "frontend-engineer",
+        "title": "Frontend engineer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      },
+      {
+        "id": "ui-designer",
+        "title": "Product designer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      }
+    ]
+  },
+  "plan": {
+    "version": 1,
+    "versions": 1,
+    "goal": "Build Teamboard, a team task tracker: sign-up and sign-in, workspaces with owner/member/guest roles, projects with tasks, assignees, due dates and comments, a documented REST API, a responsive React web UI with a drag-and-drop board, email-style notifications stored in SQLite, CSV export and a site admin page, with API tests (Vitest) and UI tests (Playwright).",
+    "milestones": [
+      {
+        "id": "ms-1",
+        "title": "Foundations"
+      },
+      {
+        "id": "ms-2",
+        "title": "Core tracker end to end"
+      },
+      {
+        "id": "ms-3",
+        "title": "Notifications, admin and final review"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "p-1",
+        "title": "Server foundation, auth, workspaces and the API contract",
+        "owner": "backend-engineer",
+        "files": [
+          "docs/api.md",
+          "server/package.json",
+          "server/package-lock.json",
+          "server/tsconfig.json",
+          "server/vitest.config.ts",
+          "server/.gitignore",
+          "server/src/index.ts",
+          "server/src/core",
+          "server/src/db",
+          "server/src/lib",
+          "server/src/test-utils",
+          "server/src/scripts",
+          "server/src/routes/auth",
+          "server/src/routes/workspaces"
+        ],
+        "check": "npm --prefix server run typecheck && npm --prefix server test",
+        "after": [],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-4",
+        "title": "Web app setup and API client",
+        "owner": "frontend-engineer",
+        "files": [
+          "web/package.json",
+          "web/package-lock.json",
+          "web/tsconfig.json",
+          "web/tsconfig.node.json",
+          "web/vite.config.ts",
+          "web/index.html",
+          "web/playwright.config.ts",
+          "web/.gitignore",
+          "web/src/vite-env.d.ts",
+          "web/src/test-setup.ts",
+          "web/src/lib",
+          "web/e2e/support"
+        ],
+        "check": "npm --prefix web run typecheck && npm --prefix web test",
+        "after": [],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-5",
+        "title": "Teamboard design system and gallery",
+        "owner": "ui-designer",
+        "files": [
+          "web/src/ui",
+          "web/gallery.html",
+          "docs/design.md"
+        ],
+        "check": "npm --prefix web run typecheck && npm --prefix web test",
+        "after": [
+          "p-4"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-2",
+        "title": "Projects, tasks, comments and CSV export API",
+        "owner": "backend-engineer",
+        "files": [
+          "server/src/routes/projects",
+          "server/src/routes/tasks",
+          "server/src/routes/comments",
+          "server/src/routes/export"
+        ],
+        "check": "npm --prefix server run typecheck && npm --prefix server test",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-6",
+        "title": "App shell, sign-in and workspace screens",
+        "owner": "frontend-engineer",
+        "files": [
+          "web/src/main.tsx",
+          "web/src/app",
+          "web/src/features/auth",
+          "web/src/features/workspaces",
+          "web/e2e/auth-workspaces"
+        ],
+        "check": "npm --prefix web run typecheck && npm --prefix web test && npm --prefix web run test:e2e",
+        "after": [
+          "p-1",
+          "p-5"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-7",
+        "title": "Projects, board, task detail, comments and export screens",
+        "owner": "frontend-engineer",
+        "files": [
+          "web/src/features/projects",
+          "web/src/features/board",
+          "web/src/features/tasks",
+          "web/e2e/board"
+        ],
+        "check": "npm --prefix web run typecheck && npm --prefix web test && npm --prefix web run test:e2e",
+        "after": [
+          "p-2",
+          "p-6"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-3",
+        "title": "Notifications inbox and admin API",
+        "owner": "backend-engineer",
+        "files": [
+          "server/src/routes/notifications",
+          "server/src/routes/admin"
+        ],
+        "check": "npm --prefix server run typecheck && npm --prefix server test",
+        "after": [
+          "p-2"
+        ],
+        "kind": null,
+        "milestone": "ms-3"
+      },
+      {
+        "id": "p-8",
+        "title": "Inbox and admin screens, root scripts and README",
+        "owner": "frontend-engineer",
+        "files": [
+          "web/src/features/inbox",
+          "web/src/features/admin",
+          "web/e2e/inbox-admin",
+          "README.md",
+          "package.json"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-3",
+          "p-7"
+        ],
+        "kind": null,
+        "milestone": "ms-3"
+      },
+      {
+        "id": "p-9",
+        "title": "Final review against the stakeholder's request",
+        "owner": "ceo",
+        "files": [],
+        "check": null,
+        "after": [
+          "p-1",
+          "p-2",
+          "p-3",
+          "p-4",
+          "p-5",
+          "p-6",
+          "p-7",
+          "p-8"
+        ],
+        "kind": "verification",
+        "milestone": "ms-3"
+      }
+    ],
+    "contracts": 0
+  },
+  "refusals": {
+    "org": [
+      {
+        "at": 1794585834302,
+        "count": 2,
+        "errors": [
+          "people[1].owns: up to 200 characters, got 239",
+          "people[2].owns: up to 200 characters, got 218"
+        ]
+      }
+    ],
+    "plan": [
+      {
+        "at": 1794586149685,
+        "count": 2,
+        "errors": [
+          "“Server foundation, auth, workspaces and the API contract” (p-1) is too big for one context: its files span 6 areas (the project root, .gitignore, docs, server, server/src, server/scripts). Split it by area into tasks that each own one area with its own tests and check (never one task to build and another to test), keeping each to 4 areas, 2400 characters of brief and 6 requirements.",
+          "“Final review against the stakeholder's request” (p-9) doesn't cite the stakeholder's words; its doneWhen must say it checks each requirement from stakeholder_words and reports each one's result."
+        ]
+      },
+      {
+        "at": 1794586210960,
+        "count": 8,
+        "errors": [
+          "Task p-4's brief names package.json, which is in task p-8's files, not its own, so its changes there would stay out of its commit. Add package.json to its files (with it waiting for p-8), or reword the brief if it only reads the file.",
+          "Task p-2's brief names docs/api.md, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add docs/api.md to its files (with it waiting for p-1), or reword the brief if it only reads the file.",
+          "Task p-6's brief names docs/api.md, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add docs/api.md to its files (with it waiting for p-1), or reword the brief if it only reads the file.",
+          "Task p-6's brief names docs/design.md, which is in task p-5's files, not its own, so its changes there would stay out of its commit. Add docs/design.md to its files (with it waiting for p-5), or reword the brief if it only reads the file.",
+          "Task p-7's brief names docs/api.md, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add docs/api.md to its files (with it waiting for p-1), or reword the brief if it only reads the file.",
+          "Task p-7's brief names docs/design.md, which is in task p-5's files, not its own, so its changes there would stay out of its commit. Add docs/design.md to its files (with it waiting for p-5), or reword the brief if it only reads the file.",
+          "Task p-3's brief names docs/api.md, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add docs/api.md to its files (with it waiting for p-1), or reword the brief if it only reads the file.",
+          "Task p-8's brief names docs/api.md, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add docs/api.md to its files (with it waiting for p-1), or reword the brief if it only reads the file."
+        ]
+      }
+    ]
+  }
+}

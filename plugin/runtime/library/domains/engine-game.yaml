@@ -1,0 +1,17 @@
+id: engine-game
+title: Engine game
+summary: Games built in Godot, Unity or Unreal for desktop, console or mobile.
+detect:
+  priority: 2
+  files: [project.godot, export_presets.cfg, ProjectSettings, "*.uproject"]
+roles:
+  lean: [engine-specialist, game-designer, art-director, qa-engineer]
+  standard: [level-designer, technical-artist, sound-designer, performance-engineer]
+  full: [producer, narrative-writer, ui-designer, accessibility-specialist, localization-specialist, analytics-engineer,
+    release-manager, 3d-artist]
+rules: [godot, unity, unreal, tests]
+skills: [plan-feature, fix-bug, ship, playtest, store-submission, standup]
+gates:
+  lean: [playtest-gate]
+  standard: [code-gate, perf-gate]
+  full: [a11y-gate, release-gate]

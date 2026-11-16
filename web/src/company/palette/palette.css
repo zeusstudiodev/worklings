@@ -1,0 +1,316 @@
+/* The command palette (web/src/company/palette/): a modal dialog over the office with one field and the list under it.
+   No motion: it is there or it isn't, so reduced motion needs nothing of its own. */
+
+.palette {
+  width: min(640px, calc(100vw - 24px));
+  max-height: min(72dvh, 600px);
+  margin: 12vh auto auto;
+  padding: 0;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: var(--shadow-panel);
+}
+
+.palette::backdrop {
+  background: rgb(10 24 18 / 0.45);
+}
+
+.palette__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: inherit;
+  padding: 12px 14px 10px;
+}
+
+.palette__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.palette__title {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.palette__head-buttons {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.palette__head-button {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.palette__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  font-family: var(--font);
+  font-size: 1rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.palette__input:focus-visible,
+.palette__text:focus-visible {
+  border-color: var(--ink);
+}
+
+.palette__step,
+.palette__label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.palette__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 -4px;
+  padding: 0 4px 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.palette__group {
+  padding: 10px 10px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.palette__option {
+  display: grid;
+  gap: 1px;
+  min-height: 40px;
+  padding: 7px 10px;
+  cursor: pointer;
+  border-radius: 9px;
+}
+
+/* The option Enter picks: the highlighter's soft fill and an ink rule, so it shows without colour alone. */
+.palette__option.is-active {
+  background: var(--highlighter-soft);
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+
+.palette__option[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.palette__option-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.palette__option-hint {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.palette__empty,
+.palette__more {
+  margin: 4px 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.palette__form {
+  display: grid;
+  gap: 8px;
+}
+
+.palette__text {
+  font-size: 0.9375rem;
+}
+
+textarea.palette__text {
+  min-height: 84px;
+  max-height: 40dvh;
+  resize: vertical;
+}
+
+.palette__text.is-over {
+  border-color: var(--danger);
+}
+
+.palette__form-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.palette__hint {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.palette__hint .is-over {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.palette__problem {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.palette__keys {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .palette__head-button:hover {
+    background: var(--badge-hover);
+  }
+}
+
+/* Phones: at the top, where the keyboard can't cover it, with 44 px targets and no key help. */
+@media (max-width: 720px) {
+  .palette {
+    width: calc(100vw - 16px);
+    /* The browser's own modal margin would take 38 px of a narrow phone. */
+    max-width: calc(100vw - 16px);
+    max-height: 62dvh;
+    margin: calc(8px + env(safe-area-inset-top, 0px)) auto auto;
+    border-radius: 14px;
+  }
+
+  .palette__head-button {
+    min-height: 44px;
+  }
+
+  .palette__option {
+    min-height: 44px;
+  }
+
+  .palette__form .button {
+    min-height: 44px;
+  }
+
+  .palette__text {
+    font-size: 1rem;
+  }
+}
+
+@media (hover: none) {
+  .palette__keys {
+    display: none;
+  }
+}
+
+/* Short viewports (400% zoom is 320 by 256): the dialog takes the height there is, the list keeps about two options and
+   the panel scrolls, so the field, the list and Close are all reachable. */
+@media (max-height: 560px) {
+  .palette {
+    max-height: calc(100dvh - 16px);
+    margin-top: 8px;
+  }
+
+  .palette__panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .palette__list {
+    flex: 0 0 auto;
+    min-height: 92px;
+  }
+}
+
+/* Forced colours drop the fill and the shadow: the active option keeps its marking with the system's highlight. */
+@media (forced-colors: active) {
+  .palette__option.is-active {
+    color: HighlightText;
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .palette__option.is-active .palette__option-hint {
+    color: HighlightText;
+  }
+}
+
+/* What a palette action did, left in view for about ten seconds, with Undo where the change can be undone. */
+.palette-toast {
+  position: fixed;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  left: 18px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  max-width: min(460px, calc(100vw - 36px));
+  padding: 10px 14px;
+  font-weight: 500;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 10px;
+  box-shadow: var(--shadow-panel);
+}
+
+.palette-toast__text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.palette-toast__button {
+  min-height: 28px;
+  padding: 0 4px;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .palette-toast {
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    left: 10px;
+    max-width: none;
+  }
+
+  .palette-toast__button {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,4665 @@
+/* Worklings office. Tokens and principles: docs/design.md */
+:root {
+  --mat: #3e5b4e;
+  --mat-grid: #5e7d6f;
+  --badge: #fcfbf7;
+  --badge-line: #e6e2d8;
+  --badge-hover: #f1eee6;
+  --ink: #18241f;
+  --ink-soft: #55635c;
+  --highlighter: #f2d541;
+  --highlighter-soft: rgba(242, 213, 65, 0.38);
+  --danger: #b3402f;
+  --ok: #367048;
+  /* Pressed: a step darker than hover while held, so a press shows on touch too; the primary goes a step deeper. */
+  --badge-pressed: #e9e4da;
+  --ink-hover: #2c3d35;
+  --ink-deep: #0b120e;
+  --highlighter-hover: #f6df63;
+  /* Quiet fills and marks: notes and callouts, pills and tracks, decorative rules, markers with no department hue. */
+  --note: #f4f1e9;
+  --pill: #efece3;
+  --rule: #c4bdae;
+  --stone: #b9ae9c;
+  --no-hue: #8c948f;
+  /* States the palette has no colour for: waiting words, resting, stuck, a warning, the office screen while off. */
+  --waiting-ink: #7a5c00;
+  --rest: #5f7391;
+  --stuck-ink: #6e1f14;
+  --stuck-fill: #f7d6ce;
+  --warn-fill: #fbf1cc;
+  --screen-off: #2e3833;
+  --screen-ink: #f3f0ea;
+  /* Scales. Type: 12, 13, 14, 15 (body), 16 (phones), 19 (titles, Semi Condensed), 24 (panel headings), 28 (figures).
+     Radius: 4 (signs, markers), 8 (buttons, tags), 10 (fields, rows, choices), 14 (bubbles, cards), 16 (sheets,
+     popovers, panels), 999 (pills), 50% (dots). */
+  --font: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-narrow: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+  --panel-width: 384px;
+  --shadow-panel: 0 22px 44px -22px rgba(10, 24, 18, 0.6), 0 2px 6px rgba(10, 24, 18, 0.12);
+  color-scheme: light;
+
+  /* Stage and dock (docs/design-hud.md, "Tokens"). Room hues, as the scene's DEPARTMENT_HUE; the CEO's gold. */
+  --direction: #8e7cc3;
+  --design: #e58fa0;
+  --art: #e9a36b;
+  --engineering: #5b8fc7;
+  --ops: #e07f3c;
+  --data: #3fa5a0;
+  --quality: #6fae6a;
+  --security: #d9625b;
+  --content: #e2bf4f;
+  --lead-gold: #c9b458;
+  /* The mat as the desktop camera draws it, so a board and the office shrinking into the corner share one colour; words
+     on the mat, the org chart's lines, column trays, the board's grid and what Find passes over. */
+  --mat-shade: #204b3a;
+  --mat-ink: var(--badge);
+  --mat-line: #9db0a6;
+  --lane-fill: #2f5747;
+  --lane-lit: #3d6253;
+  --grid-minor: rgb(252 251 247 / 0.05);
+  --grid-major: rgb(252 251 247 / 0.11);
+  --dim-paper: #afbdb5;
+  /* Edges and elevation: crisp, a hard contact line and one short shadow, never a blur over the model. */
+  --sunk: inset 0 2px 0 rgb(24 36 31 / 0.18);
+  --bevel: inset 0 -3px 0 rgb(24 36 31 / 0.14);
+  --bevel-ink: inset 0 -3px 0 rgb(0 0 0 / 0.4);
+  --lift-1: 0 1px 0 rgb(10 24 18 / 0.32), 0 4px 8px -4px rgb(10 24 18 / 0.5);
+  --lift-2: 0 2px 0 rgb(10 24 18 / 0.28), 0 12px 20px -12px rgb(10 24 18 / 0.6);
+  --lift-3: 0 2px 0 rgb(10 24 18 / 0.28), 0 22px 44px -22px rgb(10 24 18 / 0.62);
+  --lift-4: 0 6px 0 rgb(10 24 18 / 0.14), 0 26px 34px -14px rgb(10 24 18 / 0.6);
+  --ring: 0 0 0 6px var(--highlighter);
+  /* Type in rem, so the HUD follows the browser's text size (v2's scale: 12, 13, 14, 15, 16, 19, 24, 28 px). */
+  --text-12: 0.75rem;
+  --text-13: 0.8125rem;
+  --text-14: 0.875rem;
+  --text-15: 0.9375rem;
+  --text-16: 1rem;
+  --text-19: 1.1875rem;
+  --text-24: 1.5rem;
+  --text-28: 1.75rem;
+  /* The shell's geometry: one gutter between every floating piece and from the window's edges. The talk bar measures
+     itself into --talk-now (on the shell's root); a board's scrollers keep --dock-clear free at their foot. */
+  --gutter: 12px;
+  --bar-h: 44px;
+  --stage-top: calc(var(--gutter) * 2 + var(--bar-h));
+  --views-h: 56px;
+  --talk-now: 56px;
+  --dock-clear: calc(var(--gutter) * 2 + var(--talk-now) + 8px + 30px);
+  /* Motion. */
+  --t-press: 80ms;
+  --t-hover: 120ms;
+  --t-quick: 150ms;
+  --t-move: 220ms;
+  --t-stage: 250ms;
+  --t-hop: 300ms;
+  --t-refit: 350ms;
+  --t-ring: 400ms;
+  --t-flight: 450ms;
+  --t-fade: 1000ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-settle: cubic-bezier(0.3, 1.35, 0.5, 1);
+  /* Layers, bottom to top. Lists, menus and tooltips open in the top layer (popover), the palette and dialogs above all. */
+  --z-labels: 2;
+  --z-caption: 10;
+  --z-dock: 15;
+  --z-minimap: 16;
+  --z-panel: 18;
+  --z-separator: 19;
+  --z-bar: 20;
+  --z-feed: 22;
+  --z-sheet: 24;
+  --z-top: 30;
+}
+
+/* The phone layout (a width of 720 px or less, or a height of 480 px or less): an 8 px gutter, and the views row under
+   the bar, except in short windows (under 560 px tall), where the views fold into the bar. */
+@media (max-width: 720px), (max-height: 480px) {
+  :root {
+    --gutter: 8px;
+    --stage-top: calc(var(--gutter) * 3 + var(--bar-h) + var(--views-h));
+  }
+}
+
+@media (max-width: 720px) and (max-height: 559px), (max-height: 480px) {
+  :root {
+    --stage-top: calc(var(--gutter) * 2 + var(--bar-h));
+  }
+}
+
+/* Paper in a room's colour (design-hud, decision 4): set `data-hue` to the room's style and the hue follows. Sticky paper
+   is 34% of the hue over badge, its glue band 62%, a reply bubble 24% over white; Content's and the lead's gold stay
+   cream (24% and 40%), so yellow paper only ever means you. */
+[data-hue='direction'] {
+  --hue: var(--direction);
+}
+
+[data-hue='design'] {
+  --hue: var(--design);
+}
+
+[data-hue='art'] {
+  --hue: var(--art);
+}
+
+[data-hue='engineering'] {
+  --hue: var(--engineering);
+}
+
+[data-hue='ops'] {
+  --hue: var(--ops);
+}
+
+[data-hue='data'] {
+  --hue: var(--data);
+}
+
+[data-hue='quality'] {
+  --hue: var(--quality);
+}
+
+[data-hue='security'] {
+  --hue: var(--security);
+}
+
+[data-hue='content'] {
+  --hue: var(--content);
+}
+
+[data-hue='lead-gold'] {
+  --hue: var(--lead-gold);
+}
+
+[data-hue] {
+  --paper: color-mix(in srgb, var(--hue, var(--no-hue)) 34%, var(--badge));
+  --paper-band: color-mix(in srgb, var(--hue, var(--no-hue)) 62%, var(--badge));
+  --paper-reply: color-mix(in srgb, var(--hue, var(--no-hue)) 24%, #fff);
+}
+
+[data-hue='content'],
+[data-hue='lead-gold'] {
+  --paper: color-mix(in srgb, var(--hue) 24%, var(--badge));
+  --paper-band: color-mix(in srgb, var(--hue) 40%, var(--badge));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--mat);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+select,
+textarea,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+code,
+pre {
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.86em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--highlighter);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+/* the stage */
+.office {
+  position: fixed;
+  inset: 0;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+}
+
+.stage canvas {
+  touch-action: none;
+}
+
+/* top bar */
+.topbar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: calc(var(--panel-width) + 24px);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.topbar > * {
+  pointer-events: auto;
+}
+
+.topbar__id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 14px 8px 12px;
+  background: var(--badge);
+  border-radius: 999px;
+  box-shadow: var(--shadow-panel);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+}
+
+.wordmark__mark {
+  width: 18px;
+  height: 18px;
+  fill: var(--ink);
+}
+
+.topbar__project {
+  min-width: 0;
+  max-width: 26ch;
+  overflow: hidden;
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mode {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+.mode__dot {
+  width: 8px;
+  height: 8px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--highlighter-soft);
+}
+
+.mode--live .mode__dot {
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.mode--offline .mode__dot {
+  background: var(--stone);
+  box-shadow: none;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 7px rgba(242, 213, 65, 0);
+  }
+}
+
+.ledger {
+  display: flex;
+  margin: 0 0 0 auto;
+  padding: 6px 4px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+}
+
+.ledger__item {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 0 12px;
+}
+
+.ledger__item + .ledger__item {
+  border-left: 1px solid var(--badge-line);
+}
+
+.ledger dt {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.ledger dd {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.icon-button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: var(--shadow-panel);
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* the panel: one sheet with rows, not a stack of cards */
+.panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  width: var(--panel-width);
+  overflow: hidden;
+  background: var(--badge);
+  border-radius: 16px;
+  box-shadow: var(--shadow-panel);
+}
+
+.panel__handle {
+  display: none;
+}
+
+.panel__body {
+  flex: 1;
+  scroll-padding-bottom: var(--sticky-foot, 0px);
+  padding: 6px 16px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.tabs__tab {
+  position: relative;
+  flex: 1;
+  padding: 10px 8px 9px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-bottom: 4px solid transparent;
+}
+
+.tabs__tab:active {
+  background: var(--badge-pressed);
+}
+
+/* The selected tab's ink underline is what shows it (15.5:1); the highlighter above it is the house's "selected". The
+   highlighter is a bar of its own: an inset shadow left a hairline down the tab's side at fractional pixel ratios. */
+.tabs__tab[aria-selected='true'] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.tabs__tab[aria-selected='true']::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  content: '';
+  background: var(--highlighter);
+}
+
+.group-title {
+  margin: 20px 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.group-title__button {
+  padding: 0;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  text-decoration: underline transparent;
+}
+
+.group-title__button:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+.group-note {
+  margin: -2px 0 6px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows__empty {
+  margin: 8px 0;
+  color: var(--ink-soft);
+}
+
+.rows__more {
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.task {
+  display: grid;
+  gap: 2px;
+  padding: 8px 8px 8px 26px;
+  position: relative;
+}
+
+/* An open task is an empty box, a done one is ticked off with the highlighter. */
+.task::before {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 6px;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 4px;
+}
+
+.task--done::before {
+  background: var(--highlighter);
+  border-color: var(--ink);
+}
+
+.task--done .task__title {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.task__title {
+  overflow-wrap: anywhere;
+}
+
+.task__meta {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 6px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+}
+
+.row:hover {
+  background: var(--badge-hover);
+}
+
+.row.is-selected {
+  background: var(--highlighter-soft);
+}
+
+.row__marker {
+  align-self: stretch;
+  min-height: 30px;
+  border-radius: 4px;
+}
+
+.row__main {
+  min-width: 0;
+}
+
+.row__title {
+  display: block;
+  font-weight: 600;
+}
+
+.row__status {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.row__detail {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.row__cost {
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.status--working,
+.status--thinking {
+  color: var(--ok);
+}
+
+.status--waiting {
+  color: var(--waiting-ink);
+}
+
+.status--error {
+  color: var(--danger);
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+.pill.status--waiting {
+  background: var(--highlighter);
+  color: var(--ink);
+}
+
+/* callouts and notes */
+.callout {
+  position: absolute;
+  top: 92px;
+  left: 24px;
+  max-width: 440px;
+  padding: 18px 20px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+}
+
+.callout--inline {
+  position: static;
+  max-width: none;
+  margin: 12px 0 4px;
+  padding: 14px 16px;
+  background: var(--note);
+  box-shadow: none;
+}
+
+.callout--warn {
+  position: static;
+  max-width: none;
+  margin: 12px 0;
+  background: var(--warn-fill);
+  box-shadow: none;
+}
+
+.callout__title {
+  margin: 0 0 8px;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.callout--inline .callout__title,
+.callout--warn .callout__title {
+  font-size: 1rem;
+}
+
+.callout p {
+  margin: 0 0 10px;
+}
+
+.callout__code {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 8px;
+}
+
+.steps {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.steps li + li {
+  margin-top: 4px;
+}
+
+.note {
+  margin: 8px 0;
+  padding: 8px 10px;
+  font-size: 0.8125rem;
+  background: var(--note);
+  border-radius: 8px;
+}
+
+.plain-list {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.plain-list li + li {
+  margin-top: 4px;
+}
+
+/* the ID badge of a person or a room */
+/* Text on a room colour is a deeper ink: 5.26:1 or better on every band, where ink is 4.44:1 on Direction. */
+.badge__band {
+  position: relative;
+  margin: -6px -16px 14px;
+  padding: 34px 16px 16px;
+  color: var(--ink-deep);
+  background: var(--hue, var(--no-hue));
+}
+
+.badge__band::before {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 46px;
+  height: 9px;
+  content: '';
+  background: var(--badge);
+  border-radius: 8px;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.25);
+  transform: translateX(-50%);
+}
+
+.badge__back {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  padding: 4px 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.badge__back:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.badge__title {
+  margin: 8px 0 2px;
+  font-family: var(--font-narrow);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.badge__room {
+  margin: 0;
+  font-weight: 500;
+}
+
+.badge__now p {
+  margin: 8px 0 0;
+}
+
+.badge__doing {
+  font-weight: 600;
+}
+
+.badge__error {
+  color: var(--danger);
+}
+
+.badge__task {
+  overflow-wrap: anywhere;
+}
+
+.badge__description {
+  margin: 14px 0;
+  color: var(--ink-soft);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin: 16px 0 8px;
+}
+
+.stats div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.stats dt {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.stats dd {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats__bad {
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.files summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.files ul {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.levers {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--badge-line);
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.levers__save {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--note);
+  border-radius: 8px;
+}
+
+.levers__save p {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.levers__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.field--block {
+  grid-template-columns: 1fr;
+}
+
+.field--inline {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+}
+
+.field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+select,
+textarea {
+  padding: 7px 10px;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 8px;
+}
+
+textarea {
+  width: 100%;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.button {
+  justify-self: start;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--badge-hover);
+}
+
+.button--primary {
+  color: var(--badge);
+  background: var(--ink);
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+.button--danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Pressed, with any pointer: light controls a step darker than hover, the primary a step deeper. */
+.button:active:not(:disabled, [aria-disabled='true']) {
+  background: var(--badge-pressed);
+}
+
+.button--primary:active:not(:disabled, [aria-disabled='true']) {
+  background: var(--ink-deep);
+}
+
+/* Unavailable keeps full opacity (design.md, "Visual details"), as aria-disabled does: ink-soft words and a
+   badge-line edge. Opacity 0.45 took ink to 2.8:1. */
+.button:disabled,
+select:disabled {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: none;
+  border-color: var(--badge-line);
+}
+
+.button--primary:disabled {
+  background: #fff;
+}
+
+.link {
+  padding: 0;
+  font-weight: 600;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* rules and hiring inside a room */
+.rule {
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: var(--note);
+  border-radius: 10px;
+}
+
+.rule summary {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.rule__title {
+  font-weight: 600;
+}
+
+.rule__paths {
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rule__body {
+  max-height: 260px;
+  margin: 10px 0;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.rule__form {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.rule__actions,
+.confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hire {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.hire__title {
+  font-weight: 600;
+}
+
+.hire__desc {
+  grid-column: 1;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.hire .button {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
+/* payroll */
+.payroll__total {
+  display: flex;
+  flex-direction: column;
+  margin: 14px 0 8px;
+}
+
+.payroll__total-figure {
+  font-family: var(--font-narrow);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.payroll__total-label {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.payroll__split {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ledger-table th,
+.ledger-table td {
+  padding: 7px 4px;
+  text-align: left;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.ledger-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.ledger-table tbody th {
+  font-weight: 500;
+}
+
+.ledger-table__sub {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.num {
+  text-align: right !important;
+  font-family: var(--font-narrow);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.share {
+  display: inline-block;
+  min-width: 52px;
+  padding: 1px 6px;
+  background: linear-gradient(90deg, var(--hue) var(--share), var(--pill) var(--share));
+  border-radius: 4px;
+}
+
+.advice {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.advice__item {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0;
+  padding: 9px 12px;
+  background: var(--note);
+  border-left: 4px solid var(--rule);
+  border-radius: 8px;
+}
+
+.advice__item--expensive {
+  border-left-color: var(--highlighter);
+}
+
+.advice__item--failing {
+  border-left-color: var(--danger);
+}
+
+.rooms-bar {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rooms-bar li {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+  padding: 5px 8px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--hue) 45%, transparent) var(--share), transparent var(--share));
+  border-radius: 8px;
+}
+
+.rooms-bar__value {
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the story: milestones, newest first. Who did what on top with the time beside it, what it was about under it. */
+.story {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story__line {
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'marker head time'
+    'marker about about';
+  align-items: baseline;
+  column-gap: 10px;
+  padding: 8px 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.story__marker {
+  grid-area: marker;
+  align-self: stretch;
+  background: var(--hue);
+  border-radius: 4px;
+}
+
+.story__head {
+  grid-area: head;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.story__name {
+  font-weight: 600;
+}
+
+.story__about {
+  grid-area: about;
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.story__time {
+  grid-area: time;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Your own words, as you wrote them. */
+.story__line--asked .story__about {
+  font-style: italic;
+}
+
+.story__line--stopped .story__about {
+  color: var(--danger);
+}
+
+/* labels drawn over the 3D model */
+.person-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.bubble {
+  position: relative;
+  max-width: 220px;
+  padding: 5px 10px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: 0 8px 16px -10px rgba(0, 0, 0, 0.6);
+}
+
+.name-tag {
+  display: flex;
+  gap: 8px;
+  padding: 3px 9px;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--badge);
+  white-space: nowrap;
+  background: var(--ink);
+  border-radius: 8px;
+}
+
+.name-tag__cost {
+  color: var(--highlighter);
+  font-variant-numeric: tabular-nums;
+}
+
+.room-sign {
+  white-space: nowrap;
+}
+
+.room-sign__button,
+.room-sign--plain span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 10px 3px 8px;
+  font-family: var(--font-narrow);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  background: var(--badge);
+  border: 0;
+  border-left: 6px solid var(--hue, var(--stone));
+  border-radius: 4px;
+  box-shadow: 0 6px 14px -10px rgba(0, 0, 0, 0.7);
+}
+
+.room-sign__button {
+  cursor: pointer;
+}
+
+.room-sign.is-selected .room-sign__button {
+  background: var(--highlighter);
+}
+
+.room-sign__button:focus-visible {
+  box-shadow: var(--ring), 0 6px 14px -10px rgba(0, 0, 0, 0.7);
+}
+
+.room-sign__more {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.gate-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 8px;
+  font-family: var(--font-narrow);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  background: rgba(252, 251, 247, 0.9);
+  border-radius: 4px;
+}
+
+.gate-label__name {
+  font-weight: 600;
+}
+
+.gate-label__to {
+  color: var(--ink-soft);
+}
+
+.gate-label.is-running {
+  background: var(--highlighter);
+}
+
+.poster-label {
+  max-width: 110px;
+  padding: 1px 5px;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  background: rgba(252, 251, 247, 0.92);
+  border-radius: 4px;
+}
+
+/* replay */
+.replay {
+  padding: 12px 16px;
+  background: var(--note);
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.replay__title {
+  margin: 0 0 8px;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.replay__bar {
+  height: 6px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 4px;
+}
+
+.replay__bar span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
+.replay__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.replay__time {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.replay .field {
+  margin: 0 0 8px;
+}
+
+.replay select#replay-session {
+  width: 100%;
+}
+
+.replay__problem {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+
+/* full-screen states, written on the mat */
+.screen {
+  display: grid;
+  place-content: center;
+  height: 100%;
+  padding: 24px;
+  color: var(--badge);
+  text-align: center;
+}
+
+.screen--inline {
+  position: absolute;
+  inset: 0;
+  right: calc(var(--panel-width) + 24px);
+}
+
+.screen__title {
+  margin: 0 0 6px;
+  font-family: var(--font-narrow);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.screen__text {
+  max-width: 46ch;
+  margin: 0 auto;
+  color: var(--screen-ink);
+}
+
+.screen code {
+  padding: 1px 5px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 4px;
+}
+
+/* confirmation */
+.confirm {
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 22px;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+}
+
+.confirm::backdrop {
+  background: rgba(14, 26, 20, 0.45);
+}
+
+.confirm__title {
+  margin: 0 0 8px;
+  font-family: var(--font-narrow);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.confirm__body {
+  margin: 0 0 18px;
+}
+
+/* toasts */
+.toast-region {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  max-width: min(420px, calc(100vw - 36px));
+  pointer-events: none;
+}
+
+.toast {
+  margin: 0;
+  padding: 10px 14px;
+  font-weight: 500;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 10px;
+  box-shadow: var(--shadow-panel);
+}
+
+.toast--error {
+  background: var(--danger);
+}
+
+/* phones: the panel becomes a bottom sheet and the ledger keeps one figure */
+@media (max-width: 720px) {
+  .topbar {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .topbar__id {
+    gap: 8px;
+    padding: 7px 12px 7px 10px;
+  }
+
+  .ledger dd {
+    font-size: 1rem;
+  }
+
+  .panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    border-radius: 16px 16px 0 0;
+    transition: height 220ms ease;
+  }
+
+  .panel__handle {
+    position: relative;
+    display: block;
+    padding: 16px 0 4px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    background: none;
+    border: 0;
+  }
+
+  .panel__handle::before {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 40px;
+    height: 5px;
+    content: '';
+    background: var(--rule);
+    border-radius: 4px;
+    transform: translateX(-50%);
+  }
+
+  .callout {
+    top: 76px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    padding: 14px 16px;
+  }
+
+  .toast-region {
+    top: 70px;
+    bottom: auto;
+    left: 10px;
+  }
+
+  .screen--inline {
+    right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* "Still office" (the Company menu) is the same ask, made in the office itself: lib/still.ts sets the attribute. */
+html[data-still='on'] *,
+html[data-still='on'] *::before,
+html[data-still='on'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* the label layer over the canvas: positions come from the projector, each label's own offset from its class */
+.labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Labels order themselves with z-index; kept inside the layer, so the top bar, the panel and the sheet stay on top. */
+  isolation: isolate;
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+
+.label .room-sign {
+  transform: translate(0, -100%);
+  pointer-events: auto;
+}
+
+.label .gate-label,
+.label .person-label {
+  transform: translate(-50%, -100%);
+}
+
+.label .poster-label {
+  transform: translate(-50%, 0);
+}
+
+.advice__who {
+  font-weight: 600;
+}
+
+/* phones: smaller labels over a smaller model, and the wordmark keeps only its mark */
+@media (max-width: 720px) {
+  .wordmark__text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .room-sign__button,
+  .room-sign--plain span {
+    padding: 2px 7px 2px 5px;
+    font-size: 0.75rem;
+    border-left-width: 4px;
+  }
+
+  /* 12 px, the scale's smallest; wide enough for the 22 characters a phone's bubble is cut to (design.md). */
+  .bubble {
+    max-width: 164px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+  }
+
+  .gate-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* Now tab */
+.now__stopped {
+  margin: 12px 0 0;
+}
+
+.now__headline {
+  margin: 14px 0 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+/* Who needs you, marked as if with the highlighter. */
+.now__needs,
+.caption__needs {
+  font-weight: 600;
+  background: linear-gradient(transparent 58%, var(--highlighter) 58%, var(--highlighter) 92%, transparent 92%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.now-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.now-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 8px 10px;
+  border-radius: 10px;
+}
+
+.now-row:hover {
+  background: var(--badge-hover);
+}
+
+.now-row__marker {
+  min-height: 30px;
+  background: var(--hue);
+  border-radius: 4px;
+}
+
+.now-row__main {
+  min-width: 0;
+}
+
+.now-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.now-row__name {
+  min-width: 0;
+  padding: 0;
+  font-weight: 600;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+/* The name's button stretches over the whole row: the row is what you click, the name what a screen reader hears. */
+.now-row__name::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: 10px;
+}
+
+.now-row__name:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.now-row__name:focus-visible::after {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 6px var(--highlighter);
+}
+
+.now-row__cost {
+  flex-shrink: 0;
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.now-row__main p {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Cut with an ellipsis at their line counts; the model already cut the text at 160 characters (240 for a result). */
+.now-row__main .now-row__goal,
+.now-row__main .now-row__result {
+  font-size: 0.875rem;
+}
+
+.now-row__goal,
+.now-row__request,
+.now-row__error {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now-row__status,
+.now-row__result {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.now-row__request,
+.now-row__facts {
+  color: var(--ink-soft);
+}
+
+.now-row__status {
+  font-weight: 500;
+}
+
+.now-row__error {
+  color: var(--danger);
+}
+
+.now-row__main .now-row__facts {
+  font-size: 0.75rem;
+}
+
+.now-row__status--needs {
+  color: var(--ink);
+}
+
+.now-fold {
+  margin: 16px 0 0;
+  border-top: 1px solid var(--badge-line);
+}
+
+.now-fold > summary {
+  margin-top: 6px;
+  padding: 10px 8px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.now-fold > summary:hover,
+.now-fold[open] > summary {
+  color: var(--ink);
+}
+
+.now-fold > summary:hover {
+  background: var(--badge-hover);
+}
+
+/* the badge in the same words; focus lands on its title when it opens */
+.badge__title {
+  width: fit-content;
+}
+
+.badge__title:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.badge__request {
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.badge__status {
+  font-weight: 500;
+}
+
+.badge__result {
+  overflow-wrap: anywhere;
+}
+
+/* the headline over the scene, under the top bar: the camera's fit leaves room for three lines */
+.stage__notes {
+  position: absolute;
+  top: 76px;
+  left: 12px;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  max-width: min(480px, calc(100% - var(--panel-width) - 48px));
+  pointer-events: none;
+}
+
+.stage__notes > * {
+  pointer-events: auto;
+}
+
+/* The callout keeps its own width rules and lets its code lines scroll rather than widen it. */
+.stage__notes .callout {
+  position: static;
+  justify-self: stretch;
+  min-width: 0;
+}
+
+.caption {
+  display: -webkit-box;
+  padding: 9px 14px 10px;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.caption:hover {
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .stage__notes {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .now__headline {
+    font-size: 1rem;
+  }
+}
+
+/* Catch me up, under the headline: the button never moves, one line under it, then the newest catch-up */
+.catch-up {
+  margin: 12px 0 4px;
+}
+
+.catch-up__button[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  border-color: var(--badge-line);
+}
+
+.catch-up__button[aria-disabled='true']:hover {
+  background: none;
+}
+
+/* Cancel has its own line from the start of a run, so "It stops at 60s." arriving at 30 s moves nothing. */
+.catch-up__status {
+  display: grid;
+  justify-items: start;
+  row-gap: 4px;
+  margin: 6px 0 0;
+}
+
+.catch-up__line {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.catch-up__line--failed {
+  color: var(--danger);
+}
+
+/* The yellow mark of a running call: it pulses, and keeps still with reduced motion. */
+.catch-up__mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  vertical-align: 1px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--highlighter-soft);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+/* Inline in the line, with a target taller than the text it sits in. */
+.catch-up__cancel {
+  min-height: 24px;
+  padding: 3px 0;
+  font-size: 0.8125rem;
+  color: var(--ink);
+}
+
+/* Cancel pressed: the call is being stopped, so the mark keeps still and Cancel waits, as in the conversation. */
+.catch-up__status.is-stopping .catch-up__mark {
+  animation: none;
+}
+
+.catch-up__cancel[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.catch-up__digest {
+  margin: 12px 0 0;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--rule);
+}
+
+.catch-up__heading {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.catch-up__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.catch-up__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 12px;
+  margin: 4px 0 0;
+}
+
+.catch-up__signature {
+  margin: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.catch-up__more {
+  font-size: 0.8125rem;
+}
+
+.catch-up__earlier {
+  margin: 10px 0 0;
+}
+
+.catch-up__earlier > summary {
+  padding: 6px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.catch-up__earlier > summary:hover,
+.catch-up__earlier[open] > summary {
+  color: var(--ink);
+}
+
+/* the office's own payroll line, pinned under the roles after a rule */
+.ledger-table__office th,
+.ledger-table__office td {
+  border-top: 2px solid var(--rule);
+}
+
+@media (max-width: 720px) {
+  .catch-up__button {
+    min-height: 44px;
+  }
+
+  .catch-up__text:not(.is-open) {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .catch-up__more,
+  .catch-up__cancel {
+    min-height: 44px;
+    margin: 0;
+  }
+
+  .catch-up__earlier > summary,
+  .now-fold > summary {
+    padding-block: 13px;
+  }
+
+  .badge__band {
+    padding-top: 44px;
+  }
+
+  .badge__back {
+    top: 0;
+    min-height: 44px;
+  }
+}
+
+/* Bubbles and meetings */
+/* A bubble lifted clear of its neighbours (stack.ts sets --lift) keeps a thin line down to its person. Each label is a
+   layer of its own, and the lower a bubble ends on screen the higher it lies (labels.tsx sets --layer), so a line never
+   draws over another bubble's words. */
+.label--person {
+  z-index: var(--layer, 1000);
+}
+
+/* Near the side of the screen a label moves in (labels.tsx sets --shift); its line stays over its person. */
+.label .person-label {
+  position: relative;
+  translate: calc(var(--shift, 0) * 1px) calc(var(--lift, 0) * -1px);
+  transition: translate 160ms ease-out;
+}
+
+.label .person-label::after {
+  position: absolute;
+  top: 100%;
+  left: calc(50% - var(--shift, 0) * 1px);
+  width: 2px;
+  height: 1px;
+  margin-left: -1px;
+  content: '';
+  background: rgba(24, 36, 31, 0.45);
+  /* A label held down over its person (a negative lift) has no line. */
+  transform: scaleY(max(var(--lift, 0), 0));
+  transform-origin: top;
+  transition: transform 160ms ease-out;
+}
+
+/* While someone walks, bubbles move every frame: easing their lifts would slide them through each other. */
+.labels:has(.label[data-walking='true']) .person-label,
+.labels:has(.label[data-walking='true']) .person-label::after {
+  transition: none;
+}
+
+/* A room sign a bubble cuts through hides rather than show a fragment, unless it has keyboard focus. Clicks
+   there still open the room, as they did through the bubble before it hid. */
+.label[data-covered] {
+  opacity: 0;
+}
+
+.label[data-covered]:has(:focus-visible) {
+  opacity: 1;
+}
+
+/* A running gate's caption lifts clear of the room signs, and reads in ink on the highlighter (ink-soft is 4.3:1). */
+.label .gate-label {
+  translate: calc(var(--shift, 0) * 1px) calc(var(--lift, 0) * -1px);
+}
+
+.label .room-sign {
+  translate: calc(var(--shift, 0) * 1px) 0;
+}
+
+.gate-label.is-running .gate-label__to {
+  color: var(--ink);
+}
+
+/* Bubbles may pass over room signs, but never over the one that has keyboard focus. */
+.label:has(:focus-visible) {
+  z-index: 2000;
+}
+
+.bubble--needs-you {
+  font-weight: 600;
+  background: var(--highlighter);
+}
+
+/* "Answering you…" and "Answered you" over the person asked. */
+.bubble--answering {
+  background: var(--highlighter);
+}
+
+.bubble--stuck {
+  color: var(--stuck-ink);
+  background: var(--stuck-fill);
+}
+
+/* A report: an ink check mark where the dot goes, and no fill (green means on it in the panel). */
+.bubble__check {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 5px;
+  vertical-align: -1px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bubble--question {
+  box-shadow: inset 0 0 0 1.5px var(--ink), 0 8px 16px -10px rgba(0, 0, 0, 0.6);
+}
+
+.bubble__lead {
+  font-weight: 700;
+}
+
+/* On it: a dot in the person's colour that pulses while a step runs and keeps still between steps. */
+.bubble__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  background: var(--hue, var(--ink-soft));
+  border-radius: 50%;
+}
+
+.bubble__dot.is-busy {
+  animation: bubble-step 1.1s ease-in-out infinite;
+}
+
+@keyframes bubble-step {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+/* The selected person's name tag: the title cuts at 200 px so the cost and Ask always show. */
+.name-tag__title {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .bubble__dot {
+    width: 7px;
+    height: 7px;
+    margin-right: 5px;
+  }
+
+  /* A running gate takes one line on phones, its name alone: where it leads shows in the model. */
+  .gate-label__to {
+    display: none;
+  }
+}
+
+/* Conversation */
+/* Ask aside, beside its person in the scene on desktops, above every other label. */
+.label--ask {
+  z-index: 3000;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Present (so the box can take focus at once) but unseen until the projector has put it beside its person. */
+.label--ask:not([data-placed]) {
+  opacity: 0;
+}
+
+/* When it is taller than its space (a short screen, 200% zoom), the whole conversation scrolls. */
+.talk {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  color: var(--ink);
+  background: var(--badge);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 320 px wide and up to 560 px tall, or the free area's size where that is smaller (labels.tsx sets --room-w and
+   --room), so it never leaves the stage; it opens with a fade and a 4 px slide from the person's side. */
+.talk--popover {
+  position: relative;
+  width: min(320px, var(--room-w, 320px));
+  max-height: min(560px, var(--room, calc(100dvh - 200px)));
+  border-radius: 16px;
+  box-shadow: var(--shadow-panel);
+  animation: talk-in 150ms ease-out;
+}
+
+@keyframes talk-in {
+  from {
+    opacity: 0;
+    translate: var(--talk-from, -4px) 0;
+  }
+}
+
+.label--ask[data-side='left'] {
+  --talk-from: 4px;
+}
+
+/* The tail points at the person's head, sliding along the edge when the popover is held in; out of reach, it goes. It
+   hangs from the label rather than the popover, which would clip it when it scrolls. */
+.label--ask::after {
+  position: absolute;
+  top: calc(var(--tail-y, 20px) - 8px);
+  width: 16px;
+  height: 16px;
+  content: '';
+  background: var(--badge);
+  transform: rotate(45deg);
+  animation: talk-in 150ms ease-out;
+}
+
+.label--ask[data-side='right']::after {
+  left: -7px;
+}
+
+.label--ask[data-side='left']::after {
+  right: -7px;
+}
+
+.label--ask[data-tail='hidden']::after {
+  display: none;
+}
+
+.talk--sheet {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.panel__body--talk {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.talk__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 16px 16px 8px;
+}
+
+.talk--sheet .talk__head {
+  grid-template-columns: 1fr;
+  padding-top: 8px;
+}
+
+.talk__title {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.talk__close,
+.talk__back {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.talk__close {
+  margin: -4px -8px 0 0;
+}
+
+.talk__back {
+  justify-self: start;
+  margin-left: -8px;
+}
+
+.talk__about {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* The thread scrolls; the box stays at the foot. */
+.talk__thread {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px 16px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Short screens (200% zoom, a phone on its side): the thread would shrink to nothing above the box, so it keeps its
+   height and the conversation scrolls as one. */
+@media (max-height: 600px) {
+  .talk__thread {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+.talk__exchanges,
+.talk__lines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.talk__exchanges {
+  gap: 12px;
+}
+
+.talk__line {
+  display: flex;
+  flex-direction: column;
+  max-width: 88%;
+}
+
+.talk__line--mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.talk__line--theirs {
+  align-self: flex-start;
+}
+
+/* Bubbles: radius 14, the corner toward the speaker at 4. Theirs take a light tint of their room (12:1 or better). */
+.talk__said {
+  padding: 8px 12px;
+  line-height: 1.4;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  border-radius: 14px;
+}
+
+.talk__said--mine {
+  color: var(--badge);
+  background: var(--ink);
+  border-bottom-right-radius: 4px;
+}
+
+.talk__said--theirs {
+  background: color-mix(in srgb, var(--hue, var(--no-hue)) 24%, #fff);
+  border-bottom-left-radius: 4px;
+}
+
+.talk__said--pending {
+  color: var(--ink-soft);
+}
+
+.talk__sign {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* The office's own lines have no bubble; a failure is in ink with its first sentence in 600. */
+.talk__office,
+.talk__elsewhere {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.talk__office--failed {
+  color: var(--ink);
+}
+
+.talk__office--failed strong {
+  font-weight: 600;
+}
+
+.talk__elsewhere {
+  margin: 0;
+  padding: 8px 16px;
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--badge-line);
+}
+
+/* The yellow mark of a running call, as Catch me up shows it: it pulses, and keeps still with reduced motion. */
+.talk__mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  vertical-align: 1px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--highlighter-soft);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+/* Cancel pressed: the call is being stopped, so the mark keeps still. */
+.is-stopping .talk__mark {
+  animation: none;
+}
+
+/* Inline in the line, with a target taller than the text it sits in. */
+.talk__cancel,
+.talk__again {
+  display: inline-block;
+  margin: -4px 0 -4px 6px;
+  padding: 4px 2px;
+  color: var(--ink);
+}
+
+.talk__controls,
+.talk__blocked {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.talk__blocked p {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.talk__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.talk__suggestion {
+  min-height: 32px;
+  padding: 5px 11px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.talk__label {
+  display: block;
+  margin: 12px 0 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.talk__box {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  /* Questions are prose: the textareas elsewhere hold code and are monospace. */
+  font-family: var(--font);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  resize: none;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.talk__box:focus-visible {
+  border-color: var(--ink);
+}
+
+.talk__box.is-over {
+  border-color: var(--danger);
+}
+
+.talk__foot {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 6px;
+}
+
+.talk__hint {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.talk__count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.talk__count.is-over {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* Unavailable controls keep full opacity: ink-soft words on a light edge; the line beside them says why they wait. */
+.talk__suggestion[aria-disabled='true'],
+.talk__ask[aria-disabled='true'],
+.talk__retry[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: #fff;
+  border-color: var(--badge-line);
+}
+
+.talk__again[aria-disabled='true'],
+.talk__cancel[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+/* A primary button darkens under the pointer, and a tap leaves :hover stuck on touch screens: unavailable stays white. */
+.talk__suggestion[aria-disabled='true']:hover,
+.talk__ask[aria-disabled='true']:hover,
+.talk__retry[aria-disabled='true']:hover {
+  background: #fff;
+}
+
+/* Ask on the name tag: badge fill and ink, not yellow, which the tag uses for the cost and the scene for needs you. */
+.name-tag__ask {
+  min-height: 24px;
+  margin: -2px -5px -2px 2px;
+  padding: 0 9px;
+  font-family: var(--font);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 4px;
+}
+
+/* Ask on a Now row: a link at the end of the row's last line, above the row's stretched name button. */
+.now-row__ask {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  z-index: 1;
+  min-height: 24px;
+  padding: 2px 4px;
+  font-size: 0.8125rem;
+}
+
+.now-row__main:has(> .now-row__ask) > :nth-last-child(2) {
+  padding-right: 44px;
+}
+
+.badge__ask {
+  margin-top: 10px;
+}
+
+/* A tap leaves :hover stuck on touch screens, so only pointers that hover get it. */
+@media (hover: hover) and (pointer: fine) {
+  .talk__close:hover,
+  .talk__back:hover,
+  .talk__suggestion:hover:not([aria-disabled='true']) {
+    background: var(--badge-hover);
+  }
+}
+
+@media (max-width: 720px) {
+  .talk__suggestion,
+  .talk__back,
+  .badge__ask {
+    min-height: 44px;
+  }
+
+  .now-row__ask {
+    bottom: 0;
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+
+  .now-row__main:has(> .now-row__ask) > :nth-last-child(2) {
+    padding-right: 52px;
+  }
+
+  /* Under 16px, iOS zooms the page when the box gets focus. */
+  .talk__box {
+    font-size: 1rem;
+  }
+
+  .talk--sheet .talk__controls,
+  .talk--sheet .talk__blocked {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .talk__line {
+    max-width: 92%;
+  }
+}
+
+/* ===================================================================================================================
+   v3: the office runs the company (docs/design-v3.md). v2's rules above stay as they are; what follows is new.
+   =================================================================================================================== */
+
+/* Shared pieces (web/src/company/ui/) */
+/* The count of what needs you: highlighter fill, ink tabular figures, nothing at zero. */
+.count {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--highlighter);
+  border-radius: 999px;
+}
+
+/* An answer you press: white, a control edge, 44 px tall everywhere, the words wrap. */
+.choices {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.choice__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* "Their pick": an ink-soft outline, since yellow means now and needs you. */
+.choice__pick {
+  flex: none;
+  padding: 1px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+.choice[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  border-color: var(--badge-line);
+}
+
+/* The wide view: over the stage left of the panel, 12 px inside the free stage; phones get it full screen. */
+.wide {
+  position: absolute;
+  top: 76px;
+  right: calc(var(--panel-width) + 24px);
+  bottom: 12px;
+  left: 12px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--badge);
+  border-radius: 16px;
+  box-shadow: var(--shadow-panel);
+  animation: wide-in 150ms ease-out;
+}
+
+@keyframes wide-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.wide__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 12px 10px 18px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.wide__title {
+  flex: 1 1 12em;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.wide__title:focus-visible,
+.panel-title:focus-visible,
+.company__h1:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.wide__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wide__close,
+.wide__back {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.wide__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 18px 20px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* A person on the org chart: their room's hue down the edge. */
+.org-card {
+  position: relative;
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px 9px 15px;
+  overflow: hidden;
+  color: var(--ink);
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--badge-line);
+  border-radius: 10px;
+}
+
+.org-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  content: '';
+  background: var(--hue, var(--no-hue));
+}
+
+.org-card--button {
+  cursor: pointer;
+}
+
+.org-card.is-selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--highlighter);
+}
+
+.org-card__name {
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.org-card__title {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.org-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+
+.org-card__model {
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.org-card__tag {
+  padding: 0 7px;
+  font-weight: 600;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 999px;
+}
+
+/* What a press leaves in place: a still mark, the words, Undo. */
+.undo-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 6px 0;
+  font-size: 0.875rem;
+}
+
+.undo-line__mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--highlighter-soft);
+}
+
+.undo-line__text {
+  overflow-wrap: anywhere;
+}
+
+.undo-line__undo {
+  min-height: 24px;
+  padding: 2px 0;
+}
+
+.undo-line__undo[aria-disabled='true'],
+.link[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+/* A state in a word or two; the words carry it, the mark backs them up. */
+.state-pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+.state-pill__mark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--ink-soft);
+  border-radius: 50%;
+}
+
+.state-pill--working .state-pill__mark {
+  background: var(--ok);
+}
+
+.state-pill--needs {
+  background: var(--highlighter);
+}
+
+.state-pill--waiting .state-pill__mark {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.state-pill--error {
+  color: var(--danger);
+}
+
+.state-pill--error .state-pill__mark {
+  background: var(--danger);
+}
+
+.state-pill--rest .state-pill__mark {
+  background: var(--rest);
+}
+
+.state-pill--done .state-pill__mark {
+  background: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .choice:hover:not([aria-disabled='true']),
+  .org-card--button:hover,
+  .wide__close:hover,
+  .wide__back:hover {
+    background: var(--badge-hover);
+  }
+}
+
+@media (max-width: 720px) {
+  .wide {
+    inset: 0;
+    z-index: 40;
+    border-radius: 0;
+  }
+
+  .wide__head {
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 12px 8px 8px;
+  }
+
+  .wide__back {
+    min-height: 44px;
+  }
+
+  .wide__body {
+    padding: 12px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .undo-line__undo {
+    min-height: 44px;
+  }
+}
+
+/* What the company shell shares with the lobby; the shell's own rules are in web/src/company/shell/shell.css. */
+/* A hidden "Skip to the panel", first in the tab order, shown when it has focus. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 60;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 8px;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+.panel-title {
+  width: fit-content;
+  max-width: 100%;
+  margin: 14px 0 6px;
+  font-family: var(--font-narrow);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.panel-back {
+  min-height: 32px;
+  margin: 8px 0 0 -8px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.panel__offline {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--note);
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.shell-empty {
+  margin: 16px 0;
+}
+
+.shell-empty__line {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.shell-empty__meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The lobby's top bar comes first in the page for the tab order, so it lies over the stage drawn after it. */
+.topbar--lobby {
+  z-index: 3;
+  align-items: center;
+}
+
+/* Text fields and selects in the v3 panels: a control edge, 44 px on phones, Barlow for prose. */
+.text-input,
+.select-input,
+.prose-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.prose-input {
+  resize: vertical;
+}
+
+.text-input:focus-visible,
+.select-input:focus-visible,
+.prose-input:focus-visible {
+  border-color: var(--ink);
+}
+
+.prose-input.is-over {
+  border-color: var(--danger);
+}
+
+/* A field in error has the danger edge, focused or not; the words under it say what is wrong. The start form's folder
+   is marked by the refusal under it until the field says aria-invalid itself. */
+.text-input[aria-invalid='true'],
+.select-input[aria-invalid='true'],
+.prose-input[aria-invalid='true'],
+.start__field:has(.start__about .start__refusal) .start__path {
+  border-color: var(--danger);
+}
+
+.text-input--number {
+  width: 6.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.button--large {
+  min-height: 44px;
+  padding: 10px 20px;
+  font-size: 1rem;
+}
+
+/* Unavailable buttons keep full opacity and say why beside them (design.md, "Visual details"). */
+.button[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: none;
+  border-color: var(--badge-line);
+}
+
+.button--primary[aria-disabled='true'],
+.button--primary[aria-disabled='true']:hover {
+  color: var(--ink-soft);
+  background: #fff;
+  border-color: var(--badge-line);
+}
+
+.button[aria-disabled='true']:hover {
+  background: none;
+}
+
+.link--danger {
+  color: var(--danger);
+  text-decoration-color: currentColor;
+}
+
+/* The running mark: the 8 px highlighter dot that pulses, still with reduced motion. */
+.running-mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--highlighter-soft);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.running-line {
+  margin: 12px 0;
+  font-size: 0.875rem;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The proposal */
+.proposal__state {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.proposal__prompt {
+  margin: 12px 0;
+  padding: 2px 0 2px 12px;
+  font-style: italic;
+  overflow-wrap: anywhere;
+  border-left: 3px solid var(--rule);
+}
+
+/* The CEO's own words when its turn ended without a proposal: kept as it wrote them, line breaks included. */
+.proposal__words {
+  margin: 8px 0;
+  padding: 2px 0 2px 12px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  border-left: 3px solid var(--rule);
+}
+
+.draft-lines {
+  margin: 8px 0;
+  padding: 0;
+  font-size: 0.875rem;
+  list-style: none;
+}
+
+.draft-lines li {
+  padding: 4px 0;
+  overflow-wrap: anywhere;
+}
+
+.draft-lines__time {
+  margin-right: 6px;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.proposal__problem,
+.settings__problem,
+.edit-form__problem,
+.start-block__problem,
+.start__refusal {
+  margin: 6px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.proposal__section {
+  margin-top: 8px;
+  padding-top: 4px;
+}
+
+.proposal__name {
+  margin: 4px 0 2px;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+}
+
+.proposal__goal {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.summary-list {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}
+
+.summary-list li + li {
+  margin-top: 3px;
+}
+
+.proposal__chart-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 12px 0 4px;
+}
+
+.proposal__hint,
+.proposal__foot {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.proposal__foot {
+  margin-top: 10px;
+}
+
+.proposal__errors .button {
+  margin-top: 4px;
+}
+
+.proposal__thread {
+  margin: 8px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+/* A question: a 3 px highlighter rule on its left while it waits, as the inbox's item. */
+.questions {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.question {
+  padding: 4px 0 4px 12px;
+  border-left: 3px solid transparent;
+}
+
+.question--open {
+  border-left-color: var(--highlighter);
+}
+
+.question__who {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.question__text {
+  margin: 2px 0 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.question__answered {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+}
+
+.question__why {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* The CEO's scoping questions: one press answers every open one with its pick. */
+.scoping-picks {
+  margin: 16px 0 4px;
+}
+
+.scoping-answers {
+  margin: 4px 0 8px;
+  font-size: 0.875rem;
+}
+
+.scoping-answers__row + .scoping-answers__row {
+  margin-top: 6px;
+}
+
+.scoping-answers dt {
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.scoping-answers dd {
+  margin: 1px 0 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.proposal__answers {
+  margin: 8px 0 4px;
+  font-size: 0.875rem;
+}
+
+.proposal__answers summary {
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.question__own {
+  min-height: 32px;
+  margin-top: 6px;
+  font-size: 0.875rem;
+}
+
+.question__form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.start-block {
+  margin: 20px 0 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.start-block--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.start-block__note {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.start-block--compact .start-block__note {
+  flex: 1 1 16em;
+  margin: 0;
+}
+
+/* Direct edits, in the panel */
+.edit-form {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 12px 14px 14px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.edit-form__title {
+  width: fit-content;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.edit-field {
+  display: grid;
+  gap: 4px;
+}
+
+.edit-field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.edit-field__count {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.edit-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-form__hint,
+.edit-form__why {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.edit-form__remove {
+  justify-self: start;
+  min-height: 32px;
+  font-size: 0.875rem;
+}
+
+/* A few buttons where one is pressed (ui/Segmented.tsx), wherever a panel switches what it shows. */
+.segmented-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-self: start;
+  gap: 2px;
+  padding: 3px;
+  background: var(--pill);
+  border-radius: 10px;
+}
+
+.segmented-control__option {
+  min-height: 34px;
+  padding: 6px 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.segmented-control__option[aria-pressed='true'] {
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 0 0 1.5px var(--ink-soft);
+}
+
+/* Unavailable at full opacity (design.md): ink-soft in a lighter weight, so it reads apart from the options you can press. */
+.segmented-control__option:disabled {
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .segmented-control__option:not([aria-pressed='true']):not(:disabled):hover {
+    color: var(--ink);
+    background: var(--badge-hover);
+  }
+}
+
+/* The org chart, in the wide view */
+.chart__start {
+  margin-bottom: 16px;
+}
+
+.chart__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.org-card--you {
+  width: auto;
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.chart__leaders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chart__leader {
+  width: 220px;
+}
+
+.chart__columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.chart__column {
+  display: grid;
+  gap: 8px;
+  width: 220px;
+  max-height: 64vh;
+  padding: 10px;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--hue, var(--no-hue)) 14%, #fff);
+  border-top: 4px solid var(--hue, var(--no-hue));
+  border-radius: 14px;
+}
+
+.chart__room {
+  margin: 0 0 2px;
+  font-family: var(--font-narrow);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.chart__cards {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart__card--lead {
+  margin-left: 10px;
+}
+
+.chart__card--worker {
+  margin-left: 20px;
+}
+
+.chart__add {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 10px;
+}
+
+.chart__add--room {
+  align-self: stretch;
+  width: 160px;
+  min-height: 80px;
+  text-align: center;
+}
+
+.chart__removed {
+  margin: 16px 0 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+/* Phones: People's outline, 16 px in per level. */
+.chart-outline {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart-outline__you {
+  padding: 6px 0;
+  font-weight: 600;
+}
+
+.chart-outline__item {
+  padding-left: calc(var(--depth, 0) * 16px);
+}
+
+.chart-outline__adds {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Customize and Settings */
+.settings__group {
+  margin: 0;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.settings__group--last {
+  border-bottom: 0;
+}
+
+.settings__legend {
+  display: block;
+  margin: 0 0 6px;
+  padding: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.settings__note {
+  margin: 4px 0 8px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.settings__note code {
+  color: var(--ink);
+}
+
+.settings__inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings__foot {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.rule-list,
+.decor-list,
+.room-rows {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.rule-list__item,
+.decor-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 6px 10px;
+  background: var(--note);
+  border-radius: 8px;
+}
+
+.rule-list__rule {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The nine themes as a radio group of named swatches. */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.theme-option {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  cursor: pointer;
+  border: 1.5px solid var(--badge-line);
+  border-radius: 10px;
+}
+
+.theme-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-option__swatch {
+  height: 34px;
+  background:
+    linear-gradient(135deg, transparent 55%, var(--accent) 55%, var(--accent) 72%, transparent 72%),
+    var(--floor);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.theme-option__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.theme-option:has(input:checked) {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--highlighter);
+}
+
+.theme-option:has(input:focus-visible) {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.theme-option:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.room-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 11em);
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 8px 6px 12px;
+  background: var(--note);
+  border-left: 4px solid var(--hue, var(--stone));
+  border-radius: 8px;
+}
+
+.room-row--extra .link {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: 0.8125rem;
+}
+
+.room-row__name {
+  display: grid;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.room-row__kind {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.decor-add {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 6px 8px;
+}
+
+.decor-add .settings__note,
+.decor-add .edit-form__problem {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.looks-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.swatches legend {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+}
+
+.swatch {
+  position: relative;
+  display: inline-grid;
+  cursor: pointer;
+}
+
+.swatch input {
+  position: absolute;
+  opacity: 0;
+}
+
+.swatch__chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.swatch:has(input:checked) .swatch__chip {
+  box-shadow: 0 0 0 2px var(--badge), 0 0 0 4px var(--ink);
+}
+
+.swatch:has(input:focus-visible) .swatch__chip {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+
+/* The lobby */
+.lobby-stage {
+  overflow: hidden;
+}
+
+/* The cutting mat the companies' worlds stand on: its grid and ruler marks, until the scene draws the worlds. */
+.lobby-mat {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(124, 153, 139, 0.9) 1.5px, transparent 1.5px) 0 0 / 200px 200px,
+    linear-gradient(90deg, rgba(124, 153, 139, 0.9) 1.5px, transparent 1.5px) 0 0 / 200px 200px,
+    linear-gradient(var(--mat-grid) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--mat-grid) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--mat);
+}
+
+.topbar--lobby .topbar__project {
+  color: var(--ink);
+}
+
+.lobby-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 6px 0 2px;
+}
+
+.lobby-head .panel-title {
+  margin: 8px 0 4px;
+}
+
+.lobby-desks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 6px 0 4px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.lobby-desks__line {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.lobby-desks .link {
+  min-height: 24px;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.lobby-hub {
+  margin: 4px 0 8px;
+  padding: 12px 14px;
+  background: var(--note);
+  border: 0;
+  border-radius: 14px;
+}
+
+.lobby-rows {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lobby-row {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.lobby-row__button {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  padding: 10px 8px;
+}
+
+.lobby-row__marker {
+  width: 6px;
+  min-height: 52px;
+  background: var(--hue, var(--no-hue));
+}
+
+.lobby-row__name {
+  font-size: 1rem;
+}
+
+.lobby-row__folder {
+  display: block;
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lobby-row__state {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.lobby-row__state--error {
+  color: var(--danger);
+}
+
+/* Status lines take two lines at most. */
+.lobby-row__latest {
+  display: -webkit-box;
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.lobby-row__side {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.lobby-row__spent {
+  font-family: var(--font-narrow);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lobby-row__inbox {
+  display: inline-block;
+  min-height: 24px;
+  margin: 0 0 4px 26px;
+  padding: 2px 0;
+  font-size: 0.875rem;
+}
+
+/* v0.2: a company's TL;DR in its row (lobby/LobbyCard.tsx): the name and the stage, your words, how far along, what
+   needs you, what it finished, who works on what, the money and when it last moved. Still one sheet of rows. */
+.lobby-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 12px 8px 12px;
+}
+
+.lobby-card .lobby-row__marker {
+  min-height: 100%;
+}
+
+.lobby-card__main {
+  display: grid;
+  gap: 5px;
+}
+
+.lobby-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lobby-card__goal {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.lobby-card__progress {
+  display: grid;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.lobby-card__figures {
+  font-family: var(--font-narrow);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The dashboards' progress, smaller: ink on the badge line. */
+.lobby-card__bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.lobby-card__bar > span {
+  display: block;
+  width: var(--share, 0%);
+  height: 100%;
+  background: var(--ink);
+  border-radius: inherit;
+}
+
+/* What needs you: the count and the oldest item, on the highlighter bar that marks what is yours. */
+.lobby-card__needs {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 8px 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  background: linear-gradient(90deg, var(--ink) 0 1px, var(--highlighter) 1px 5px, transparent 5px) no-repeat, var(--note);
+  border-radius: 8px;
+}
+
+.lobby-card__needs-text {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.lobby-card__line {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.lobby-card__key {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.lobby-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.lobby-card__money {
+  font-family: var(--font-narrow);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* v0.2: what needs you across every company (lobby/NeedsStrip.tsx), above the cards. */
+.needs-strip {
+  margin: 12px 0 4px;
+  padding: 10px 12px 8px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.needs-strip__title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 4px;
+  font-family: var(--font-narrow);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.needs-strip__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.needs-strip__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: baseline;
+  padding: 6px 0 6px 12px;
+  background: linear-gradient(90deg, var(--ink) 0 1px, var(--highlighter) 1px 4px, transparent 4px) no-repeat 0 8px / 4px calc(100% - 16px);
+  border-top: 1px solid var(--badge-line);
+}
+
+.needs-strip__item:first-child {
+  border-top: 0;
+}
+
+.needs-strip__item--stuck {
+  background: linear-gradient(var(--danger), var(--danger)) no-repeat 0 8px / 4px calc(100% - 16px);
+}
+
+.needs-strip__link {
+  display: grid;
+  min-width: 0;
+  min-height: 24px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.needs-strip__link:hover .needs-strip__text {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.needs-strip__company {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.needs-strip__text {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.needs-strip__toggle {
+  min-height: 32px;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+}
+
+.needs-strip__age {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.lobby-notice {
+  margin: 10px 0 4px;
+  padding: 8px 12px;
+  background: var(--note);
+  border-radius: 10px;
+}
+
+.lobby-notice__text {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.lobby-welcome__text {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.lobby-demo {
+  margin: 18px 0 0;
+  padding-top: 12px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--badge-line);
+}
+
+/* After the list its last row's rule already separates it. */
+.lobby-rows + .lobby-demo {
+  border-top: 0;
+}
+
+.lobby-demo .link {
+  min-height: 24px;
+  color: var(--ink);
+}
+
+/* First run: the Claude Code callout's actions, the estimate under Start and the watch form. */
+.setup-callout__actions,
+.watch__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+
+.setup-callout p {
+  overflow-wrap: anywhere;
+}
+
+.setup-callout a.button {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.start-block__cost {
+  margin: 0 0 14px;
+}
+
+.start-block__cost .group-title {
+  margin-top: 0;
+}
+
+.start-block__cost-line {
+  margin: 4px 0 0;
+  font-weight: 500;
+}
+
+.start-block__estimate {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.start-block__estimate summary {
+  min-height: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.start-block__estimate p {
+  margin: 0 0 6px;
+}
+
+.lobby-more {
+  margin: 14px 0 0;
+  font-size: 0.8125rem;
+}
+
+.lobby-more .link {
+  min-height: 24px;
+  color: var(--ink);
+}
+
+.watch {
+  margin: 14px 0 0;
+}
+
+.watch__lead {
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+
+.watch__list {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.watch__open {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+}
+
+.watch__open p {
+  margin: 0 0 4px;
+}
+
+.watch__command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 4px 0 8px;
+}
+
+.watch__code {
+  display: inline-block;
+  max-width: 100%;
+  padding: 2px 6px;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.8125rem;
+  background: var(--note);
+  border-radius: 6px;
+  user-select: all;
+}
+
+/* A theme's 56 px still: its floor's pattern, its accent, and the house's shape. */
+.theme-still {
+  position: relative;
+  display: block;
+  flex: none;
+  width: var(--size, 56px);
+  height: var(--size, 56px);
+  overflow: hidden;
+  background: var(--floor);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.theme-still--checks {
+  background: repeating-conic-gradient(var(--floor) 0 25%, #e9e4da 0 50%) 0 0 / 10px 10px;
+}
+
+.theme-still--tiles {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px) 0 0 / 14px 14px,
+    linear-gradient(90deg, rgba(0, 0, 0, 0.08) 1px, transparent 1px) 0 0 / 14px 14px,
+    var(--floor);
+}
+
+.theme-still--boards {
+  background: repeating-linear-gradient(90deg, var(--floor) 0 9px, color-mix(in srgb, var(--floor) 82%, #000) 9px 10px);
+}
+
+.theme-still--grass {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18) 0 2px, transparent 3px) 0 0 / 10px 10px, var(--floor);
+}
+
+.theme-still--stars {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0 1px, transparent 1.5px) 0 0 / 11px 11px, var(--floor);
+}
+
+.theme-still__house {
+  position: absolute;
+  right: 20%;
+  bottom: 14%;
+  left: 20%;
+  height: 56%;
+  background:
+    linear-gradient(rgba(24, 36, 31, 0.55), rgba(24, 36, 31, 0.55)) 50% 100% / 26% 40% no-repeat,
+    var(--accent);
+  clip-path: polygon(50% 0, 100% 38%, 100% 100%, 0 100%, 0 38%);
+}
+
+/* Start a company */
+.start {
+  display: grid;
+  gap: 18px;
+  margin: 4px 0 8px;
+}
+
+.start__field {
+  display: grid;
+  gap: 6px;
+}
+
+.start__label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.start__folder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.start__path {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+.start__suggestions,
+.start__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.start__suggestion {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.start__about p {
+  margin: 2px 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.start__detected {
+  font-weight: 500;
+}
+
+.start__note,
+.start__reading {
+  color: var(--ink-soft);
+}
+
+/* Four rows growing to ten where the browser sizes fields to their content; four and a scrollbar elsewhere. */
+.start__prompt {
+  min-height: calc(4lh + 16px);
+  max-height: calc(10lh + 16px);
+  font-size: 0.9375rem;
+  field-sizing: content;
+}
+
+/* How the work runs: two choices, each a whole row to press, the chosen one marked by its border and its radio. */
+.start__work {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.start__work .start__label {
+  margin-bottom: 2px;
+  padding: 0;
+}
+
+.start__choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.start__choice.is-chosen {
+  border-color: var(--ink);
+}
+
+.start__choice input {
+  margin: 3px 0 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ink);
+}
+
+.start__choice-text {
+  display: grid;
+  gap: 2px;
+}
+
+.start__choice-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.start__choice-note {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.start__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.start__prompt[aria-invalid='true'] + .start__hint {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.start__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.start .start-block {
+  margin-top: 0;
+}
+
+/* The folder browser: the hub reads a level at a time. */
+.browser {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.browser__here {
+  margin: 0;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.browser__list {
+  display: grid;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.browser__item {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.browser__item--up {
+  color: var(--ink-soft);
+}
+
+.browser__empty {
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.browser__actions,
+.browser__new {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.browser__new .text-input {
+  flex: 1 1 10em;
+  width: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .panel-back:hover,
+  .browser__item:hover,
+  .chart__add:hover,
+  .theme-option:hover {
+    background: var(--badge-hover);
+  }
+}
+
+/* Pressed, with any pointer (a tap gets no hover): a step darker than hover while it is held. Each selector matches its
+   hover rule's weight, so the press shows under a mouse too. */
+.choice:active:not([aria-disabled='true']),
+.org-card--button:active,
+.wide__close:active,
+.wide__back:active,
+.row:active,
+.now-row:active,
+.panel-back:active,
+.browser__item:active,
+.chart__add:active,
+.theme-option:active,
+.room-sign__button:active,
+.segmented-control__option:not([aria-pressed='true']):not(:disabled):active {
+  background: var(--badge-pressed);
+}
+
+/* Phones */
+@media (max-width: 720px) {
+  .panel-back {
+    min-height: 44px;
+  }
+
+  .text-input,
+  .select-input,
+  .prose-input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .start__path {
+    font-size: 1rem;
+  }
+
+  .segmented-control__option,
+  .chart__add,
+  .browser__item,
+  .question__own,
+  .edit-form__remove,
+  .lobby-row__inbox,
+  .lobby-desks .link,
+  .lobby-demo .link,
+  .room-row--extra .link,
+  .decor-list__item .link,
+  .rule-list__item .link {
+    min-height: 44px;
+  }
+
+  .swatch__chip {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* The lobby and Start fill the screen under the top bar: there is no 3D lobby on phones. */
+  .panel--full {
+    top: 64px;
+    height: auto;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .panel--full .panel__body {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .lobby-row__button {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+  }
+
+  .lobby-card {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .needs-strip__link {
+    min-height: 44px;
+  }
+
+  .lobby-row__inbox {
+    margin-left: 72px;
+  }
+
+  .chart__leader,
+  .chart__column {
+    width: 100%;
+  }
+}
+
+/* Forced colours drop backgrounds, shadows and the highlighter bar, and show a transparent border as a line: the selected
+   tab and the pressed view button keep their marking with system colours and an underline of their own. */
+@media (forced-colors: active) {
+  .tabs__tab {
+    border-bottom-color: Canvas;
+  }
+
+  .tabs__tab[aria-selected='true'] {
+    border-bottom-color: Highlight;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
+  .segmented-control__option {
+    border: 2px solid Canvas;
+  }
+
+  .segmented-control__option[aria-pressed='true'] {
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    border-color: Highlight;
+  }
+}

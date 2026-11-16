@@ -1,0 +1,135 @@
+# Worklings studio manifest: which room each Claude Code role, rule and gate lives in.
+version: 1
+name: Worklings
+domain: web-app
+rigor: standard
+departments:
+  - id: design
+    name: Design
+    style: design
+  - id: engineering
+    name: Engineering
+    style: engineering
+  - id: quality
+    name: Quality
+    style: quality
+  - id: security
+    name: Security
+    style: security
+  - id: content
+    name: Content
+    style: content
+  - id: ops
+    name: Ops & Release
+    style: ops
+  - id: art
+    name: Art & Audio
+    style: art
+  - id: direction
+    name: Direction
+    style: direction
+roles:
+  - id: frontend-engineer
+    department: engineering
+    title: Frontend engineer
+    archetype: frontend-engineer
+  - id: backend-engineer
+    department: engineering
+    title: Backend engineer
+    archetype: backend-engineer
+  - id: ux-designer
+    department: design
+    title: UX designer
+    archetype: ux-designer
+  - id: qa-engineer
+    department: quality
+    title: QA engineer
+    archetype: qa-engineer
+  - id: ui-designer
+    department: design
+    title: UI designer
+    archetype: ui-designer
+  - id: code-reviewer
+    department: quality
+    title: Code reviewer
+    archetype: code-reviewer
+  - id: security-reviewer
+    department: security
+    title: Security reviewer
+    archetype: security-reviewer
+  - id: accessibility-specialist
+    department: quality
+    title: Accessibility specialist
+    archetype: accessibility-specialist
+  - id: docs-writer
+    department: content
+    title: Docs writer
+    archetype: docs-writer
+  - id: runtime-engineer
+    department: engineering
+    title: Runtime engineer
+    archetype: runtime-engineer
+  - id: technical-artist
+    department: art
+    title: Technical artist
+    archetype: technical-artist
+  - id: 3d-artist
+    department: art
+    title: 3D artist
+    archetype: 3d-artist
+  - id: game-designer
+    department: design
+    title: Game designer
+    archetype: game-designer
+  - id: product-manager
+    department: direction
+    title: Product manager
+    archetype: product-manager
+rules:
+  - id: typescript
+    department: engineering
+    title: TypeScript
+  - id: react-web
+    department: engineering
+    title: React on the web
+  - id: web-ui
+    department: design
+    title: Web UI and accessibility
+  - id: node-service
+    department: engineering
+    title: Node services
+  - id: tests
+    department: quality
+    title: Tests
+gates:
+  - id: code-gate
+    title: Code gate
+    from: engineering
+    to: quality
+  - id: design-gate
+    title: Design gate
+    from: design
+    to: engineering
+  - id: security-gate
+    title: Security gate
+    from: security
+    to: ops
+  - id: a11y-gate
+    title: Accessibility gate
+    from: quality
+    to: ops
+skills:
+  - id: plan-feature
+    title: Plan feature
+  - id: fix-bug
+    title: Fix bug
+  - id: ship
+    title: Ship
+  - id: content-pass
+    title: Content pass
+  - id: standup
+    title: Standup
+fired: []
+generator:
+  tool: worklings
+  version: 0.1.0

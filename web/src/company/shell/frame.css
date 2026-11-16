@@ -1,0 +1,813 @@
+/* The board frame, the mini-map and the stage's own box (docs/design-hud.md, "Boards over the map"; BoardFrame.tsx,
+   MiniMap.tsx, scene/Stage.tsx). Boards are the cutting mat seen from above: every word on it is mat-ink, keys lie on it
+   with the short shadow (--lift-1), and the office shrinks into the corner while the table it stood on stays. */
+
+/* ===============================================================================================================
+   The frame: the main view's box, from the window's top (the bar lies on the mat) to its foot
+   =============================================================================================================== */
+.bf {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: calc(var(--stage-top) + 6px + var(--reconnect-h, 0px));
+  color: var(--mat-ink);
+  pointer-events: auto;
+}
+
+/* The mat runs on under the side panel to the window's edge, so its gutters show the same table. */
+.bf__mat {
+  position: absolute;
+  inset: 0 calc(-1 * var(--main-right, 0px)) 0 0;
+  background-color: var(--mat-shade);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-position: -1px 3px;
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+}
+
+/* The cutting mat's ruler along the top, under the bar: a tick every 24 px, a longer one every 120. */
+.bf__ruler {
+  position: absolute;
+  top: var(--stage-top);
+  right: calc(-1 * var(--main-right, 0px));
+  left: 0;
+  height: 10px;
+  background-image:
+    linear-gradient(90deg, rgb(252 251 247 / 0.32) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(252 251 247 / 0.2) 1px, transparent 1px);
+  background-position: -1px 0;
+  background-repeat: repeat-x;
+  background-size: 120px 10px, 24px 5px;
+}
+
+/* Opening: the board rises 12 px and fades in while the office shrinks into the corner; cut with reduced motion. */
+.bf--rises > .bf__mat,
+.bf--rises > .bf__ruler {
+  animation: bf-fade var(--t-quick) var(--ease-out) both;
+}
+
+.bf--rises > .bf__head,
+.bf--rises > .bf__body {
+  animation: bf-rise var(--t-quick) var(--ease-out) both;
+}
+
+@keyframes bf-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes bf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf--rises > * {
+    animation: none !important;
+  }
+}
+
+/* The head: the title, the sentence, the sub-views, the filters, the board's keys and Back to the office. It folds by
+   its own measured room (BoardFrame.tsx); nothing in it wraps, so its widths are its pieces'. */
+.bf__head {
+  position: relative;
+  display: flex;
+  flex: none;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0 var(--gutter) 0 20px;
+}
+
+.bf__rest {
+  display: contents;
+}
+
+/* The last step: the title and Back to the office over the rest, and the board's content starts under both rows. */
+.bf__head[data-step='5'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 8px;
+  padding-block: 0 4px;
+}
+
+.bf__head[data-step='5'] .bf__rest {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.bf__head[data-step='5'] .bf__back {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.bf__title {
+  flex: none;
+  margin: 0 6px 0 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-24);
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
+  border-radius: 4px;
+  /* Painted by forced colours only: a contrast theme still shows where focus is. */
+  outline: 2px solid transparent;
+}
+
+/* Focus on the mat: v2's ink outline with the highlighter 8 px out, so it reads on mat-shade (6.8:1). */
+.bf__title:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter);
+}
+
+.bf__sum {
+  flex: none;
+  margin: 0;
+  font-size: var(--text-14);
+  white-space: nowrap;
+}
+
+/* Measuring copies: laid out at their whole width, never seen or heard. */
+.bf__twin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The sub-views: a tile of keys lying on the mat, the one you are in pressed with its highlighter bar. */
+.bf__views {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  align-items: center;
+  height: 40px;
+  padding: 0 3px 3px;
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.bf__view {
+  position: relative;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: 10px;
+  outline: 2px solid transparent;
+  transition: background var(--t-hover);
+}
+
+.bf__view:hover {
+  background: var(--badge-hover);
+}
+
+.bf__view:active {
+  background: var(--badge-pressed);
+}
+
+.bf__view[aria-current='page'] {
+  background: var(--badge-pressed);
+  box-shadow: var(--sunk);
+}
+
+.bf__view[aria-current='page']::after {
+  position: absolute;
+  right: 10px;
+  bottom: 3px;
+  left: 10px;
+  height: 3px;
+  content: '';
+  background: var(--highlighter);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.bf__view:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: var(--ring);
+}
+
+/* The filters in a row on the mat; folded, the same element is a popover of badge paper under the Filter key. */
+.bf__filters {
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Only while it isn't a popover: a closed popover keeps the browser's own display: none. */
+.bf__filters:not([popover]) {
+  display: flex;
+}
+
+/* Not a scroll container (a popover is one by the browser's own rule): in Chromium a top-layer scroller over the canvas
+   can leave a hole in the office's picture. A few chips never need to scroll. */
+.bf__filters--pop {
+  position: fixed;
+  inset: auto;
+  flex-wrap: wrap;
+  max-width: min(36rem, calc(100vw - 16px));
+  overflow: visible;
+  margin: 0;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--lift-3);
+}
+
+.bf__filters--pop:popover-open {
+  display: flex;
+}
+
+/* The board's own keys; the first of them takes the slack, so they and Back to the office sit at the right end. */
+.bf__actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+/* Keys lying on the mat: badge, a bevel and the short shadow; they rise under the pointer and sink when pressed. */
+.bf__key,
+.bf__back {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px 3px 12px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  outline: 2px solid transparent;
+  box-shadow: var(--bevel), var(--lift-1);
+  transition: background var(--t-hover), transform var(--t-press), box-shadow var(--t-press);
+}
+
+.bf__back {
+  margin-inline-start: auto;
+}
+
+/* With the board's own keys there, they take the slack instead. */
+.bf__rest:has(.bf__actions) + .bf__back {
+  margin-inline-start: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bf__key:hover,
+  .bf__back:hover {
+    background: #fff;
+    box-shadow: var(--bevel), var(--lift-2);
+    transform: translateY(-2px);
+  }
+}
+
+.bf__key:active,
+.bf__back:active {
+  box-shadow: var(--sunk);
+  transform: translateY(2px);
+}
+
+.bf__key:focus-visible,
+.bf__back:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter), var(--bevel), var(--lift-1);
+}
+
+/* The folded Filter key's count of filters on: ink, since it doesn't need you. */
+.bf__on {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+/* What a press did: a badge strip under the head for 10 s, laid over the board so nothing under it moves. */
+.bf__row {
+  position: relative;
+  z-index: 2;
+  padding: 4px 20px 0;
+}
+
+/* It takes a line of its own while it shows, so it never lies over the board's head or its column heads. */
+.bf__row > * {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 7px 14px;
+  font-size: var(--text-14);
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 10px;
+  box-shadow: var(--lift-1);
+}
+
+.bf__refused {
+  font-weight: 600;
+  color: var(--danger);
+  outline: 2px solid transparent;
+}
+
+.bf__refused:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* The board's own part: the rest of the main view, down to the window's foot. Its scrollers keep --dock-clear free at
+   their foot (the talk bar, a strip line and the mini-map's corner), and pad it, so focus never lands under them. */
+.bf__body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  margin-top: 8px;
+}
+
+/* Loading: blank paper at badge 14% in the shapes to come, still. */
+.bf__loading {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 16px;
+  min-height: 0;
+  padding: 0 var(--gutter) 0 20px;
+  overflow: hidden;
+}
+
+.bf__loading-line {
+  margin: 0;
+  font-size: var(--text-15);
+}
+
+.bf__shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-content: flex-start;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bf__shape {
+  flex: none;
+  background: rgb(252 251 247 / 0.14);
+  border-radius: 14px;
+}
+
+.bf__loading[data-shape='columns'] .bf__shapes {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.bf__loading[data-shape='columns'] .bf__shape {
+  width: 248px;
+  border-radius: 14px 14px 0 0;
+}
+
+.bf__loading[data-shape='chart'] .bf__shapes {
+  justify-content: center;
+  padding-top: 24px;
+}
+
+.bf__loading[data-shape='chart'] .bf__shape {
+  width: 216px;
+  height: 80px;
+  border-radius: 10px;
+}
+
+.bf__loading[data-shape='cards'] .bf__shapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.bf__loading[data-shape='cards'] .bf__shape {
+  height: 120px;
+}
+
+/* Failed: a badge callout in the middle, with its sentence. */
+.bf__error {
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  padding: 24px var(--gutter) var(--dock-clear);
+}
+
+.bf__callout {
+  max-width: 28rem;
+  padding: 16px 20px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.bf__callout-line {
+  margin: 0;
+  font-size: var(--text-15);
+}
+
+.bf__callout-line + .bf__callout-line {
+  margin-top: 6px;
+  color: var(--ink-soft);
+}
+
+/* Phones: the board is a sheet of the mat between the views row and the strip's line above the talk bar, its words in
+   mat-ink; the views row's Office takes you back, so the head is the board's title and its own pieces. */
+@media (max-width: 720px), (max-height: 480px) {
+  .bf {
+    /* The sheet already ends above the strip and the talk bar, so its scrollers keep nothing more clear (the inline value
+       is the desktop's; keeping it here took the room twice, and a short window's cards with it). */
+    --dock-clear: 0px !important;
+    --dock-strip: 0px !important;
+    --dock-over: 0px !important;
+    inset: var(--stage-top) var(--gutter)
+      var(--sheet-clear, calc(var(--gutter) + var(--talk-now, 56px) + 8px + 44px + 8px + env(safe-area-inset-bottom)));
+    padding-top: calc(6px + var(--reconnect-h, 0px));
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .bf__mat {
+    inset: 0;
+    background-color: var(--mat);
+    background-image:
+      linear-gradient(var(--grid-minor) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+    background-size: 24px 24px;
+    border-radius: 14px;
+  }
+
+  /* The light edge lies over what scrolls in the sheet, so a card cut at its foot is cut by the edge. */
+  .bf::after {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    content: '';
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 1.5px rgb(252 251 247 / 0.22);
+  }
+
+  .bf__ruler,
+  .bf__back,
+  .bf__sum {
+    display: none;
+  }
+
+  .bf__head {
+    min-height: 52px;
+    padding: 0 12px 0 16px;
+  }
+
+  .bf__key,
+  .bf__view {
+    min-height: 44px;
+  }
+
+  .bf__views {
+    height: 50px;
+  }
+
+  .bf__row {
+    padding-inline: 12px;
+  }
+}
+
+/* The head, the result line and the body as one piece: it adds no box except in a short window. */
+.bf__scroll {
+  display: contents;
+}
+
+/* Under 400 px tall (a phone on its side) the head, the chips and the filter row would fill the sheet and leave the
+   columns no room: the whole board scrolls as one under the sheet's edge, the head going away with it, and the result
+   line stays at the top of the view. */
+@media (max-height: 400px) {
+  .bf__scroll {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* A board swaps whole columns under it: let the code say where it stands. */
+    overflow-anchor: none;
+  }
+
+  .bf__head {
+    min-height: 36px;
+  }
+
+  .bf__title {
+    font-size: var(--text-20, 1.25rem);
+  }
+
+  .bf__row {
+    position: sticky;
+    top: 0;
+  }
+
+  .bf__body {
+    flex: none;
+  }
+}
+
+/* ===============================================================================================================
+   The mini-map: the live office in the main view's corner, a print of itself on a badge frame. One button.
+   =============================================================================================================== */
+/* In the main view's corner; beside a floating side panel (the shell's --float-clear), the window's corner under the
+   panel's foot. */
+.minimap {
+  position: absolute;
+  right: calc(var(--gutter) - var(--float-clear, 0px));
+  bottom: var(--gutter);
+  z-index: var(--z-minimap);
+  display: grid;
+  width: 252px;
+  padding: 6px 6px 0;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  outline: 2px solid transparent;
+  box-shadow: var(--bevel), var(--lift-2);
+  transition: transform var(--t-press), box-shadow var(--t-press);
+}
+
+/* Where the canvas lies: the stage draws the live office over it (Stage.tsx), never inside it. */
+.minimap__view {
+  display: block;
+  height: 150px;
+  background: var(--mat-shade);
+  border-radius: 9px;
+}
+
+/* Its height is the stage's too (frameModel.ts, MINI_GEOMETRY): the canvas is laid over the window above it. */
+.minimap__caption {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  height: 2.125rem;
+  padding: 0 4px 3px;
+  font-size: var(--text-13);
+  font-weight: 600;
+}
+
+.minimap__esc {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px 2px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: var(--badge);
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px var(--badge-line), inset 0 -2px 0 var(--badge-line);
+}
+
+.minimap--thumb,
+.minimap--above {
+  width: 104px;
+  padding: 4px 4px 7px;
+}
+
+.minimap--thumb .minimap__view,
+.minimap--above .minimap__view {
+  height: 56px;
+  border-radius: 8px;
+}
+
+.minimap--thumb .minimap__caption,
+.minimap--above .minimap__caption {
+  display: none;
+}
+
+/* Where even the thumbnail has no room beside the talk bar, it rises one gutter above it. */
+.minimap--above {
+  bottom: calc(var(--gutter) * 2 + var(--talk-now, 56px));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .minimap:hover {
+    box-shadow: var(--bevel), var(--lift-3);
+    transform: translateY(-2px);
+  }
+}
+
+.minimap:active {
+  box-shadow: var(--sunk), var(--lift-1);
+  transform: translateY(1px);
+}
+
+.minimap:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: var(--ring), var(--bevel), var(--lift-2);
+}
+
+/* ===============================================================================================================
+   The stage's own box (scene/Stage.tsx): the whole window under the HUD, or the mini-map's window over a board
+   =============================================================================================================== */
+.stage-view {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
+
+/* Shrinking, growing, or in the corner: above the board, never catching the pointer (the mini-map's button under it
+   takes the press), and out of the accessibility tree. */
+.stage-view[data-phase='to-mini'],
+.stage-view[data-phase='to-office'],
+.stage-view[data-phase='mini'] {
+  z-index: var(--z-minimap);
+  pointer-events: none;
+  transform-origin: 0 0;
+}
+
+.stage-view[data-phase='to-mini'],
+.stage-view[data-phase='to-office'] {
+  will-change: transform;
+}
+
+.stage-view[data-phase='mini'] {
+  inset: auto;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.stage-view[data-phase='to-mini'] .labels,
+.stage-view[data-phase='to-office'] .labels,
+.stage-view[data-phase='mini'] .labels {
+  display: none;
+}
+
+.stage-view[data-covered] {
+  visibility: hidden;
+}
+
+/* The mini-map's marks over the live office: the state's word and mark top left, what needs you top right, and a 1 px
+   dark inner edge. Decoration: the mini-map's button carries both in its name. */
+.stage-mini {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(10 24 18 / 0.25);
+}
+
+.stage-mini__live {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  max-width: calc(100% - 44px);
+  padding: 0 7px;
+  overflow: hidden;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--ink);
+  white-space: nowrap;
+  background: var(--badge);
+  border-radius: 999px;
+}
+
+.stage-mini__live::before {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  content: '';
+  background: var(--ok);
+  border-radius: 50%;
+}
+
+.stage-mini__live[data-mark='rest']::before {
+  background: var(--rest);
+}
+
+.stage-mini__live[data-mark='paused']::before {
+  background: linear-gradient(90deg, var(--ink-soft) 35%, transparent 35% 65%, var(--ink-soft) 65%);
+  border-radius: 1px;
+}
+
+.stage-mini__live[data-mark='stopped']::before {
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.stage-mini__live[data-mark='idle']::before {
+  height: 2px;
+  background: var(--ink-soft);
+  border-radius: 1px;
+}
+
+.stage-mini__live[data-mark='error']::before {
+  background: var(--danger);
+}
+
+.stage-mini__live[data-mark='needs'] {
+  background: var(--highlighter);
+}
+
+.stage-mini__live[data-mark='needs']::before {
+  background: var(--ink);
+}
+
+.stage-mini__needs {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+}
+
+/* The thumbnail keeps the state as its mark alone and the count; the words are in the mini-map's name. */
+.stage-mini--thumb .stage-mini__live {
+  top: 4px;
+  left: 4px;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font-size: 0;
+}
+
+.stage-mini--thumb .stage-mini__needs {
+  top: 4px;
+  right: 4px;
+}
+
+/* Forced colours: the frame and the marks keep an edge, and the state's mark its shape. */
+@media (forced-colors: active) {
+  .minimap,
+  .bf__views,
+  .bf__key,
+  .bf__back,
+  .bf__row > * {
+    border: 1px solid CanvasText;
+  }
+
+  .bf__view[aria-current='page']::after {
+    background: Highlight;
+  }
+
+  .stage-mini__live::before {
+    background: CanvasText;
+  }
+}

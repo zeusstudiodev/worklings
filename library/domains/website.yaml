@@ -1,0 +1,18 @@
+id: website
+title: Website
+summary: Marketing, portfolio and client sites and landing pages, mostly static, built with Astro, Eleventy, Next.js or plain HTML.
+detect:
+  priority: 1
+  dependencies: [astro, "@astrojs/sitemap", "@11ty/eleventy", gatsby, vitepress, "@docusaurus/core"]
+  files: [astro.config.mjs, astro.config.ts, astro.config.js, eleventy.config.js, .eleventy.js, hugo.toml, _config.yml,
+    gatsby-config.js, gatsby-config.ts]
+roles:
+  lean: [frontend-engineer, ui-designer, copywriter, seo-specialist]
+  standard: [ux-designer, qa-engineer, accessibility-specialist, performance-engineer]
+  full: [producer, art-director, localization-specialist, privacy-officer, analytics-engineer, devops-engineer]
+rules: [astro-site, nextjs, react-web, web-ui, threejs, typescript, tests]
+skills: [plan-feature, fix-bug, ship, content-pass]
+gates:
+  lean: [design-gate]
+  standard: [a11y-gate, perf-gate]
+  full: [code-gate, release-gate]

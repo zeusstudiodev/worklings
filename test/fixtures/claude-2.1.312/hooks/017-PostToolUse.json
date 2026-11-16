@@ -1,0 +1,25 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "bdb68bbf-d312-4d62-ac89-c8c0c02a43b0",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "echo done",
+    "description": "Print done"
+  },
+  "tool_response": {
+    "stdout": "done",
+    "stderr": "\nShell cwd was reset to /project",
+    "interrupted": false,
+    "isImage": false,
+    "noOutputExpected": false
+  },
+  "tool_use_id": "toolu_01TZBFNwKz3Lu3rjTmuqydu5",
+  "duration_ms": 20956
+}

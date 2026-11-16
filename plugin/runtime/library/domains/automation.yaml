@@ -1,0 +1,18 @@
+id: automation
+title: Automation
+summary: Scrapers, bots, scheduled jobs and integrations, including Apify actors.
+detect:
+  priority: 2
+  dependencies: [crawlee, apify, node-cron, croner, discord.js, telegraf, grammy, "@slack/bolt"]
+  files: [.actor, scrapy.cfg]
+  python: [scrapy, selenium, apify, crawlee, apscheduler, python-telegram-bot, discord.py]
+roles:
+  lean: [automation-engineer, qa-engineer, code-reviewer]
+  standard: [devops-engineer, security-reviewer, privacy-officer, data-engineer]
+  full: [architect, backend-engineer, docs-writer, release-manager, runtime-engineer]
+rules: [typescript, scraping, python, tests]
+skills: [plan-feature, fix-bug, ship]
+gates:
+  lean: [code-gate]
+  standard: [security-gate]
+  full: [release-gate]

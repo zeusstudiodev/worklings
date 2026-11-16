@@ -1,0 +1,83 @@
+{
+  "prompt": "A command-line tool in Node that converts a CSV file to JSON: handles quoted fields, a --delimiter option, exits 1 with a clear message on a malformed row; with tests and a README.",
+  "preset": "balanced",
+  "org": {
+    "size": "small",
+    "sizing": "Balanced: one small CLI with no UI, server or data store, so one library engineer builds, tests and documents it and I check the result against your words at the end.",
+    "people": [
+      {
+        "id": "ceo",
+        "title": "CEO",
+        "level": "ceo",
+        "reportsTo": null,
+        "model": "opus"
+      },
+      {
+        "id": "library-engineer",
+        "title": "CLI engineer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      }
+    ]
+  },
+  "plan": {
+    "version": 1,
+    "versions": 1,
+    "goal": "A command-line tool in Node that converts a CSV file to JSON: handles quoted fields, a --delimiter option, exits 1 with a clear message on a malformed row; with tests and a README.",
+    "milestones": [
+      {
+        "id": "ms-1",
+        "title": "Working converter with tests"
+      },
+      {
+        "id": "ms-2",
+        "title": "README"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "p-1",
+        "title": "Build the CSV-to-JSON CLI with tests",
+        "owner": "library-engineer",
+        "files": [
+          "package.json",
+          "bin",
+          "src",
+          "test"
+        ],
+        "check": "npm test",
+        "after": [],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-2",
+        "title": "Write the README",
+        "owner": "library-engineer",
+        "files": [
+          "README.md"
+        ],
+        "check": "npm test",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      }
+    ],
+    "contracts": 0
+  },
+  "refusals": {
+    "org": [],
+    "plan": [
+      {
+        "at": 1794584581759,
+        "count": 1,
+        "errors": [
+          "“Build the CSV-to-JSON CLI with tests” (p-1) is too big for one context: its files span 5 areas (the project root, bin, src, test, .gitignore). Split it by area into tasks that each own one area with its own tests and check (never one task to build and another to test), keeping each to 4 areas, 2400 characters of brief and 6 requirements."
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,608 @@
+/* A person (web/src/company/person/PersonPanel.tsx and Details.tsx): the header, what they're doing, the thread and
+   the box pinned to the panel's foot. */
+
+.person {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.person__head {
+  padding: 2px 0 10px;
+}
+
+.person__head > p {
+  margin: 0;
+}
+
+/* Their room's colour as a stripe beside the name, as their row's marker. */
+.person__name {
+  width: fit-content;
+  max-width: 100%;
+  margin: 4px 0 4px;
+  padding-left: 10px;
+  font-family: var(--font-narrow);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  border-left: 5px solid var(--hue, #8c948f);
+}
+
+.person__name:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.person__role {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.person__head .person__cost {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.person__now {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 12px 0;
+  border-top: 1px solid var(--badge-line);
+}
+
+.person__now > p {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.person__state {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.person__status,
+.person__task {
+  font-size: 0.875rem;
+}
+
+.person__age {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.person__problem {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.person__report {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.person__report-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.person__report-text {
+  font-size: 0.875rem;
+}
+
+.person__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* The thread */
+.thread {
+  flex: 1 0 auto;
+  padding: 12px 0 10px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.thread__empty {
+  margin: 4px 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.thread__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 88%;
+}
+
+.msg--mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.msg--theirs {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+/* Bubbles: radius 14, the corner toward the speaker at 4. Theirs take a light tint of their room (12:1 or better). */
+.msg__bubble {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  border-radius: 14px;
+}
+
+.msg__bubble--mine {
+  color: var(--badge);
+  background: var(--ink);
+  border-bottom-right-radius: 4px;
+}
+
+.msg__bubble--theirs {
+  background: color-mix(in srgb, var(--hue, #8c948f) 24%, #fff);
+  border-bottom-left-radius: 4px;
+}
+
+.msg__bubble--mine:focus-visible {
+  outline-color: var(--ink);
+  box-shadow: 0 0 0 6px var(--highlighter);
+}
+
+.msg__sign {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.msg--mine .msg__sign {
+  text-align: right;
+}
+
+.msg__unsend,
+.msg__again {
+  min-height: 24px;
+  padding: 2px 0;
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+
+.msg__failed {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.msg__heading {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.msg__note {
+  margin: 6px 0 0;
+  padding-left: 10px;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  border-left: 3px solid color-mix(in srgb, var(--hue, #8c948f) 70%, #fff);
+}
+
+.msg__note-who {
+  font-weight: 600;
+}
+
+/* The office's own lines: no bubble, 13 px ink-soft. */
+.msg-office {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.msg-office__check {
+  display: inline-block;
+  width: 10px;
+  height: 6px;
+  margin-right: 7px;
+  vertical-align: 2px;
+  border-bottom: 2px solid var(--ink);
+  border-left: 2px solid var(--ink);
+  transform: rotate(-45deg);
+}
+
+.msg-office__time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* What the office told them, whole: closed by default, a quiet block when open. */
+.msg-office__more {
+  margin-top: 4px;
+}
+
+.msg-office__more summary {
+  display: inline-block;
+  min-height: 24px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.msg-office__full {
+  max-height: 14em;
+  margin: 6px 0 0;
+  padding-left: 10px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  border-left: 3px solid var(--badge-line);
+}
+
+/* The box, pinned to the panel's foot while the thread scrolls above it. A window under about 500 px tall (200% and 400%
+   zoom) has no room to spare, so there the box flows with the page; keepClear sets the scroller's padding while it sticks. */
+.person-box {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  margin: auto -16px 0;
+  padding: 10px 16px 12px;
+  background: var(--badge);
+  border-top: 1px solid var(--badge-line);
+  /* A sticky box stays inside its scroller's padding, so the panel's bottom padding is left under it: its own colour
+     fills that strip, so the thread never shows through below it. A shadow paints without changing the layout. */
+  box-shadow: 0 40px 0 0 var(--badge);
+}
+
+@media (max-height: 500px) {
+  .person-box {
+    position: static;
+    box-shadow: none;
+  }
+}
+
+.person-box__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.person-box.is-stopping .person-box__label {
+  color: var(--danger);
+}
+
+/* Prose, not code: the panel's other textareas are monospace. */
+.person-box__input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  resize: none;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.person-box__input:focus-visible {
+  border-color: var(--ink);
+}
+
+.person-box__input.is-over {
+  border-color: var(--danger);
+}
+
+.person-box__foot {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.person-box.is-stopping .person-box__foot {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.person-box__hint {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.person-box__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.person-box__count.is-over {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.person-box__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Details */
+.person-details {
+  flex: 1 0 auto;
+  padding: 12px 0 10px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.person-details__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.person-details__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.person-details__title:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.person-details__back {
+  min-height: 24px;
+  font-size: 0.8125rem;
+}
+
+.person-details__sub {
+  margin: 18px 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.person-details__context {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+}
+
+.person-levers .field {
+  grid-template-columns: 70px minmax(0, 1fr);
+}
+
+.person-levers select {
+  min-width: 0;
+}
+
+.person-levers__look {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.person-levers__look > legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.person-levers__more {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.person-levers__note {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.others {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.others__head {
+  margin: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.others__with {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.others__text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.steps-now p {
+  margin: 0 0 4px;
+  font-size: 0.8125rem;
+}
+
+.handover p {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.handover__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 0 6px;
+}
+
+/* Paths and commands wrap anywhere. */
+.handover__code {
+  max-width: 100%;
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  background: #f4f1e9;
+  border-radius: 6px;
+}
+
+.handover .button {
+  margin-top: 4px;
+}
+
+.person-details__fire {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.person-details__fire p {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.person--gone .undo-line,
+.person__gone-more {
+  margin: 8px 0;
+}
+
+/* Unavailable controls keep full opacity: ink-soft words on a light edge; the line beside them says why. */
+.person .button[aria-disabled='true'],
+.person .button--primary[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: #fff;
+  border-color: var(--badge-line);
+}
+
+.person .link[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .person .button,
+  .person-details__back,
+  .msg__unsend,
+  .msg__again {
+    min-height: 44px;
+  }
+
+  .person-box {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .person-box__input {
+    /* Under 16px, iOS zooms the page when the box gets focus. */
+    font-size: 1rem;
+  }
+
+  .person-box__foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .person-box__send {
+    align-self: flex-end;
+  }
+
+  .msg {
+    max-width: 92%;
+  }
+}
+
+/* Their waiting question: the words it asks, with Answer, which opens the inbox on it. */
+.person__waiting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  margin: 8px 0 0;
+  padding: 8px 10px 8px 12px;
+  border-left: 3px solid var(--highlighter);
+  border-radius: 4px;
+}
+
+.person__waiting-text {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-14, 0.875rem);
+  overflow-wrap: anywhere;
+}
+
+.person__waiting .person__answer {
+  flex: none;
+}
+
+/* v0.2: how full their current page is, small and quiet: the numbers are in the words beside it. */
+.context-meter {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: 4px;
+  margin: 0 0 6px;
+  overflow: hidden;
+  background: var(--badge-line);
+  border-radius: 999px;
+}
+
+.context-meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--ink-soft);
+  border-radius: 999px;
+}
+
+.person-details__context-line {
+  margin: 0;
+}
+
+.person-details__context-line + .person-details__context-line {
+  margin-top: 2px;
+}

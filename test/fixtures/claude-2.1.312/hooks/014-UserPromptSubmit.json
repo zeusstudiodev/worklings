@@ -1,0 +1,9 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "bdb68bbf-d312-4d62-ac89-c8c0c02a43b0",
+  "permission_mode": "acceptEdits",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "<task-notification>\n<task-id>acc52a8892c7c742e</task-id>\n<tool-use-id>toolu_01MEgPqqYAKzV4uQdfELXnrf</tool-use-id>\n<output-file>~/AppData/Local/Temp/claude/-project/b0581371-e091-4b14-9a83-550be0bb1ac8/tasks/acc52a8892c7c742e.output</output-file>\n<status>completed</status>\n<summary>Agent \"Read notes.txt contents\" finished</summary>\n<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>\n<result>The file `notes.txt` contains one line: `hello`.</result>\n<usage><subagent_tokens>6411</subagent_tokens><tool_uses>1</tool_uses><duration_ms>3582</duration_ms></usage>\n</task-notification>"
+}

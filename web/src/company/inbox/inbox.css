@@ -1,0 +1,547 @@
+/* The inbox (web/src/company/inbox/Inbox.tsx). Items are rows, not cards; one that waits has a 3 px highlighter rule. */
+
+.inbox__count {
+  margin: 0 0 6px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.inbox__count:focus-visible,
+.inbox-item__who:focus-visible,
+.inbox-item__line:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.inbox__resting {
+  margin: 0 0 8px;
+}
+
+.inbox__items {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.inbox-item {
+  position: relative;
+  padding: 12px 4px 14px 15px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.inbox-item--open::before {
+  position: absolute;
+  top: 12px;
+  bottom: 14px;
+  left: 0;
+  width: 3px;
+  content: '';
+  background: var(--highlighter);
+  border-radius: 3px;
+}
+
+.inbox-item > p,
+.inbox-item > .clamp {
+  margin: 0;
+}
+
+.inbox-item__who {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.inbox-item__when {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.inbox-item .inbox-item__question {
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.inbox-item .inbox-item__summary {
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.inbox-item .inbox-item__for {
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.inbox-item__for .link {
+  color: var(--ink);
+}
+
+.inbox-item__detail {
+  margin: 8px 0 0;
+}
+
+.inbox-item__detail > summary {
+  width: fit-content;
+  padding: 3px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Commands wrap anywhere, so a long one never widens the panel. */
+.inbox-item__code {
+  margin: 6px 0;
+  padding: 8px 10px;
+  color: var(--badge);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  background: var(--ink);
+  border-radius: 8px;
+}
+
+.inbox-item .inbox-item__refusal {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.inbox-item__decide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.inbox-item__decide .button {
+  min-height: 40px;
+}
+
+.inbox-item .inbox-item__note {
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.inbox-item__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 10px 0 0;
+  font-size: 0.8125rem;
+}
+
+.inbox-item__links .link,
+.inbox-item__message {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.inbox-item__message {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+}
+
+/* What a press leaves: one line with a still mark. */
+.inbox-item__after {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.inbox-item__mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--ink-soft);
+  border-radius: 50%;
+  transform: translateY(-1px);
+}
+
+.inbox-item--done .inbox-item__mark {
+  background: var(--ok);
+}
+
+.inbox-item .undo-line {
+  margin: 0;
+}
+
+.inbox-item__after-note {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.inbox-why,
+.inbox-own {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.inbox-why {
+  justify-items: start;
+}
+
+.inbox-why__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Prose, not code: the panel's other textareas are monospace. */
+.inbox-box {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  resize: vertical;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.inbox-box:focus-visible {
+  border-color: var(--ink);
+}
+
+.inbox-box.is-over {
+  border-color: var(--danger);
+}
+
+.inbox-own__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.inbox-own__count {
+  margin-inline-end: auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.inbox-own__count.is-over {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.inbox-item--proposal .button {
+  margin-top: 10px;
+}
+
+/* Conversations */
+.inbox__section {
+  margin-top: 6px;
+}
+
+.inbox__empty p {
+  margin: 4px 0 10px;
+  color: var(--ink-soft);
+}
+
+.talks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.talks__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 9px 8px 10px;
+  border-radius: 9px;
+}
+
+.talks__marker {
+  align-self: stretch;
+  min-height: 30px;
+  background: var(--hue, #8c948f);
+  border-radius: 3px;
+}
+
+.talks__main {
+  min-width: 0;
+}
+
+.talks__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin: 0;
+}
+
+.talks__name {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.talks__name::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: 9px;
+}
+
+.talks__name:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.talks__name:focus-visible::after {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 6px var(--highlighter);
+}
+
+.talks__title {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.talks__age {
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.talks__last {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Something new since you last opened them: an ink dot, "new" to screen readers. */
+.talks__dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 7px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+
+/* Answered today */
+.answered {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.answered__row {
+  padding: 8px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.answered__what {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.answered__answer {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.answered__yours {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.answered__older {
+  margin: 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* Unavailable controls keep full opacity: ink-soft words on a light edge; the reconnecting line says why. */
+.inbox .button[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: #fff;
+  border-color: var(--badge-line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .talks__row:hover {
+    background: var(--badge-hover);
+  }
+}
+
+@media (max-width: 720px) {
+  /* An item's buttons stack, each 44 px tall. */
+  .inbox-item__decide {
+    display: grid;
+  }
+
+  .inbox-item__decide .button,
+  .inbox-why .button,
+  .inbox-own .button,
+  .inbox__empty .button,
+  .inbox-item--proposal .button {
+    min-height: 44px;
+  }
+
+  .inbox-item__decide .button {
+    width: 100%;
+  }
+
+  .inbox-item__links .link,
+  .inbox-item__message,
+  .inbox-item .undo-line__undo {
+    min-height: 44px;
+  }
+
+  .inbox-item__detail > summary {
+    padding-block: 12px;
+  }
+
+  .inbox-box {
+    font-size: 1rem;
+  }
+}
+
+.inbox__callout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+}
+
+.inbox__callout p {
+  margin: 0;
+}
+
+/* v0.2: the office's advice on a request for approval, and the asks raised together answered with one press. */
+.inbox-item__advice {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.inbox-batch {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--note);
+  border-radius: 14px;
+}
+
+.inbox-batch__title {
+  margin: 0 0 6px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.inbox-batch__rows {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.inbox-batch__row {
+  display: grid;
+  gap: 1px;
+  overflow-wrap: anywhere;
+}
+
+.inbox-batch__does {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.inbox-batch__note {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* The end card: the CEO's final handover, the one thing to read when the work is done. */
+.handover {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+}
+
+.handover__title {
+  margin: 0 0 4px;
+  font-family: var(--font-narrow);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.handover__by,
+.handover__cost {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.handover__body p {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.handover__actions {
+  margin: 8px 0 0;
+}
+
+/* v0.2: the handover leads with the checklist the final review marked. */
+.handover__checklist {
+  margin: 8px 0 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.handover__sub {
+  margin: 10px 0 2px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.handover__counts {
+  margin: 0 0 2px;
+  font-family: var(--font-narrow);
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.handover .check__text {
+  font-size: 0.875rem;
+}

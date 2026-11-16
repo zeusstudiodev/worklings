@@ -1,0 +1,11 @@
+export type Entry = { path: string; hash: string };
+export type Scan = { hits: number; scanned: number; lines: string[] };
+export function treeEntries(cwd: string, treeish: string): Entry[];
+export function scanBlobs(cwd: string, entries: Entry[]): Scan;
+export function scanFiles(files: { path: string; read(): Buffer }[]): Scan;
+export function personalIdentity(text: string): boolean;
+export function foreignHome(line: string): number;
+export function globToRegExp(pattern: string): RegExp;
+export function shipsBy(manifest: { include: string[]; exclude: string[] }): (path: string) => boolean;
+export function blocklist(): { label: string; re: RegExp; identity: boolean; inNotices: boolean }[];
+export const BLOCKLIST_PATH: () => string;

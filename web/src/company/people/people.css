@@ -1,0 +1,475 @@
+/* The work tabs' shared pieces (web/src/company/people/shared.tsx) and People. Tokens and principles: docs/design.md
+   and the variables in web/src/styles.css. */
+
+/* Text that shows a number of lines, then "Read all of it". */
+.clamp {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.clamp:not(.is-open) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  line-clamp: var(--lines, 3);
+}
+
+.clamp:focus-visible {
+  outline-offset: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.clamp__more,
+.copy {
+  min-height: 24px;
+  padding: 2px 0;
+  font-size: 0.8125rem;
+}
+
+/* Links that look like buttons ("Message the CEO", "Answer", "Show the diff"): a button's look, not a link's. */
+:is(.company-now, .inbox, .people, .person, .tasks, .task-page) a.button {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+:is(.company-now, .inbox, .people, .person, .tasks, .task-page) a.button--primary {
+  color: var(--badge);
+}
+
+/* Back, at the top of a view that replaces the tab: a person, a task. */
+.work-back {
+  min-height: 32px;
+  margin: 2px 0 0 -8px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+/* A person on Now and People: the room's marker, the name stretched over the row, the cost, then the lines. */
+.work-rows,
+.org__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.work-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr);
+  gap: 12px;
+  margin-inline-start: calc(var(--depth, 0) * 16px);
+  padding: 9px 8px 10px;
+  border-radius: 10px;
+}
+
+.work-row__marker {
+  min-height: 30px;
+  background: var(--hue, var(--no-hue));
+  border-radius: 4px;
+}
+
+.work-row__main {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.work-row__main > p {
+  margin: 0;
+  max-width: 100%;
+}
+
+.work-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Names and titles are one line in rows; the panel shows them whole. */
+.work-row__name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.work-row__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The name's link covers the whole row: the row is what you click, the name what a screen reader hears. */
+.work-row__link::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: 10px;
+}
+
+.work-row__link:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.work-row__link:focus-visible::after {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 6px var(--highlighter);
+}
+
+.work-row__cost {
+  flex-shrink: 0;
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.work-row__title,
+.work-row__task {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.work-row .state-pill {
+  margin: 3px 0 1px;
+}
+
+/* The state and their leash side by side, wrapping under each other in a narrow row. */
+.work-row__pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+/* Status lines are two lines in rows. */
+.work-row__line {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.work-row__word {
+  font-weight: 600;
+}
+
+.work-row__problem {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  color: var(--danger);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.work-row__plain {
+  font-weight: 600;
+}
+
+/* Above the row's stretched link, so they get their own clicks. */
+.work-row__extra {
+  position: relative;
+  z-index: 1;
+}
+
+.work-row__answer {
+  display: inline-block;
+  min-height: 24px;
+  padding: 2px 0;
+  font-size: 0.8125rem;
+}
+
+/* People: the org, a level in per manager */
+.people {
+  padding-bottom: 8px;
+}
+
+.org {
+  margin-top: 10px;
+}
+
+.org__you {
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 8px;
+}
+
+.org__you .work-row__marker {
+  min-height: 22px;
+  background: var(--hue);
+}
+
+.org__you-name {
+  font-weight: 600;
+}
+
+.org__you-who {
+  margin-inline-start: 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.org__room {
+  margin: 16px 0 0;
+  margin-inline-start: calc(var(--depth, 0) * 16px + 8px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* A room's name opens its card, as v2's Team headings do. */
+.org__room-button {
+  min-height: 24px;
+  padding: 2px 0;
+  font-weight: 600;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  text-decoration: underline transparent;
+  text-underline-offset: 3px;
+}
+
+/* A visitor's name: a button (their badge isn't an address), with the row's stretched target. */
+.work-row__button {
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  font-weight: 600;
+  color: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.org__fold > summary {
+  margin-inline-start: calc(var(--depth, 0) * 16px + 8px);
+  padding: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.org__fold[open] > summary {
+  color: var(--ink);
+}
+
+.org__where {
+  margin: -6px 0 4px 34px;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.people__section {
+  margin-top: 6px;
+}
+
+.people__empty {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: var(--note);
+  border-radius: 10px;
+}
+
+.people__empty p {
+  margin: 0 0 10px;
+}
+
+/* A room, a team or everyone at once: the composer, under the org. */
+.people__send {
+  margin: 14px 0 6px;
+}
+
+.people__send .link {
+  display: inline-block;
+  min-height: 24px;
+  padding: 2px 0;
+}
+
+.people__rehired {
+  margin-top: 10px;
+}
+
+/* Find someone, or a task */
+.find {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0 4px;
+}
+
+.find__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.find__box {
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 10px;
+  font-size: 0.9375rem;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.find__box:focus-visible {
+  border-color: var(--ink);
+}
+
+.find__count {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* A fold: Fired (2), Everyone else, Done */
+.fold {
+  margin: 16px 0 0;
+  border-top: 1px solid var(--badge-line);
+}
+
+.fold > summary {
+  margin-top: 6px;
+  padding: 10px 8px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.fold[open] > summary {
+  color: var(--ink);
+}
+
+.fired {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fired__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.fired__who {
+  min-width: 0;
+}
+
+.fired__name {
+  display: block;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fired__title {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.fired__note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.fired__note--failed {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* Unavailable controls keep full opacity: ink-soft words on a light edge; the reconnecting line says why. */
+.people .button[aria-disabled='true'],
+.company-now .button[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: none;
+  border-color: var(--badge-line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .work-back:hover,
+  .work-row:has(.work-row__link):hover,
+  .org__fold > summary:hover,
+  .fold > summary:hover {
+    background: var(--badge-hover);
+  }
+
+  .org__room-button:hover {
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Pressed with any pointer, a step darker than hover (styles.css, --badge-pressed); after hover, so it shows under a
+   mouse too. */
+.work-back:active,
+.work-row:has(.work-row__link):active {
+  background: var(--badge-pressed);
+}
+
+@media (max-width: 720px) {
+  .work-row__answer,
+  .clamp__more,
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .work-back,
+  .org__room-button {
+    min-height: 44px;
+  }
+
+  .find__box {
+    min-height: 44px;
+    /* Under 16px, iOS zooms the page when the box gets focus. */
+    font-size: 1rem;
+  }
+
+  .fold > summary,
+  .org__fold > summary {
+    padding-block: 13px;
+  }
+
+  .people .button,
+  .company-now .button {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "prompt": "A recipe box web app: add recipes with ingredients and steps, tag and search them, scale servings, a printable view, data saved in the browser, works on a phone, keyboard accessible; with tests.",
+  "preset": "lean",
+  "org": {
+    "size": "medium",
+    "sizing": "Lean: a small web app with two real streams, so a frontend engineer builds the app, storage, search, scaling and the tests, and a UI designer owns the look, phone layout and print view, both reporting to me.",
+    "people": [
+      {
+        "id": "ceo",
+        "title": "CEO",
+        "level": "ceo",
+        "reportsTo": null,
+        "model": "opus"
+      },
+      {
+        "id": "frontend-engineer",
+        "title": "Frontend engineer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      },
+      {
+        "id": "ui-designer",
+        "title": "UI designer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      }
+    ]
+  },
+  "plan": {
+    "version": 1,
+    "versions": 1,
+    "goal": "A recipe box web app: add recipes with ingredients and steps, tag and search them, scale servings, a printable view, data saved in the browser, works on a phone, keyboard accessible; with tests. Built as Vite + React + TypeScript, tested with Vitest and Testing Library, browser-only, in a warm cookbook look (light theme plus print).",
+    "milestones": [
+      {
+        "id": "ms-1",
+        "title": "Foundation"
+      },
+      {
+        "id": "ms-2",
+        "title": "Working app"
+      },
+      {
+        "id": "ms-3",
+        "title": "Phone, print and polish"
+      },
+      {
+        "id": "ms-4",
+        "title": "Checked against the request"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "p-1",
+        "title": "Scaffold the project and test setup",
+        "owner": "frontend-engineer",
+        "files": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "tsconfig.app.json",
+          "tsconfig.node.json",
+          "vite.config.ts",
+          "index.html",
+          ".gitignore",
+          "src/vite-env.d.ts",
+          "src/test"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-2",
+        "title": "Recipe types, storage, search and scaling logic",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/lib"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-3",
+        "title": "Design tokens and base styles",
+        "owner": "ui-designer",
+        "files": [
+          "src/styles/tokens.css",
+          "src/styles/base.css",
+          "src/styles/tokens.test.ts",
+          "src/styles/README.md"
+        ],
+        "check": "npm test",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-4",
+        "title": "Recipe detail with serving scaling and print button",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/components/detail"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-2"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-5",
+        "title": "Search, tag filter and recipe list",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/components/browse"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-2"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-6",
+        "title": "Add and edit recipe form",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/components/form"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-2"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-7",
+        "title": "App shell, saved data, routing and integration tests",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/App.tsx",
+          "src/App.test.tsx",
+          "src/main.tsx",
+          "src/state",
+          "README.md"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-4",
+          "p-5",
+          "p-6"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-8",
+        "title": "Screen styles, phone layout and print view",
+        "owner": "ui-designer",
+        "files": [
+          "src/styles/index.css",
+          "src/styles/layout.css",
+          "src/styles/components.css",
+          "src/styles/print.css"
+        ],
+        "check": "npm run build && npm test",
+        "after": [
+          "p-3",
+          "p-7"
+        ],
+        "kind": null,
+        "milestone": "ms-3"
+      },
+      {
+        "id": "p-9",
+        "title": "Final review against the stakeholder's request",
+        "owner": "ceo",
+        "files": [],
+        "check": null,
+        "after": [
+          "p-1",
+          "p-2",
+          "p-3",
+          "p-4",
+          "p-5",
+          "p-6",
+          "p-7",
+          "p-8"
+        ],
+        "kind": "verification",
+        "milestone": "ms-4"
+      }
+    ],
+    "contracts": 0
+  },
+  "refusals": {
+    "org": [],
+    "plan": [
+      {
+        "at": 1794585394537,
+        "count": 2,
+        "errors": [
+          "“Scaffold the project and build the recipe logic” (p-1) is too big for one context: its files span 5 areas (the project root, .gitignore, src, src/test, src/lib). Split it by area into tasks that each own one area with its own tests and check (never one task to build and another to test), keeping each to 4 areas, 2400 characters of brief and 6 requirements.",
+          "“Final review against the stakeholder's request” (p-8) doesn't cite the stakeholder's words; its doneWhen must say it checks each requirement from stakeholder_words and reports each one's result."
+        ]
+      },
+      {
+        "at": 1794585436713,
+        "count": 4,
+        "errors": [
+          "Task p-1's brief names src/main.tsx, which is in task p-7's files, not its own, so its changes there would stay out of its commit. Add src/main.tsx to its files (with it waiting for p-7), or reword the brief if it only reads the file.",
+          "Task p-3's brief names README.md, which is in task p-7's files, not its own, so its changes there would stay out of its commit. Add README.md to its files (with it waiting for p-7), or reword the brief if it only reads the file.",
+          "Task p-8's brief names src/App.tsx, which is in task p-7's files, not its own, so its changes there would stay out of its commit. Add src/App.tsx to its files (with it waiting for p-7), or reword the brief if it only reads the file.",
+          "Task p-8's brief names src/main.tsx, which is in task p-7's files, not its own, so its changes there would stay out of its commit. Add src/main.tsx to its files (with it waiting for p-7), or reword the brief if it only reads the file."
+        ]
+      }
+    ]
+  }
+}

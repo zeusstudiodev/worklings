@@ -1,0 +1,20 @@
+id: web-app
+title: Web app
+summary: Interactive web products with accounts and data, built with React, Next.js, React Router, Vue or Svelte and an API.
+detect:
+  priority: 1
+  dependencies: [next, react-router, "@remix-run/react", "@tanstack/react-start", "@tanstack/react-router", nuxt,
+    "@sveltejs/kit", "@angular/core", vue-router, "@tanstack/react-query", "@trpc/server", next-auth, better-auth,
+    "@supabase/supabase-js"]
+  files: [next.config.js, next.config.mjs, next.config.ts, react-router.config.ts, nuxt.config.ts, svelte.config.js,
+    angular.json]
+roles:
+  lean: [frontend-engineer, backend-engineer, ux-designer, qa-engineer]
+  standard: [ui-designer, code-reviewer, security-reviewer, accessibility-specialist, devops-engineer]
+  full: [product-manager, architect, performance-engineer, privacy-officer, copywriter, analytics-engineer, release-manager]
+rules: [typescript, react-web, nextjs, web-ui, node-service, cloudflare-workers, database-migrations, tests]
+skills: [plan-feature, fix-bug, ship, content-pass, standup]
+gates:
+  lean: [code-gate]
+  standard: [design-gate, security-gate, a11y-gate]
+  full: [perf-gate, release-gate]

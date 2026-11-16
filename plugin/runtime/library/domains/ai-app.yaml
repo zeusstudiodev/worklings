@@ -1,0 +1,20 @@
+id: ai-app
+title: AI app
+summary: Products built around LLM features and agents, with the Anthropic or OpenAI SDKs, the Vercel AI SDK, LangChain or similar.
+detect:
+  priority: 2
+  dependencies: ["@anthropic-ai/sdk", "@anthropic-ai/claude-agent-sdk", openai, "@openai/agents", ai, "@ai-sdk/anthropic",
+    "@ai-sdk/openai", langchain, "@langchain/core", "@langchain/langgraph", llamaindex, "@mastra/core",
+    "@modelcontextprotocol/sdk"]
+  python: [anthropic, claude-agent-sdk, openai, langchain, langgraph, llama-index, litellm, pydantic-ai, dspy, instructor]
+roles:
+  lean: [ai-engineer, ux-designer, qa-engineer, security-reviewer]
+  standard: [frontend-engineer, backend-engineer, code-reviewer, privacy-officer]
+  full: [product-manager, architect, ui-designer, data-engineer, performance-engineer, analytics-engineer, devops-engineer,
+    runtime-engineer]
+rules: [ai-prompts, typescript, python, react-web, nextjs, node-service, python-service, tests]
+skills: [plan-feature, fix-bug, run-evals, ship, standup]
+gates:
+  lean: [eval-gate]
+  standard: [code-gate, security-gate, design-gate]
+  full: [perf-gate, release-gate]

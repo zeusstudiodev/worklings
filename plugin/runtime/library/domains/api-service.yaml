@@ -1,0 +1,18 @@
+id: api-service
+title: API service
+summary: Backends, APIs and workers in Node, Python or Go, or on Cloudflare Workers.
+detect:
+  priority: 0
+  dependencies: [express, fastify, hono, koa, "@nestjs/core", elysia, "@hono/node-server", itty-router]
+  files: [wrangler.toml, wrangler.jsonc, wrangler.json, go.mod, openapi.yaml, openapi.json]
+  python: [fastapi, django, djangorestframework, flask, litestar, starlette, uvicorn, gunicorn]
+roles:
+  lean: [backend-engineer, code-reviewer, qa-engineer, security-reviewer]
+  standard: [architect, devops-engineer, performance-engineer, docs-writer]
+  full: [product-manager, data-engineer, privacy-officer, release-manager]
+rules: [typescript, node-service, cloudflare-workers, python, python-service, database-migrations, docs-markdown, tests]
+skills: [plan-feature, fix-bug, ship, standup]
+gates:
+  lean: [code-gate]
+  standard: [security-gate, perf-gate]
+  full: [release-gate]

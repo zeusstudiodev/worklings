@@ -1,0 +1,386 @@
+{
+  "noToken": [
+    {
+      "at": 0,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "accept": "application/json, text/event-stream",
+          "accept-encoding": "identity",
+          "content-type": "application/json",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "mcp-method": "server/discover",
+          "mcp-protocol-version": "2026-07-28",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "www-authenticate": "Bearer realm=\"worklings-org\""
+        },
+        "body": {
+          "jsonrpc": "2.0",
+          "error": {
+            "code": -31001,
+            "message": "This desk's token is missing or wrong."
+          }
+        }
+      }
+    },
+    {
+      "at": 1342,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-protected-resource/mcp",
+        "headers": {
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "accept": "*/*",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1405,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-protected-resource",
+        "headers": {
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "accept": "*/*",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1417,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-authorization-server",
+        "headers": {
+          "accept": "application/json",
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1422,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/openid-configuration",
+        "headers": {
+          "accept": "application/json",
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1524,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "headers": {
+          "accept": "application/json, text/event-stream",
+          "accept-encoding": "identity",
+          "content-type": "application/json",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1622,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "accept": "application/json, text/event-stream",
+          "accept-encoding": "identity",
+          "content-type": "application/json",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "www-authenticate": "Bearer realm=\"worklings-org\""
+        },
+        "body": {
+          "jsonrpc": "2.0",
+          "error": {
+            "code": -31001,
+            "message": "This desk's token is missing or wrong."
+          }
+        }
+      }
+    },
+    {
+      "at": 1624,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-authorization-server",
+        "headers": {
+          "accept": "application/json",
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1624,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/openid-configuration",
+        "headers": {
+          "accept": "application/json",
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1625,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-protected-resource/mcp",
+        "headers": {
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "accept": "*/*",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1625,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-protected-resource",
+        "headers": {
+          "accept-encoding": "identity",
+          "mcp-protocol-version": "2025-11-25",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "accept": "*/*",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    },
+    {
+      "at": 1626,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "headers": {
+          "accept": "application/json, text/event-stream",
+          "accept-encoding": "identity",
+          "content-type": "application/json",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "Not found."
+        }
+      }
+    }
+  ],
+  "wrongToken": [
+    {
+      "at": 0,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "accept": "application/json, text/event-stream",
+          "accept-encoding": "identity",
+          "authorization": "Bearer <wrong token>",
+          "content-type": "application/json",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "mcp-method": "server/discover",
+          "mcp-protocol-version": "2026-07-28",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "www-authenticate": "Bearer realm=\"worklings-org\", error=\"invalid_token\""
+        },
+        "body": {
+          "jsonrpc": "2.0",
+          "error": {
+            "code": -31001,
+            "message": "This desk's token is missing or wrong."
+          }
+        }
+      }
+    },
+    {
+      "at": 9,
+      "desk": null,
+      "era": null,
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "accept": "application/json, text/event-stream",
+          "accept-encoding": "identity",
+          "authorization": "Bearer <wrong token>",
+          "content-type": "application/json",
+          "user-agent": "claude-code/2.1.312 (sdk-cli)",
+          "connection": "keep-alive",
+          "host": "127.0.0.1:<org port>"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "www-authenticate": "Bearer realm=\"worklings-org\", error=\"invalid_token\""
+        },
+        "body": {
+          "jsonrpc": "2.0",
+          "error": {
+            "code": -31001,
+            "message": "This desk's token is missing or wrong."
+          }
+        }
+      }
+    }
+  ]
+}

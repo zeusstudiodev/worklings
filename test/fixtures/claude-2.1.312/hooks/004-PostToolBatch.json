@@ -1,0 +1,22 @@
+{
+  "session_id": "b0581371-e091-4b14-9a83-550be0bb1ac8",
+  "transcript_path": "~/.claude/projects/-project/b0581371-e091-4b14-9a83-550be0bb1ac8.jsonl",
+  "cwd": "/project",
+  "prompt_id": "f722b53f-149f-4257-9ddd-70de73660fe5",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolBatch",
+  "tool_calls": [
+    {
+      "tool_name": "Write",
+      "tool_input": {
+        "file_path": "/project/notes.txt",
+        "content": "hello"
+      },
+      "tool_use_id": "toolu_01XDqLAR43GxfuK15itrn57f",
+      "tool_response": "File created successfully at: /project/notes.txt (file state is current in your context — no need to Read it back)"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+/* The static web demo's frame (web/src/site/main.tsx): a line saying it's a demo, then the app in the space under it. */
+.site {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.site-line {
+  display: flex;
+  flex: none;
+  gap: 12px;
+  align-items: center;
+  min-height: 32px;
+  padding: calc(4px + env(safe-area-inset-top, 0px)) max(4px, env(safe-area-inset-right, 0px)) 4px max(12px, env(safe-area-inset-left, 0px));
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--badge);
+  background: var(--ink);
+}
+
+.site-line__text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.site-line__hide {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.site-line__hide:hover {
+  background: var(--ink-hover);
+}
+
+.site-line__hide:active {
+  background: var(--ink-deep);
+}
+
+.site-line__hide svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.site-line__hide:focus-visible {
+  outline-color: var(--badge);
+  outline-offset: -3px;
+}
+
+.site-line__install {
+  display: inline-block;
+  font-weight: 600;
+  line-height: 24px;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-line__install:focus-visible {
+  outline-color: var(--badge);
+}
+
+/* The app lays itself out on the viewport (.office is fixed): containment makes this box its viewport instead, the box
+   it fills and the edge it is clipped at, so what it hides above its top (the skip links) stays hidden under the line. */
+.site__app {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  contain: layout paint;
+}
+
+@media (max-width: 720px) {
+  .site-line__more {
+    display: none;
+  }
+
+  /* A phone's keyboard takes the screen's lower part, and the app gives a box being typed in all the height left. */
+  .site:has(.site__app :is(textarea, [contenteditable='true'], input:not([type]), input[type='text'], input[type='search'], input[type='number'], input[type='email'], input[type='url']):focus) .site-line {
+    display: none;
+  }
+}

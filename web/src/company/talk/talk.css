@@ -1,0 +1,1065 @@
+/* The dock and the talk bar (docs/design-hud.md, "The talk bar"): a tile of badge paper standing over the model, one
+   gutter above the window's foot, centred in the main view at min(760px, main view - 2 gutters). Its pieces lay out in
+   the shell's main view (the container `main`); the talk bar alone keeps the whole width under a floating side panel. */
+
+.dock {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-dock);
+  pointer-events: none;
+}
+
+/* The talk bar's row: centred in the main view, and under a floating side panel in the width beside it as well. */
+.dock__bar {
+  position: absolute;
+  right: calc(0px - var(--float-clear, 0px));
+  bottom: calc(var(--gutter) + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.dock--phone .dock__bar {
+  bottom: calc(var(--gutter) + max(env(safe-area-inset-bottom, 0px), var(--keyboard, 0px)));
+}
+
+/* What rides on the talk bar: the strip, the proposal's suggestions, or the feed. */
+.dock__above {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--gutter) + var(--talk-now) + 8px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.dock--phone .dock__above {
+  bottom: calc(var(--gutter) + var(--talk-now) + 8px + max(env(safe-area-inset-bottom, 0px), var(--keyboard, 0px)));
+}
+
+.dock__above > * {
+  width: min(760px, 100% - var(--gutter) * 2);
+  pointer-events: auto;
+}
+
+/* The feed is the talk bar grown upward: no gap, the same width. */
+.dock__above--feed {
+  bottom: calc(var(--gutter) + var(--talk-now) + env(safe-area-inset-bottom, 0px));
+}
+
+/* The sheet starts below the reconnecting row (--reconnect-h, as a board's head does), so Close and Filter stay in reach. */
+.dock--phone .dock__above--feed {
+  top: calc(var(--stage-top) + var(--reconnect-h, 0px));
+  bottom: calc(var(--gutter) + var(--talk-now) + max(env(safe-area-inset-bottom, 0px), var(--keyboard, 0px)));
+  align-items: stretch;
+}
+
+.dock--phone .dock__above > * {
+  width: calc(100% - var(--gutter) * 2);
+}
+
+/* Phones: the strip gives way to the hint row while you type. */
+.dock--phone:has(.talkbar__box:focus) .dock__above:has(.livestrip) {
+  display: none;
+}
+
+/* Phones: while a field in the side panel's sheet has focus, the talk bar steps aside so the form keeps its room. */
+[data-company-shell]:has(.side-panel :is(input, select, textarea):focus) .dock--phone,
+[data-company-shell][data-typing] .dock--phone {
+  visibility: hidden;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   The talk bar */
+
+.talkbar {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100% - var(--gutter) * 2);
+  padding: 6px 6px 9px;
+  color: var(--ink);
+  pointer-events: auto;
+  background: var(--badge);
+  border-radius: 16px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.dock--phone .talkbar {
+  width: calc(100% - var(--gutter) * 2);
+}
+
+.dock--feed .talkbar {
+  border-radius: 6px 6px 16px 16px;
+  box-shadow: var(--bevel), var(--lift-2), 0 -1px 0 var(--badge-line);
+}
+
+.dock--phone.dock--feed .talkbar {
+  border-radius: 16px;
+}
+
+.talkbar__row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+/* Who hears it: a slot piece with the face and the words; it opens the picker. */
+.talkbar__to {
+  display: inline-flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  min-width: 44px;
+  max-width: 240px;
+  min-height: 44px;
+  padding: 0 10px 2px 8px;
+  font-size: var(--text-14);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--note);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--badge-line), inset 0 -2px 0 var(--badge-line);
+  transition: background var(--t-hover);
+}
+
+.talkbar__to:hover {
+  background: var(--badge-hover);
+}
+
+.talkbar__to:active,
+.talkbar__to[aria-expanded='true'] {
+  background: var(--badge-pressed);
+  box-shadow: inset 0 0 0 1px var(--badge-line), var(--sunk);
+}
+
+.talkbar__to:disabled {
+  cursor: default;
+}
+
+@container main (max-width: 47.5rem) {
+  .talkbar__to {
+    max-width: 180px;
+  }
+}
+
+.talkbar__to-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.talkbar__to-words,
+.talkbar__to-once {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* For this message only, and a command's step: a second line under the words. */
+.talkbar__to-once {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--text-12);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.talkbar__caret {
+  flex: none;
+  color: var(--ink-soft);
+}
+
+/* Stop: the To's place outlined in the danger colour, not a button while Stop lasts. */
+.talkbar__to--stop {
+  color: var(--danger);
+  cursor: default;
+  box-shadow: inset 0 0 0 2px var(--danger);
+}
+
+/* A command: ink, its glyph, its step under it in mat-ink. */
+.talkbar__to--command {
+  color: var(--badge);
+  cursor: default;
+  background: var(--ink);
+  box-shadow: none;
+}
+
+.talkbar__to--command .talkbar__to-once {
+  color: var(--mat-ink);
+}
+
+.talkbar--compact .talkbar__to,
+.talkbar--phone .talkbar__to {
+  max-width: 128px;
+  padding: 0 8px 2px 6px;
+}
+
+.talkbar__to-words--short {
+  display: block;
+}
+
+/* Under 360 px the To is its face alone; its words stay in its name. */
+@media (max-width: 22.4375em) {
+  .talkbar--phone .talkbar__to-words--short {
+    display: none;
+  }
+
+  .talkbar--phone .talkbar__to {
+    padding: 0 8px 2px;
+  }
+}
+
+/* The box: a slot cut into the tile, white, with its focus ring drawn on the slot. */
+.talkbar__slot {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 4px 0 6px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: inset 0 2px 0 rgb(24 36 31 / 0.1), inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.talkbar__slot:focus-within {
+  box-shadow: inset 0 2px 0 rgb(24 36 31 / 0.1), inset 0 0 0 2px var(--ink), 0 0 0 4px var(--highlighter);
+}
+
+.talkbar--over .talkbar__slot {
+  box-shadow: inset 0 2px 0 rgb(24 36 31 / 0.1), inset 0 0 0 2px var(--danger);
+}
+
+.talkbar--over .talkbar__slot:focus-within {
+  box-shadow: inset 0 2px 0 rgb(24 36 31 / 0.1), inset 0 0 0 2px var(--danger), 0 0 0 4px var(--highlighter);
+}
+
+/* Reconnecting: the box on note paper, its words kept. */
+.talkbar--offline .talkbar__slot {
+  background: var(--note);
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.talkbar__box {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 6px;
+  font-family: var(--font);
+  font-size: var(--text-15);
+  line-height: 22px;
+  color: var(--ink);
+  resize: none;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  /* The ring is the slot's; forced colours paint this transparent outline instead. */
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+
+.talkbar__box:focus-visible {
+  box-shadow: none;
+}
+
+.talkbar__box::placeholder {
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
+.talkbar--phone .talkbar__box {
+  font-size: var(--text-16);
+}
+
+/* "For Kai": who it's for, at the start of the box; on phones and the compact bar, in the hint row. */
+.talkbar__for {
+  display: inline-flex;
+  flex: none;
+  gap: 5px;
+  align-items: center;
+  height: 32px;
+  padding: 0 2px 0 5px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--note);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--badge-line);
+}
+
+.talkbar__for-x {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--ink-soft);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+}
+
+.talkbar__for-x:hover {
+  color: var(--ink);
+  background: var(--badge-hover);
+}
+
+.talkbar--phone .talkbar__for {
+  height: 44px;
+  padding-left: 6px;
+}
+
+.talkbar--phone .talkbar__for-x {
+  width: 44px;
+  height: 44px;
+}
+
+/* Send: primary, ink; a word key while it does something else; on phones the paper-plane key. */
+.talkbar__send,
+.talkbar__key,
+.talkbar__feed {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px 3px;
+  font-size: var(--text-15);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  transition:
+    background var(--t-hover),
+    transform var(--t-press);
+}
+
+.talkbar__send {
+  color: var(--badge);
+  background: var(--ink);
+  box-shadow: var(--bevel-ink);
+}
+
+.talkbar__send:hover {
+  background: var(--ink-hover);
+}
+
+.talkbar__send:active {
+  background: var(--ink-deep);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.35);
+}
+
+.talkbar__send[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--badge-line);
+}
+
+.talkbar__send--icon {
+  width: 48px;
+  padding: 0 0 3px;
+}
+
+.talkbar--stop .talkbar__send:not([aria-disabled='true']) {
+  color: var(--badge);
+}
+
+/* The busy dot leads the words while a send is on its way, and pulses (still with reduced motion it doesn't move). */
+.talkbar__busy {
+  width: 8px;
+  height: 8px;
+  background: var(--highlighter);
+  border-radius: 50%;
+  animation: talkbar-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes talkbar-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Feed and Stop and wait: standing keys with their words. */
+.talkbar__key,
+.talkbar__feed {
+  color: var(--ink);
+  background: var(--badge);
+  box-shadow: inset 0 0 0 1.5px var(--badge-line), var(--bevel);
+}
+
+.talkbar__key:hover,
+.talkbar__feed:hover {
+  background: #fff;
+}
+
+.talkbar__key:active,
+.talkbar__feed:active,
+.talkbar__feed.is-on {
+  background: var(--badge-pressed);
+  box-shadow: inset 0 0 0 1.5px var(--badge-line), var(--sunk);
+}
+
+.talkbar__key[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+/* Feed is a small key everywhere since v0.2's simpler talk bar: recipient, box, send, and this. */
+.talkbar__feed {
+  position: relative;
+  width: 48px;
+  padding: 0 0 3px;
+}
+
+/* New replies and disagreements: an ink count, never yellow (they don't need you); else an ink dot. */
+.talkbar__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+.talkbar__feed .talkbar__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
+.talkbar__dot {
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+
+/* An empty box with focus: a few plain things to do above it, as small paper chips. */
+.talkbar__offers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 4px 6px;
+}
+
+.talkbar__offer {
+  min-height: 32px;
+  padding: 0 12px 2px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--badge-line);
+  transition: background var(--t-hover);
+}
+
+.talkbar__offer:hover {
+  background: #fff;
+}
+
+.talkbar--phone .talkbar__offer {
+  min-height: 44px;
+}
+
+/* What the To can't say in the compact form: a row above the box at the bar's full width. */
+.talkbar__mode {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  margin: 0 0 6px;
+  padding: 0 10px 0 6px;
+  font-size: var(--text-14);
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 10px;
+}
+
+.talkbar__mode > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.talkbar__mode--stop {
+  color: var(--danger);
+  background: var(--note);
+  box-shadow: inset 0 0 0 2px var(--danger);
+}
+
+.talkbar__mode--command {
+  padding-left: 10px;
+  color: var(--badge);
+  background: var(--ink);
+}
+
+/* The hint row: one sentence at a time, the counter on the right, its keys after it. */
+.talkbar__hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+  min-height: 20px;
+  margin: 4px 4px 0;
+  font-size: var(--text-12);
+  line-height: 16px;
+  color: var(--ink-soft);
+}
+
+.talkbar__hint.is-hidden {
+  display: none;
+}
+
+.talkbar__hint.is-danger .talkbar__hint-line {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.talkbar__hint-line {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.talkbar__keys-hint b,
+.talkbar__hint b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.talkbar__counter {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.talkbar__counter.is-over {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.talkbar__hint-keys,
+.talkbar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+}
+
+.talkbar__chips {
+  flex-basis: 100%;
+}
+
+/* Keys in the hint row: small line keys (44 px on phones). */
+.talkbar__small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px 1px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.talkbar__small:hover {
+  background: #fff;
+}
+
+.talkbar__small[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  box-shadow: inset 0 0 0 1.5px var(--badge-line);
+}
+
+.talkbar--phone .talkbar__small {
+  min-height: 44px;
+  padding: 0 14px 1px;
+  font-size: var(--text-14);
+}
+
+.talkbar--phone .talkbar__hint {
+  font-size: var(--text-13);
+  line-height: 18px;
+}
+
+/* Glyphs: design-hud's set, 1.8 stroke, round caps, the current colour. */
+.tglyph {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Your words, as the office carries them: a small yellow paper with two ink lines. */
+.tpaper {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 14px;
+  vertical-align: -2px;
+  background: var(--highlighter);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgb(24 36 31 / 0.35);
+}
+
+.tpaper::before,
+.tpaper::after {
+  position: absolute;
+  left: 3px;
+  height: 1.5px;
+  content: '';
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.tpaper::before {
+  top: 4px;
+  width: 11px;
+}
+
+.tpaper::after {
+  top: 8px;
+  width: 7px;
+}
+
+.tpaper--white {
+  background: #fff;
+}
+
+.tfaces {
+  display: inline-flex;
+  flex: none;
+}
+
+.tfaces .face + .face {
+  margin-left: -10px;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Popovers: the `@` and `/` lists and the To's picker, in the top layer above the feed and the side panel. The list
+   inside scrolls, not the popover: a popover that scrolls itself left a hole in the office's canvas above it. */
+
+.tpop {
+  position: fixed;
+  inset: auto;
+  flex-direction: column;
+  width: 400px;
+  max-width: calc(100vw - 16px);
+  max-height: min(27rem, 60vh);
+  margin: 0;
+  padding: 6px;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--lift-3);
+}
+
+.tpop:popover-open {
+  display: flex;
+}
+
+.tpop__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.tpop:popover-open {
+  animation: tpop-rise var(--t-quick) var(--ease-out);
+}
+
+@keyframes tpop-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.tpop--phone {
+  width: auto;
+  max-height: min(14rem, 40vh);
+}
+
+.tpop--picker {
+  width: 360px;
+  max-height: min(30rem, 70vh);
+}
+
+.tpop__title {
+  margin: 4px 8px 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+}
+
+.tpop__search {
+  flex: none;
+  margin: 0 0 4px;
+}
+
+.tpop__field {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: var(--text-15);
+  color: var(--ink);
+  background: var(--note);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1.5px var(--badge-line);
+}
+
+.tpop__field::placeholder {
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
+.tpop__group {
+  margin: 8px 10px 4px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+h3.tpop__group {
+  margin: 12px 10px 4px;
+}
+
+.tpop__option {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 10px 4px 6px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+}
+
+.tpop__option:hover,
+.tpop__option--button:focus-visible {
+  background: var(--badge-hover);
+}
+
+/* The option the keyboard is on: the highlighter, ink words (11:1). */
+.tpop__option.is-active,
+.tpop__option[aria-selected='true'] {
+  background: var(--highlighter);
+}
+
+.tpop__option.is-disabled {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.tpop__main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tpop__label,
+.tpop__detail {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tpop__label {
+  font-size: var(--text-15);
+}
+
+.tpop__label b {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.tpop__detail {
+  font-size: var(--text-12);
+  color: var(--ink-soft);
+}
+
+.tpop__option.is-active .tpop__detail,
+.tpop__option[aria-selected='true'] .tpop__detail {
+  color: var(--ink);
+}
+
+.tpop__glyph {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 50%;
+}
+
+.tpop__empty {
+  margin: 8px 10px;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+}
+
+/* The phone's To sheet: a modal dialog from the foot, over an ink scrim. */
+.tsheet {
+  width: 100%;
+  max-width: none;
+  max-height: 78vh;
+  margin: auto 0 0;
+  padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: var(--lift-3);
+}
+
+.tsheet::backdrop {
+  background: rgb(24 36 31 / 0.45);
+}
+
+.tsheet[open] {
+  display: flex;
+  flex-direction: column;
+  animation: tsheet-up var(--t-move) var(--ease-out);
+}
+
+@keyframes tsheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.tsheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 0 0 8px;
+}
+
+.tsheet__title {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-19);
+  font-weight: 600;
+}
+
+.tsheet__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+}
+
+.tsheet .tpop__search {
+  position: static;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.tsheet .tpop__field {
+  min-height: 44px;
+  font-size: var(--text-16);
+}
+
+.tsheet__list {
+  overflow: auto;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Before the start: the proposal's suggestions in the strip's place. */
+
+.dock__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* A phone keeps them on one row that scrolls sideways: a second row would sit under the side panel's peek. */
+.dock--phone .dock__suggestions {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dock--phone .dock__suggestion {
+  flex: none;
+}
+
+.dock__suggestion,
+.dock__feed-key {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px 2px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: var(--lift-1);
+}
+
+.dock__suggestion:hover,
+.dock__feed-key:hover {
+  background: #fff;
+}
+
+.dock--phone .dock__suggestion,
+.dock--phone .dock__feed-key {
+  min-height: 44px;
+}
+
+.dock__feed-key {
+  position: relative;
+  justify-content: center;
+  width: 44px !important;
+  padding: 0;
+  border-radius: 14px;
+}
+
+/* Phones off the office: the feed is a small key at the talk bar's right edge, not a pill in the middle. */
+.dock__above--end {
+  justify-content: flex-end;
+  padding-right: var(--gutter);
+}
+
+.dock__feed-key .talkbar__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
+/* Reduced motion and Still office: nothing rises or slides. */
+.dock[data-still] .tpop,
+.dock[data-still] .talkbar__send,
+.dock[data-still] .talkbar__to {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tpop:popover-open,
+  .tsheet[open] {
+    animation: none;
+  }
+}
+
+/* Forced colours: tiles and keys keep an edge; the active option keeps Highlight. */
+@media (forced-colors: active) {
+  .talkbar,
+  .talkbar__to,
+  .talkbar__slot,
+  .talkbar__send,
+  .talkbar__feed,
+  .talkbar__key,
+  .talkbar__small,
+  .tpop {
+    border: 1px solid CanvasText;
+  }
+
+  .tpop__option.is-active,
+  .tpop__option[aria-selected='true'] {
+    color: HighlightText;
+    background: Highlight;
+  }
+
+  .talkbar__box:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Send's flight (docs/design-hud.md): the HUD's copy of game-feel's note, flying from the Send key to the receiver's desk.
+   sendFlight.ts moves it by transform each frame; it never catches the pointer and nothing in it is read out. */
+.tflight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-top);
+  width: 22px;
+  height: 17px;
+  pointer-events: none;
+  background: var(--highlighter);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgb(24 36 31 / 0.35), 0 2px 0 rgb(10 24 18 / 0.28), 0 4px 6px -2px rgb(10 24 18 / 0.5);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.tflight::before,
+.tflight::after {
+  position: absolute;
+  left: 4px;
+  height: 2px;
+  content: '';
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.tflight::before {
+  top: 5px;
+  width: 13px;
+}
+
+.tflight::after {
+  top: 10px;
+  width: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tflight {
+    display: none;
+  }
+}

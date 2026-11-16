@@ -1,0 +1,19 @@
+id: cli-library
+title: CLI or library
+summary: Command-line tools and reusable packages published to npm, PyPI, crates.io or a similar registry.
+detect:
+  priority: 0
+  dependencies: [commander, yargs, citty, cac, clipanion, "@oclif/core", meow, tsup, unbuild, "@changesets/cli"]
+  files: [Cargo.toml, setup.py]
+  python: [click, typer]
+  json: { package.json: bin }
+roles:
+  lean: [library-engineer, code-reviewer, qa-engineer, docs-writer]
+  standard: [architect, security-reviewer, release-manager, devops-engineer]
+  full: [product-manager, performance-engineer]
+rules: [typescript, cli-package, python, docs-markdown, tests]
+skills: [plan-feature, fix-bug, ship]
+gates:
+  lean: [code-gate]
+  standard: [security-gate, release-gate]
+  full: [perf-gate]

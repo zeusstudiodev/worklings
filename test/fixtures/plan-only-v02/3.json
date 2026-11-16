@@ -1,0 +1,278 @@
+{
+  "prompt": "A recipe box web app: add recipes with ingredients and steps, tag and search them, scale servings, a printable view, data saved in the browser, works on a phone, keyboard accessible; with tests.",
+  "preset": "balanced",
+  "org": {
+    "size": "medium",
+    "sizing": "Balanced: a browser-only app with two real parts, the app logic with its keyboard accessibility and the visual system with phone and print layout, so two makers reporting to me, with one independent review at the end.",
+    "people": [
+      {
+        "id": "ceo",
+        "title": "CEO",
+        "level": "ceo",
+        "reportsTo": null,
+        "model": "opus"
+      },
+      {
+        "id": "frontend-engineer",
+        "title": "Frontend engineer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      },
+      {
+        "id": "ui-designer",
+        "title": "UI designer",
+        "level": "worker",
+        "reportsTo": "ceo",
+        "model": "sonnet"
+      }
+    ]
+  },
+  "plan": {
+    "version": 1,
+    "versions": 1,
+    "goal": "A recipe box web app: add recipes with ingredients and steps, tag and search them, scale servings, a printable view, data saved in the browser, works on a phone, keyboard accessible; with tests. Stack: Vite + React + TypeScript, Vitest and Testing Library, no backend. Extra: JSON export and import as a backup. Look: warm editorial cookbook (cream paper, serif headings, one accent colour, light and dark).",
+    "milestones": [
+      {
+        "id": "ms-1",
+        "title": "Foundation"
+      },
+      {
+        "id": "ms-2",
+        "title": "The recipe box works end to end"
+      },
+      {
+        "id": "ms-3",
+        "title": "Looks right on a phone and on paper"
+      },
+      {
+        "id": "ms-4",
+        "title": "Checked against the brief"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "p-1",
+        "title": "Project setup: Vite, React, TypeScript and test tooling",
+        "owner": "frontend-engineer",
+        "files": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "tsconfig.node.json",
+          "vite.config.ts",
+          ".gitignore",
+          "index.html",
+          "src/main.tsx",
+          "src/App.tsx",
+          "src/vite-env.d.ts",
+          "src/test"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-2",
+        "title": "Recipe types and tolerant browser storage",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/domain/types.ts",
+          "src/domain/storage.ts",
+          "src/domain/storage.test.ts"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-3",
+        "title": "Scaling, search and backup logic",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/domain/scaling.ts",
+          "src/domain/scaling.test.ts",
+          "src/domain/search.ts",
+          "src/domain/search.test.ts",
+          "src/domain/backup.ts",
+          "src/domain/backup.test.ts"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-2"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-4",
+        "title": "Design foundation: tokens, base styles and primitives",
+        "owner": "ui-designer",
+        "files": [
+          "src/styles"
+        ],
+        "check": "npm run build",
+        "after": [
+          "p-1"
+        ],
+        "kind": null,
+        "milestone": "ms-1"
+      },
+      {
+        "id": "p-5",
+        "title": "App state, accessibility helpers and the library view",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/state",
+          "src/a11y",
+          "src/components/library"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-3",
+          "p-4"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-6",
+        "title": "Recipe editor: add and edit with ingredients and steps",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/components/editor"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-5"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-7",
+        "title": "Recipe detail with servings scaler and printable view",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/components/detail"
+        ],
+        "check": "npm run typecheck && npm test",
+        "after": [
+          "p-5"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-8",
+        "title": "App shell, routing, backup UI and end-to-end flows",
+        "owner": "frontend-engineer",
+        "files": [
+          "src/App.tsx",
+          "src/main.tsx",
+          "src/components/shell",
+          "src/__tests__",
+          "README.md"
+        ],
+        "check": "npm run typecheck && npm test && npm run build",
+        "after": [
+          "p-1",
+          "p-5",
+          "p-6",
+          "p-7"
+        ],
+        "kind": null,
+        "milestone": "ms-2"
+      },
+      {
+        "id": "p-9",
+        "title": "Style every screen: phone, dark mode, print",
+        "owner": "ui-designer",
+        "files": [
+          "src/styles"
+        ],
+        "check": "npm run build && npm test",
+        "after": [
+          "p-4",
+          "p-8"
+        ],
+        "kind": null,
+        "milestone": "ms-3"
+      },
+      {
+        "id": "p-10",
+        "title": "Fresh review of the whole result against the stakeholder's words",
+        "owner": "ceo",
+        "files": [],
+        "check": null,
+        "after": [
+          "p-1",
+          "p-2",
+          "p-3",
+          "p-4",
+          "p-5",
+          "p-6",
+          "p-7",
+          "p-8",
+          "p-9"
+        ],
+        "kind": "verification",
+        "milestone": "ms-4"
+      }
+    ],
+    "contracts": 0
+  },
+  "refusals": {
+    "org": [
+      {
+        "at": 1794584814646,
+        "count": 2,
+        "errors": [
+          "people[1].owns: up to 200 characters, got 217",
+          "people[3].owns: up to 200 characters, got 227"
+        ]
+      },
+      {
+        "at": 1794584824972,
+        "count": 1,
+        "errors": [
+          "people[3] (\"accessibility-specialist\") is a QA or reviewer seat, and Balanced has none: makers test their own work, the office runs each task's check, and one independent review comes at the end; remove them"
+        ]
+      },
+      {
+        "at": 1794584837799,
+        "count": 2,
+        "errors": [
+          "people[1].notes: up to 6 notes, got 7",
+          "people[1].notes[3]: up to 300 characters, got 417"
+        ]
+      }
+    ],
+    "plan": [
+      {
+        "at": 1794585035533,
+        "count": 2,
+        "errors": [
+          "“Project setup, recipe types and browser storage” (p-1) is too big for one context: its files span 5 areas (the project root, .gitignore, src, src/test, src/domain). Split it by area into tasks that each own one area with its own tests and check (never one task to build and another to test), keeping each to 4 areas, 2400 characters of brief and 6 requirements.",
+          "“Fresh review of the whole result against the stakeholder's words” (p-9) doesn't cite the stakeholder's words; its doneWhen must say it checks each requirement from stakeholder_words and reports each one's result."
+        ]
+      },
+      {
+        "at": 1794585072293,
+        "count": 6,
+        "errors": [
+          "Task p-3's brief names src/domain/types.ts, which is in task p-2's files, not its own, so its changes there would stay out of its commit. Add src/domain/types.ts to its files (with it waiting for p-2), or reword the brief if it only reads the file.",
+          "Task p-4's brief names src/main.tsx, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add src/main.tsx to its files (with it waiting for p-1), or reword the brief if it only reads the file.",
+          "Task p-5's brief names src/styles/README.md, which is in task p-4's files, not its own, so its changes there would stay out of its commit. Add src/styles/README.md to its files (with it waiting for p-4), or reword the brief if it only reads the file.",
+          "Task p-6's brief names src/styles/README.md, which is in task p-4's files, not its own, so its changes there would stay out of its commit. Add src/styles/README.md to its files (with it waiting for p-4), or reword the brief if it only reads the file.",
+          "Task p-7's brief names src/styles/README.md, which is in task p-4's files, not its own, so its changes there would stay out of its commit. Add src/styles/README.md to its files (with it waiting for p-4), or reword the brief if it only reads the file.",
+          "Task p-9's brief names src/App.tsx, which is in task p-1's files, not its own, so its changes there would stay out of its commit. Add src/App.tsx to its files (with it waiting for p-1), or reword the brief if it only reads the file."
+        ]
+      }
+    ]
+  }
+}

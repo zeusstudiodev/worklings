@@ -1,0 +1,307 @@
+/* A message's trace (web/src/company/trace/): the line under your messages in a conversation, and the trace's page with
+   where it stalls, who got it, who it's for, what came of it and the follow-ups. */
+
+/* The line under one of your messages: 12 px like the delivery line it follows, wrapping, never live. The words carry
+   the state; the mark only backs them up. */
+.trace-line {
+  margin: 2px 0 0;
+  max-width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.msg--mine .trace-line {
+  text-align: right;
+}
+
+.trace-line--disagree,
+.trace-line--stalled {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.trace-line__mark {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  border-radius: 50%;
+}
+
+.trace-line--stalled .trace-line__mark {
+  background: var(--danger);
+}
+
+.trace-line--disagree .trace-line__mark {
+  background: var(--highlighter);
+  box-shadow: 0 0 0 2px var(--highlighter-soft);
+}
+
+.trace-line__link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The page */
+.trace {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding-bottom: 24px;
+}
+
+.trace__head .panel-title {
+  margin-top: 6px;
+}
+
+.trace__message {
+  display: grid;
+  justify-items: end;
+  margin: 2px 0 8px;
+}
+
+.trace__to {
+  justify-self: start;
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* Your words as your bubble in a conversation: ink, the corner toward you at 4. */
+.trace__quote {
+  max-width: 92%;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--badge);
+  background: var(--ink);
+  border-radius: 14px;
+  border-bottom-right-radius: 4px;
+}
+
+.trace__message .clamp__more {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+}
+
+.trace__summary {
+  margin: 4px 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.trace__summary--stalled,
+.trace__summary--disagreement {
+  font-weight: 600;
+}
+
+.trace__gone,
+.trace__empty,
+.trace__offline {
+  margin: 4px 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.trace__offline {
+  font-size: 0.8125rem;
+}
+
+/* Where it stalls: each flag as an inbox item, a 3 px highlighter rule while it waits on a nudge. */
+.trace-flags {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trace-flag {
+  padding: 8px 0 8px 12px;
+  border-left: 3px solid var(--highlighter);
+}
+
+.trace-flag__sentence {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.trace-flag__meta {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.trace-flag__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trace-flag__note {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+}
+
+.trace-flag__note--failed {
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* Who got it: each copy with their room's marker, relays a step in under whoever passed them on. */
+.trace-stops {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trace-stop {
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr);
+  gap: 12px;
+  margin-inline-start: calc(var(--depth, 0) * 16px);
+  padding: 7px 0 8px;
+}
+
+.trace-stop__marker {
+  min-height: 30px;
+  background: var(--hue, #8c948f);
+  border-radius: 3px;
+}
+
+.trace-stop__main {
+  min-width: 0;
+}
+
+.trace-stop__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.trace-stop__name {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+a.trace-stop__name {
+  text-decoration: underline;
+  text-decoration-color: #c4bdae;
+  text-underline-offset: 3px;
+}
+
+a.trace-stop__name:hover {
+  text-decoration-color: currentColor;
+}
+
+.trace-stop__line,
+.trace-stop__note,
+.trace-stop__ack {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.trace-stop__line {
+  color: var(--ink-soft);
+}
+
+.trace-stop__ack-word {
+  font-weight: 600;
+}
+
+.trace-stop__ack.is-disagree .trace-stop__ack-word {
+  padding: 0 4px;
+  background: var(--highlighter);
+  border-radius: 4px;
+}
+
+/* Who it's for, what came of it, follow-ups */
+.trace-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+  list-style: none;
+}
+
+.trace-list__item {
+  overflow-wrap: anywhere;
+}
+
+.trace-list__who {
+  font-weight: 600;
+}
+
+.trace-list__when {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .trace-line__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .trace-flag__actions .button,
+  .trace .work-back {
+    min-height: 44px;
+  }
+
+  .trace-flag__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trace-stop__name {
+    min-height: 44px;
+  }
+
+  .trace-list .link {
+    display: inline;
+    line-height: 2;
+  }
+}
+
+/* The grid would stretch it across the panel; Back sits at the start, as on the other pages. */
+.trace__head > .work-back {
+  justify-self: start;
+}
+
+/* Those who acknowledged, folded into one line under a long trace. */
+.trace-stops__folded {
+  margin-top: 8px;
+}
+
+.trace-stops__folded > summary {
+  min-height: 44px;
+  padding: 10px 0;
+  font-weight: 600;
+  cursor: pointer;
+}

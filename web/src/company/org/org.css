@@ -1,0 +1,1292 @@
+/* The org chart (docs/design-hud.md, "The org chart"; OrgBoard.tsx, Chart.tsx, Outline.tsx, NodeMenu.tsx): ID badges
+   lying on the cutting mat, joined by elbow lines; the head's Find, Hire and zoom keys; on phones, the outline. Every
+   word on the mat is mat-ink; the nodes are badge paper with their room's hue down the left edge. */
+
+/* ===============================================================================================================
+   The view: one world panned and zoomed by a transform; it clips, so a focus move never scrolls the page under it
+   =============================================================================================================== */
+.org-view {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: var(--dock-clear, 0px);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.org-view:active {
+  cursor: grabbing;
+}
+
+.org-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+/* Only while a gesture runs: left on, the words stay rasterised at the old scale and blur after zooming. */
+.org-world.is-moving {
+  will-change: transform;
+}
+
+.org-world.is-gliding {
+  transition: transform var(--t-refit) var(--ease-out);
+}
+
+.org-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.org-lines path {
+  fill: none;
+  stroke: var(--mat-line);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.org-lines path.is-dashed {
+  stroke-dasharray: 5 5;
+}
+
+/* A relay on its way: its route lit with the highlighter while the paper travels. */
+.org-lines path.is-lit {
+  stroke: var(--highlighter);
+  stroke-width: 3;
+}
+
+.org-tree {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* "You": an ink tag over the CEO. */
+.org-you {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px 2px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+  color: var(--badge);
+  white-space: nowrap;
+  background: var(--ink);
+  border-radius: 8px;
+  box-shadow: var(--bevel-ink), var(--lift-1);
+  transform: translateX(-50%);
+}
+
+/* A room's sign over its head: decorative, the head's name says the room. */
+.org-sign {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  max-width: 220px;
+  padding: 0 10px 1px 8px;
+  overflow: hidden;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--badge);
+  border-left: 6px solid var(--hue, var(--stone));
+  border-radius: 4px;
+  box-shadow: 0 6px 14px -10px rgb(0 0 0 / 0.7);
+}
+
+.org-lost {
+  position: absolute;
+  overflow: hidden;
+  font-size: var(--text-12);
+  line-height: 15px;
+  color: var(--mat-ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ===============================================================================================================
+   A node: an ID badge, their room's colour down its left edge
+   =============================================================================================================== */
+.org-node {
+  position: absolute;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 0 9px;
+  align-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 6px 10px 8px 14px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: var(--badge);
+  border-radius: 10px;
+  outline: 2px solid transparent;
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), var(--bevel), var(--lift-1);
+  transition: transform var(--t-hover), box-shadow var(--t-hover), background var(--t-hover), opacity var(--t-quick);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .org-node:hover {
+    box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), var(--bevel), var(--lift-2);
+    transform: translateY(-2px);
+  }
+}
+
+/* Focus on the mat: the ink outline and the highlighter 8 px out. */
+.org-node:focus-visible {
+  z-index: 2;
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), 0 0 0 8px var(--highlighter), var(--lift-1);
+}
+
+/* Open in the side panel: the key's "on" mark. It sinks, takes a 2 px ink edge and a highlighter bar on an ink line at
+   its foot; no ring, so it never looks like focus. */
+.org-node.is-open {
+  background: var(--badge-pressed);
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), inset 0 0 0 2px var(--ink), inset 0 -6px 0 var(--ink), inset 0 -6px 0 2px var(--highlighter);
+}
+
+.org-node.is-open:focus-visible {
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), inset 0 0 0 2px var(--ink), inset 0 -6px 0 var(--ink), inset 0 -6px 0 2px var(--highlighter), 0 0 0 8px var(--highlighter);
+}
+
+/* A paper landed: a highlighter ring 6 px out that fades. */
+.org-node.is-ringing::after {
+  position: absolute;
+  inset: -6px;
+  pointer-events: none;
+  content: '';
+  border: 3px solid var(--highlighter);
+  border-radius: 14px;
+  animation: org-ring var(--t-ring) var(--ease-out) forwards;
+}
+
+@keyframes org-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+/* Not matching Find someone: flat on sage paper, every word in ink, the face greyed. */
+.org-node.is-dim {
+  background: var(--dim-paper);
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue));
+}
+
+.org-node.is-dim .org-node__title,
+.org-node.is-dim .org-node__model {
+  color: var(--ink);
+}
+
+.org-node.is-dim .face {
+  filter: grayscale(0.7);
+}
+
+.org-node.is-leaving {
+  opacity: 0.35;
+}
+
+.org-node__id {
+  display: grid;
+  min-width: 0;
+}
+
+.org-node__name {
+  display: block;
+  overflow: hidden;
+  font-size: var(--text-15);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.org-node__title {
+  display: block;
+  overflow: hidden;
+  font-size: var(--text-12);
+  line-height: 1.3;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.org-node__nums {
+  display: grid;
+  align-self: start;
+  justify-items: end;
+  font-family: var(--font-narrow);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.org-node__cost {
+  font-size: var(--text-13);
+  font-variant-numeric: tabular-nums;
+}
+
+.org-node__model {
+  font-size: var(--text-12);
+  color: var(--ink-soft);
+}
+
+.org-node__now {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  margin-top: 7px;
+  font-size: var(--text-12);
+}
+
+.org-node__task {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The leash's tag (top edge, left) and "In Design" (top edge, right): on the badge's edge, never inside it. */
+.org-node__leash,
+.org-node__moved {
+  position: absolute;
+  top: -10px;
+  padding: 0 7px 1px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+  line-height: 17px;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+
+.org-node__leash {
+  left: 12px;
+  color: var(--ink);
+  background: var(--badge);
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.org-node__moved {
+  right: 10px;
+  color: var(--ink-deep);
+  background: var(--paper-band);
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+/* Compact: the face, the name and the state in words. */
+.org-node--compact {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 0 8px;
+  padding: 5px 8px 6px 12px;
+}
+
+.org-node--compact .org-node__name {
+  font-size: var(--text-13);
+}
+
+.org-node--compact .org-state {
+  justify-self: start;
+  padding: 0;
+  background: none;
+}
+
+.org-node--compact .org-state--needs {
+  padding: 0 6px;
+  background: var(--highlighter);
+}
+
+/* A chip: the face with its state's mark on the corner, the whole first name. */
+.org-node--chip {
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 0 6px;
+  padding: 5px 8px 5px 11px;
+}
+
+.org-node--chip .org-node__name {
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  text-overflow: ellipsis;
+}
+
+.org-node__face {
+  position: relative;
+  display: inline-grid;
+}
+
+/* A chip's mark has a shape as well as a colour: working a disc, idle a dash, waiting a ring, needs you a square with
+   an ink edge, stuck or blocked a triangle, in Claude Code a half disc, paused two bars. */
+.org-dot {
+  position: absolute;
+  right: -4px;
+  bottom: -3px;
+  width: 9px;
+  height: 9px;
+  background: var(--ok);
+  border-radius: 50%;
+  outline: 1.5px solid var(--badge);
+}
+
+.org-dot--idle,
+.org-dot--off {
+  height: 4px;
+  bottom: -1px;
+  background: var(--ink-soft);
+  border-radius: 2px;
+}
+
+.org-dot--waiting {
+  background: var(--badge);
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
+}
+
+.org-dot--needs {
+  background: var(--highlighter);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.org-dot--stuck,
+.org-dot--blocked {
+  width: 11px;
+  height: 10px;
+  background: var(--danger);
+  border-radius: 0;
+  outline: none;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.org-dot--away {
+  background: linear-gradient(90deg, var(--rest) 50%, var(--badge) 50%);
+  box-shadow: inset 0 0 0 2px var(--rest);
+}
+
+.org-dot--paused {
+  background: linear-gradient(90deg, var(--ink-soft) 35%, var(--badge) 35% 65%, var(--ink-soft) 65%);
+  border-radius: 1px;
+}
+
+/* The state chip: its words, a mark, the colour backing them up. */
+.org-state {
+  display: inline-flex;
+  flex: none;
+  gap: 5px;
+  align-items: center;
+  padding: 0 7px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  line-height: 1.45;
+  white-space: nowrap;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+.org-state::before {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  content: '';
+  background: var(--ink-soft);
+  border-radius: 50%;
+}
+
+.org-state--working::before {
+  background: var(--ok);
+}
+
+.org-state--needs {
+  background: var(--highlighter);
+}
+
+.org-state--needs::before {
+  background: var(--ink);
+}
+
+.org-state--waiting::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.org-state--paused::before {
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--ink-soft) 35%, transparent 35% 65%, var(--ink-soft) 65%);
+}
+
+.org-state--stuck,
+.org-state--blocked {
+  color: var(--danger);
+}
+
+.org-state--stuck::before,
+.org-state--blocked::before {
+  background: var(--danger);
+}
+
+.org-state--away::before {
+  background: var(--rest);
+}
+
+/* "From Ada", with reduced motion: the paper's mark in place of the work line for a moment. */
+.org-from {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-weight: 600;
+}
+
+.org-from__paper {
+  position: relative;
+  width: 14px;
+  height: 11px;
+  background: var(--highlighter);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+/* A proposal's tag: "New role", "Added", "Changed: moved from Design". */
+.org-tag {
+  overflow: hidden;
+  padding: 0 7px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--pill);
+  border-radius: 999px;
+}
+
+/* ===============================================================================================================
+   Beside the nodes: More, a manager's fold, the proposal's places, papers, visitors
+   =============================================================================================================== */
+.org-more {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 8px;
+  outline: 2px solid transparent;
+  box-shadow: var(--bevel), var(--lift-1);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.org-more svg {
+  width: 18px;
+  height: 18px;
+  fill: currentcolor;
+}
+
+.org-more.is-shown,
+.org-more:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.org-more:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter), var(--bevel), var(--lift-1);
+}
+
+@media (pointer: coarse) {
+  .org-more {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.org-fold {
+  position: absolute;
+  z-index: 1;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px 2px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 rgb(24 36 31 / 0.14), 0 1px 0 rgb(10 24 18 / 0.35);
+  transform: translateX(-50%);
+}
+
+.org-fold__needs {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: var(--text-12);
+  background: var(--highlighter);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+/* An open manager's fold: a small round key on their line. */
+.org-fold--open {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--t-hover);
+}
+
+.org-fold--open svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.org-view:hover .org-fold--open,
+.org-fold--open:focus-visible {
+  pointer-events: auto;
+  opacity: 0.85;
+}
+
+/* Dashed paper on the mat: a place for someone or something new. */
+.org-add {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 10px;
+  overflow: hidden;
+  font: inherit;
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--mat-ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  background: transparent;
+  border: 1.5px dashed rgb(252 251 247 / 0.55);
+  border-radius: 10px;
+  outline: 2px solid transparent;
+}
+
+.org-add:hover {
+  background: rgb(252 251 247 / 0.08);
+}
+
+.org-add:focus-visible {
+  outline: 3px solid var(--highlighter);
+  outline-offset: 2px;
+}
+
+.org-add--row {
+  position: static;
+  width: 100%;
+  min-height: 44px;
+}
+
+.org-removed {
+  margin: 0;
+  font-size: var(--text-14);
+  color: var(--mat-ink);
+}
+
+/* A paper on its way: yellow when it carries your words, white otherwise (game-feel's notes). */
+.org-paper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  width: 18px;
+  height: 14px;
+  pointer-events: none;
+  background: var(--badge);
+  border-radius: 2px;
+  box-shadow: 0 2px 0 rgb(10 24 18 / 0.35), inset 0 -2px 0 rgb(24 36 31 / 0.18);
+  offset-rotate: 0deg;
+  offset-anchor: center;
+}
+
+.org-paper--yours {
+  background: var(--highlighter);
+}
+
+.org-paper::before,
+.org-paper::after {
+  position: absolute;
+  left: 4px;
+  height: 1.5px;
+  content: '';
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.org-paper::before {
+  top: 4px;
+  width: 10px;
+}
+
+.org-paper::after {
+  top: 8px;
+  width: 7px;
+}
+
+.org-after {
+  position: absolute;
+  left: 0;
+  color: var(--mat-ink);
+}
+
+.org-visitors__title {
+  margin: 0 0 4px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+}
+
+.org-visitors__note {
+  margin: 0 0 10px;
+  font-size: var(--text-13);
+}
+
+.org-visitors__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.org-visitor {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 0 8px;
+  align-items: center;
+  width: 216px;
+  padding: 6px 10px 7px;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: var(--badge);
+  border: 0;
+  border-radius: 10px;
+  outline: 2px solid transparent;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.org-visitor:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter), var(--lift-1);
+}
+
+.org-visitor__name {
+  font-size: var(--text-14);
+  font-weight: 600;
+}
+
+.org-visitor__line {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  font-size: var(--text-12);
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.org-only {
+  margin: 0 20px 12px;
+  font-size: var(--text-14);
+}
+
+.org-link {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+/* ===============================================================================================================
+   The head: Find someone, Hire someone, the zoom tile, Start
+   =============================================================================================================== */
+.org-find {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.org-find__glyph {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.org-find__box {
+  box-sizing: border-box;
+  width: 12.5rem;
+  min-height: 40px;
+  padding: 0 12px 1px 34px;
+  font: inherit;
+  font-size: var(--text-14);
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  outline: 2px solid transparent;
+  box-shadow: var(--sunk), inset 0 0 0 1.5px var(--rule);
+}
+
+.org-find--narrow .org-find__box {
+  width: 120px;
+}
+
+.org-find__box:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px var(--highlighter);
+}
+
+.org-find__said {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 6px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--mat-ink);
+  white-space: nowrap;
+}
+
+.org-hire__glyph,
+.org-zoom svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.org-hire--glyph {
+  width: 44px;
+  padding: 0 0 3px;
+}
+
+.org-zoom {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 4px;
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 14px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.org-zoom__key,
+.org-zoom__fit {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 8px 2px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  outline: 2px solid transparent;
+}
+
+.org-zoom__fit {
+  border-left: 1.5px solid var(--badge-line);
+  border-radius: 0 10px 10px 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .org-zoom__key:hover,
+  .org-zoom__fit:hover {
+    background: var(--badge-hover);
+  }
+}
+
+.org-zoom__key:focus-visible,
+.org-zoom__fit:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.org-zoom__pct {
+  min-width: 3.2em;
+  font-family: var(--font-narrow);
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.org-start {
+  display: inline-flex;
+  flex: none;
+  gap: 10px;
+  align-items: center;
+}
+
+.org-start__cost {
+  max-width: 22rem;
+  font-size: var(--text-13);
+  line-height: 1.3;
+  color: var(--mat-ink);
+}
+
+/* Phone width: the cost sentence (22rem) and Start side by side are wider than the board, which clips them, and Start
+   is out of reach. The frame's action row does not shrink by itself, so the one holding this lets go of that, and Start
+   wraps under the sentence. Wider windows keep the one row. */
+@media (max-width: 720px) {
+  .bf__actions:has(> .org-start) {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .org-start {
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .org-start__cost {
+    max-width: 100%;
+  }
+}
+
+.bf__key.org-start__key {
+  color: var(--badge);
+  background: var(--ink);
+  box-shadow: var(--bevel-ink), var(--lift-1);
+}
+
+.bf__key.org-start__key[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+/* Menus: the node's More and Hire someone, badge paper in the top layer. */
+.org-menu {
+  position: fixed;
+  inset: auto;
+  min-width: 15rem;
+  max-width: min(22rem, calc(100vw - 16px));
+  max-height: min(26rem, calc(100vh - 16px));
+  margin: 0;
+  padding: 6px;
+  overflow: auto;
+  color: var(--ink);
+  background: var(--badge);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--lift-3);
+}
+
+.org-menu__item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px 1px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 9px;
+  outline: 2px solid transparent;
+}
+
+.org-menu__item:hover,
+.org-menu__item:focus-visible {
+  background: var(--badge-hover);
+}
+
+.org-menu__item:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+}
+
+.org-menu__item[aria-disabled='true'] {
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.org-menu__item--danger {
+  color: var(--danger);
+}
+
+.org-menu__more {
+  font-size: var(--text-16);
+}
+
+.org-menu__hint {
+  font-size: var(--text-12);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.org-menu__title {
+  margin: 6px 12px 4px;
+  font-size: var(--text-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.org-menu__note {
+  margin: 6px 12px;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+}
+
+@media (pointer: coarse) {
+  .org-menu__item {
+    min-height: 44px;
+  }
+}
+
+/* Before the start, while the CEO drafts: the CEO alone and the line. */
+.org-drafting {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.org-drafting__ceo {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 0 9px;
+  align-items: center;
+  width: 216px;
+  padding: 10px 12px 11px 14px;
+  color: var(--ink);
+  text-align: left;
+  background: var(--badge);
+  border-radius: 10px;
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), var(--bevel), var(--lift-1);
+}
+
+.org-drafting__line {
+  margin: 0;
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.org-drafting__status {
+  margin: 0;
+  font-size: var(--text-14);
+}
+
+/* ===============================================================================================================
+   Phones: the outline, rows of badge paper a level in per manager on elbows
+   =============================================================================================================== */
+.org-outline {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px 12px calc(var(--dock-clear, 0px) + 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: var(--dock-clear, 0px);
+}
+
+.org-outline__tree {
+  display: grid;
+  gap: 8px;
+}
+
+.org-row {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 44px;
+  margin-left: calc(var(--depth, 0) * 22px);
+  padding: 9px 12px 10px 14px;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--badge);
+  border-radius: 12px;
+  outline: 2px solid transparent;
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), var(--bevel), var(--lift-1);
+}
+
+/* The elbow from the manager's row above. */
+.org-row::before {
+  position: absolute;
+  top: -10px;
+  left: -13px;
+  width: 11px;
+  height: 30px;
+  content: '';
+  border-bottom: 2px solid var(--mat-line);
+  border-left: 2px solid var(--mat-line);
+  border-bottom-left-radius: 6px;
+}
+
+.org-row[aria-level='1']::before {
+  display: none;
+}
+
+.org-row:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), 0 0 0 7px var(--highlighter);
+}
+
+.org-row.is-open {
+  background: var(--badge-pressed);
+  box-shadow: inset 5px 0 0 var(--hue, var(--no-hue)), inset 0 0 0 2px var(--ink);
+}
+
+.org-row.is-dim {
+  background: var(--dim-paper);
+}
+
+.org-row__toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.org-row__toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.org-row__body {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.org-row__id {
+  display: grid;
+  min-width: 0;
+}
+
+.org-row__name {
+  overflow: hidden;
+  font-size: var(--text-16);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.org-row__title {
+  overflow: hidden;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.org-row__cost {
+  align-self: start;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.org-row__now {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  min-width: 0;
+  margin-top: 6px;
+  font-size: var(--text-13);
+}
+
+.org-row__now .org-state {
+  font-size: var(--text-13);
+}
+
+.org-row__task {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.org-row__tag {
+  padding: 0 6px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-12);
+  font-weight: 600;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+.org-row__tag--moved {
+  background: var(--paper-band);
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+.org-row--closed {
+  min-height: 52px;
+}
+
+.org-row__closed {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.org-row__needs {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  font-family: var(--font-narrow);
+  font-size: var(--text-15);
+  background: var(--highlighter);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.org-outline__adds {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+@media (max-width: 720px), (max-height: 480px) {
+  .org-find__box {
+    width: 9.5rem;
+    min-height: 44px;
+  }
+
+  .org-find__said {
+    position: static;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .org-world.is-gliding,
+  .org-node {
+    transition: none;
+  }
+
+  .org-node.is-ringing::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+:root[data-still='on'] .org-world.is-gliding,
+:root[data-still='on'] .org-node {
+  transition: none;
+}
+
+@media (forced-colors: active) {
+  .org-node,
+  .org-row,
+  .org-more,
+  .org-fold,
+  .org-menu,
+  .org-zoom,
+  .org-sign {
+    border: 1px solid CanvasText;
+  }
+
+  .org-lines path {
+    stroke: CanvasText;
+  }
+
+  .org-node:focus-visible,
+  .org-row:focus-visible {
+    outline-color: Highlight;
+  }
+}

@@ -1,0 +1,90 @@
+/* v0.7: a plain job's task board (SessionBoard.tsx): the session's own list and its helpers, as two stacks of notes on the
+   mat. Every class here starts with sb-; words on the mat are mat-ink. */
+
+.sb {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  padding: 8px 20px 28px;
+  overflow-y: auto;
+  color: var(--mat-ink);
+}
+
+.sb__part {
+  max-width: 44rem;
+}
+
+.sb__head {
+  margin: 0 0 10px;
+  font-size: var(--text-15);
+  font-weight: 650;
+}
+
+.sb__part .tb-empty {
+  margin: 0;
+}
+
+.sb__todos,
+.sb__helpers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sb__todo,
+.sb__helper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: var(--text-15);
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 12px;
+  box-shadow: var(--bevel), var(--lift-1);
+}
+
+.sb__todo--completed .sb__text {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.sb__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sb__kind {
+  font-weight: 650;
+}
+
+.sb__what {
+  color: var(--ink-soft);
+}
+
+.sb__cost {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 520px) {
+  .sb {
+    padding: 4px 12px 24px;
+  }
+
+  .sb__helper {
+    flex-wrap: wrap;
+  }
+}
