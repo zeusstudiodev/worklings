@@ -1,10 +1,12 @@
-// Renders GitHub's social preview image (1280x640) from an HTML page: the name, one line and a real screenshot of the
-// office, set in the office's own fonts and colours (web/src/styles.css).
+// Renders GitHub's social preview image (1280x640) from an HTML page: the wordmark, the tagline, the mascot and a real
+// screenshot of the office, set in the office's own fonts and colours (web/src/styles.css).
 //
 //   node scripts/launch/social-preview.mjs [--shot <screenshot.png>] [--out <image.png>]
 //
 // Defaults: the screenshot in docs/launch/office-screenshot.png (a 1440x900 capture of the demo company's office) and
-// the output docs/launch/social-preview.png. Needs Playwright's Chromium (`npx playwright install chromium`).
+// the output docs/launch/social-preview.png. A new office shot swaps in with --shot and nothing else changes. The
+// wordmark and the mascot come from docs/launch/brand (scripts/launch/mascot.mjs, scripts/launch/brand.mjs). Needs
+// Playwright's Chromium (`npx playwright install chromium`).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,9 +21,9 @@ const out = resolve(values.out ?? `${root}docs/launch/social-preview.png`);
 const dataUri = (file, type) => `data:${type};base64,${readFileSync(file).toString('base64')}`;
 const font = (pkg, name) => dataUri(`${root}node_modules/@fontsource/${pkg}/files/${pkg}-latin-${name}-normal.woff2`, 'font/woff2');
 
-const TITLE = 'Worklings';
-const LINE = 'A company of Claude Code agents you run from a 3D office';
+const LINE = 'Claude Code, with an office around it.';
 if (LINE.length >= 70) throw new Error('The line must stay under 70 characters.');
+const brand = `${root}docs/launch/brand`;
 
 // Colours are the office's tokens: --mat, --mat-grid, --badge, --badge-line, --ink, --ink-soft, --highlighter.
 const html = `<!doctype html>
@@ -40,22 +42,23 @@ body {
     linear-gradient(150deg, transparent 49.6%, rgba(94,125,111,.55) 49.6% 50.4%, transparent 50.4%);
   background-size: 120px 69px;
 }
-.copy { position: absolute; left: 64px; top: 0; bottom: 0; width: 480px; display: flex; flex-direction: column; justify-content: center; }
-.name { font-family: 'Barlow Semi Condensed', 'Barlow', sans-serif; font-weight: 700; font-size: 112px; line-height: 1; letter-spacing: -1px; }
-.name span { background: linear-gradient(transparent 68%, rgba(242,213,65,.85) 68% 92%, transparent 92%); padding: 0 6px; margin: 0 -6px; }
-.line { margin-top: 30px; font-weight: 500; font-size: 33px; line-height: 1.28; max-width: 480px; }
-.tag { margin-top: 34px; align-self: flex-start; background: var(--badge); color: var(--ink); border: 1px solid var(--badge-line);
-  border-radius: 999px; padding: 8px 18px; font-weight: 600; font-size: 21px; }
-.shot { position: absolute; left: 560px; top: 62px; width: 740px; height: 516px; border-radius: 22px 0 0 22px; overflow: hidden;
+.copy { position: absolute; left: 64px; top: 92px; width: 470px; }
+.word { display: block; width: 430px; height: auto; margin-left: -8px; }
+.line { margin-top: 26px; font-weight: 600; font-size: 46px; line-height: 1.16; }
+.tag { position: absolute; left: 64px; bottom: 64px; background: var(--badge); color: var(--ink); border: 1px solid var(--badge-line);
+  border-radius: 999px; padding: 8px 18px; font-weight: 600; font-size: 22px; }
+.shot { position: absolute; left: 600px; top: 62px; width: 700px; height: 516px; border-radius: 22px 0 0 22px; overflow: hidden;
   background: var(--badge); box-shadow: 0 30px 60px -20px rgba(10,24,18,.7), 0 0 0 6px var(--badge); }
 .shot img { position: absolute; left: -10px; top: 0; width: 1010px; height: auto; }
+.mascot { position: absolute; left: 368px; top: 318px; width: 300px; height: 300px; }
 </style></head><body>
 <div class="copy">
-  <div class="name"><span>${TITLE}</span></div>
+  <img class="word" src="${dataUri(`${brand}/wordmark-dark.svg`, 'image/svg+xml')}" alt="">
   <div class="line">${LINE}</div>
-  <div class="tag">Free and open source</div>
 </div>
+<div class="tag">Free and open source</div>
 <div class="shot"><img src="${dataUri(shot, 'image/png')}" alt=""></div>
+<img class="mascot" src="${dataUri(`${brand}/mascot-1024.png`, 'image/png')}" alt="">
 </body></html>`;
 
 const browser = await chromium.launch();
