@@ -89,9 +89,9 @@ packages `@fontsource/barlow` and `@fontsource/barlow-semi-condensed`.
 
 ## The mascot
 
-The Workling mascot in `docs/launch/brand` (`mascot-*.png` and the logos) is a render of the art above, made by
-`scripts/launch/mascot.mjs` with the office's own drawing code: KayKit's mannequin in its Waving clip, the office's
-desk and plant (made here, sampling the Furniture Bits atlas) and a laptop made the same way.
+The Workling, the green creature in a hard hat, is original artwork made for Worklings, not taken from a pack. Its
+source is `docs/launch/brand/workling.svg`; `scripts/launch/brand.mjs` renders the PNGs, the avatars and the logos from
+it.
 
 ## Bundled code
 
