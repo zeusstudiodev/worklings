@@ -1,11 +1,11 @@
-// Renders GitHub's social preview image (1280x640) from an HTML page: the wordmark, the tagline, the mascot and a real
+// Renders GitHub's social preview image (1280x640) from an HTML page: the wordmark, the tagline, the Workling and a real
 // screenshot of the office, set in the office's own fonts and colours (web/src/styles.css).
 //
 //   node scripts/launch/social-preview.mjs [--shot <screenshot.png>] [--out <image.png>]
 //
 // Defaults: the screenshot in docs/launch/office-screenshot.png (a 1440x900 capture of the demo company's office) and
 // the output docs/launch/social-preview.png. A new office shot swaps in with --shot and nothing else changes. The
-// wordmark and the mascot come from docs/launch/brand (scripts/launch/mascot.mjs, scripts/launch/brand.mjs). Needs
+// wordmark and the Workling come from docs/launch/brand (rendered by scripts/launch/brand.mjs). Needs
 // Playwright's Chromium (`npx playwright install chromium`).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -50,7 +50,9 @@ body {
 .shot { position: absolute; left: 600px; top: 62px; width: 700px; height: 516px; border-radius: 22px 0 0 22px; overflow: hidden;
   background: var(--badge); box-shadow: 0 30px 60px -20px rgba(10,24,18,.7), 0 0 0 6px var(--badge); }
 .shot img { position: absolute; left: -10px; top: 0; width: 1010px; height: auto; }
-.mascot { position: absolute; left: 368px; top: 318px; width: 300px; height: 300px; }
+.mascot { position: absolute; left: 420px; top: 330px; width: 270px; height: 270px; 
+  /* A cream sticker edge, so the dark outline lifts off the mat, and a soft shadow under it. */
+  filter: drop-shadow(4px 0 0 var(--badge)) drop-shadow(-4px 0 0 var(--badge)) drop-shadow(0 4px 0 var(--badge)) drop-shadow(0 -4px 0 var(--badge)) drop-shadow(0 14px 18px rgba(10,24,18,.45)); }
 </style></head><body>
 <div class="copy">
   <img class="word" src="${dataUri(`${brand}/wordmark-dark.svg`, 'image/svg+xml')}" alt="">
