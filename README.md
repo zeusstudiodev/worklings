@@ -1,25 +1,62 @@
-# Worklings
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/launch/brand/logo-dark.png">
+    <img alt="Worklings" src="docs/launch/brand/logo-light.png" width="520">
+  </picture>
+</h1>
 
-**Claude Code, with an office around it.**
+<p align="center"><strong>Claude Code, with an office around it.</strong></p>
 
-[![npm](https://img.shields.io/npm/v/worklings)](https://www.npmjs.com/package/worklings)
-[![License: MIT](https://img.shields.io/github/license/zeusstudiodev/worklings)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/zeusstudiodev/worklings)](https://github.com/zeusstudiodev/worklings/stargazers)
-[![Package check](https://github.com/zeusstudiodev/worklings/actions/workflows/package.yml/badge.svg)](https://github.com/zeusstudiodev/worklings/actions/workflows/package.yml)
-![Node 22 or later](https://img.shields.io/badge/node-%3E%3D22-brightgreen)
-
-You say what to build. Your words go verbatim to your own `claude`, with your own setup: your CLAUDE.md, skills,
-plugins, MCP servers, permission rules, model and effort. Worklings doesn't change how Claude Code works. It adds an
-office around the session: control over it, an organization for many jobs, a fine-grained view of what it is doing,
-and a cozy low-poly 3D office to watch it in.
-
-[![The launch film: a company builds a bakery website with pickup orders from one sentence. The CEO's questions, the sized org, people at their desks, a push approved on a phone, the site they built and the CEO's report](docs/launch/film/teaser.gif)](docs/launch/film/hero.mp4)
+<p align="center">
+  <a href="docs/launch/film/hero.mp4"><img src="docs/launch/film/teaser.gif" width="720" alt="The launch film: a company builds a bakery website with pickup orders from one sentence. The CEO's questions, the sized org, people at their desks, a push approved on a phone, the site they built and the CEO's report"></a>
+</p>
 
 *Watch [the launch film](docs/launch/film/hero.mp4) (82 seconds): a real company of Claude Code sessions building a
 bakery website with pickup orders, filmed from one sentence to its last report. It was filmed with an earlier version's
 company of roles (a CEO and five people); a new job now runs as one Claude Code session, and a team is an experiment
 (see [The team](#the-team-experimental)). Shots that run faster than real time say so;
 [how it was made](docs/launch/film/how-it-was-made.md).*
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/worklings"><img alt="npm" src="https://img.shields.io/npm/v/worklings"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/zeusstudiodev/worklings"></a>
+  <a href="https://github.com/zeusstudiodev/worklings/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/zeusstudiodev/worklings"></a>
+  <a href="https://github.com/zeusstudiodev/worklings/actions/workflows/package.yml"><img alt="Package check" src="https://github.com/zeusstudiodev/worklings/actions/workflows/package.yml/badge.svg"></a>
+  <img alt="Node 22 or later" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
+</p>
+
+Worklings starts your own, unchanged Claude Code on your words and puts a cozy low-poly 3D office around it: one inbox
+for its prompts and questions, budgets, its todo list as a task board and its subagents as helpers with their own cost.
+
+<table>
+<tr>
+<th width="50%" align="left">Just want to build something?</th>
+<th width="50%" align="left">Live in Claude Code already?</th>
+</tr>
+<tr>
+<td valign="top">
+
+1. Try the [live demo](https://zeusstudiodev.github.io/worklings/): nothing to install.
+2. Add the [plugin](#try-it-in-30-seconds) to Claude Code and run `/worklings:hub`.
+3. Pick a folder and say what you want.
+4. Watch it work. Questions and permission prompts wait in the inbox, on your computer or
+   [your phone](#phone-access-with-tailscale).
+
+Worklings itself never pushes or deploys. It asks exactly when your Claude Code would.
+
+</td>
+<td valign="top">
+
+- **Your `claude`, unchanged:** your CLAUDE.md, skills, hooks, MCP servers and rules.
+- **Held to plain `claude -p`** by a [contract test](test/parity-contract.test.ts); the
+  [parity bench](#is-it-as-good-as-plain-claude-code) found no difference 20 pairs can detect.
+- **Budgets** as Claude Code's own `--max-budget-usd`, and each subagent's cost apart.
+- **One inbox** for its permission prompts, questions and plan approvals.
+- **From a terminal:** `worklings new ./app --prompt "..."` with `--model` and `--effort` ([more](#run-a-job)).
+
+</td>
+</tr>
+</table>
 
 ## Try it in 30 seconds
 
