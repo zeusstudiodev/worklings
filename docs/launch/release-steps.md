@@ -215,3 +215,60 @@ base `/worklings/`) and deploys it. Open the address and look at the demo compan
   commands followed by `/worklings:hub` in Claude Code.
 - Open the good first issues in `docs/launch/good-first-issues.md` if you want them in the tracker (label
   `good first issue`).
+
+## Releases after 0.2.0
+
+The public repository already has history: `main` on `zeus` (`zeusstudiodev/worklings`) is 0.2.0's one commit. A later
+release adds one commit on top of it, never a second parentless root, and this machine's `run/*` history is still never
+pushed. Shown for 0.3.0 from `run/v0.8`; for another version, change the numbers. Every step is the maintainer's.
+
+**1. Check and prepare, on the candidate branch** (makes nothing public). Run every check in step 1 above on `run/v0.8`.
+`package.json` says 0.3.0 already; on the day, turn the changelog's heading "0.3.0 (unreleased)" into "0.3.0, <date>" and
+commit it. The plugin's version follows from `package.json` when the runtime is staged.
+
+**2. The squashed tree, on a temporary branch** (makes nothing public). The squash script makes the tree exactly as for
+0.2.0: the manifest's files, the staged plugin runtime, the privacy scan. It writes to a branch that doesn't exist yet,
+so `release-0.3` is fine (it refuses a name that exists, such as `release` or `release-0.2`):
+
+```bash
+node scripts/release-plugin.ts --stage
+npm run release:squash -- --dry-run --branch release-0.3
+npm run release:squash -- --branch release-0.3 --message "Worklings 0.3.0" --yes
+```
+
+`release-0.3` is a parentless commit: only its tree is used. It refuses inside office hours, as for 0.2.0.
+
+**3. The public commit on top of the public `main`** (makes nothing public yet). In the same sitting, outside office
+hours, as Zeus Studio. In bash:
+
+```bash
+git fetch zeus main
+tree=$(git rev-parse 'release-0.3^{tree}')
+git diff --stat zeus/main "$tree"
+commit=$(GIT_AUTHOR_NAME="Zeus Studio" GIT_AUTHOR_EMAIL=support@zeusstudio.dev \
+  GIT_COMMITTER_NAME="Zeus Studio" GIT_COMMITTER_EMAIL=support@zeusstudio.dev \
+  git commit-tree "$tree" -p zeus/main -m "Worklings 0.3.0")
+git branch release-0.3-public "$commit"
+git log --format='%an <%ae> %ad%n%cn <%ce> %cd' -1 release-0.3-public
+node scripts/check-public.mjs --tree release-0.3-public
+```
+
+In PowerShell, set the four variables with `$env:GIT_AUTHOR_NAME = "Zeus Studio"` and so on, run
+`$tree = git rev-parse 'release-0.3^{tree}'` and `$commit = git commit-tree $tree -p zeus/main -m "Worklings 0.3.0"`, then
+remove the four variables (`Remove-Item Env:GIT_AUTHOR_NAME`, and so on). `git commit-tree` doesn't check the clock as
+the squash script does: the `git log` line shows the time it stamped, which must be outside office hours. The diff is
+what the release changes on GitHub; the scan must say "Clean". Then take the staged runtime out of `run/v0.8`'s index,
+as in step 2e (`git restore --staged -- plugin .claude-plugin`).
+
+**4. Push, tag and release** (makes it public).
+
+```bash
+git push zeus release-0.3-public:main
+git tag v0.3.0 release-0.3-public
+git push zeus v0.3.0
+gh release create v0.3.0 --repo zeusstudiodev/worklings --verify-tag --title "Worklings 0.3.0" --notes-file <the 0.3.0 section of CHANGELOG.md, saved to a file>
+```
+
+The push is a fast-forward of `main` (one commit on top), so it needs no force; if it is refused, `main` moved since the
+fetch: fetch again and make the commit again in step 3. Then step 6 for npm (from a worktree of `release-0.3-public`)
+and step 7 for the web demo, as for 0.2.0. `release-0.3` and `release-0.3-public` stay local.

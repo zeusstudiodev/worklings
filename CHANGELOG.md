@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.3.0, 17 November 2026
+
+The office is calmer. It fills the screen, the next thing that needs you waits on one card, and everything else is a
+click away. The web demo can now start a project from scratch, by replaying a real recorded run.
+
+### What a 0.2.0 user notices
+
+- **Office first.** A company opens on its office, not on Progress. By default the screen holds three things: a slim
+  bar (back to the lobby, the name, its status, the budget and More), one card with what needs you, and the talk bar.
+  Progress, the task board and the whole inbox open when you ask, one at a time: opening one closes the other. Nothing
+  was removed. The views, Inbox with its count and the office's zoom, Fit and Full screen keys are in More, and the
+  palette (Ctrl+K) still has every command.
+- **The inbox as one card.** The oldest thing waiting sits on a card over the talk bar: who asks, the question or the
+  permission prompt, its answers (Answer in your own words included) and "1 of 6", with Next, Skip and See all. After you
+  answer, the next card slides in and takes focus, and the answer's Undo stays on the card for its five seconds. With
+  nothing waiting there is no card. On a phone the card is a sheet over the talk bar, and it folds to its head while
+  you type in the talk bar.
+- **Fewer things over the office.** Room signs and the bubbles over people show only where something happens now: someone
+  at work, stuck, in a meeting or answering you. The front desk's sign gave way to the card. A room nobody works in
+  keeps a key the keyboard reaches. The summary box over the office is gone, and Progress says how many things need you
+  in one line instead of listing them again.
+- **The live strip is off by default.** The relay lines that stacked over the talk bar are in the feed (the talk bar's
+  Feed key, on phones too). More's "Show the live strip" brings it back in this browser.
+- **The side panel opens when you ask for it.** It no longer shows the inbox by default on desktops, and it leaves no
+  pull on the window's edge. The inbox you open is a step of its own: Back closes it.
+- **Try it in the web demo.** The demo lobby has "Try it: start a project". It opens the real start form with the words
+  of one real Claude Code run, recorded once from an empty folder on Sonnet. Start replays that run sped up ×8: the todo
+  list fills the board, a helper appears with its cost, and each permission prompt waits on the card for your tap. It
+  ends with the run's last words. Nothing runs in your browser, so if you type other words, the form says it will replay
+  the recorded run instead. The demo lobby also shows a plain one-session job beside the team companies.
+- **The new Workling.** The green Workling mascot replaces the 3D one, in the logos, the social preview and the favicon
+  of the office and the demo.
+
+- **A turn's end reads as one.** A job whose session ended its turn with words, and waits for nothing else, reads
+  "Your turn" in its bar and on its lobby card; "Waiting for your OK" is kept for permission prompts and plans. The card
+  says "Claude Code asks you." only when its words end in a question, and "Claude Code finished its turn." otherwise,
+  with "Reply in your own words".
+- **Only the latest words wait.** When the session goes on by itself after ending a turn (a background subagent or
+  command reporting back), the words it ended that turn with leave the inbox, so the card never shows words the session
+  has moved past. A reply you were writing to them stays on the card and reaches the session as a message. While its
+  helpers still run, the job reads Working.
+- **Helpers count as at work.** More's "At work" counts a session's running subagents too.
+- **Prompts say Run once.** A command's prompt read "Claude Code asks: Run Run npm test"; it now uses Claude Code's own
+  description of the command as it is.
+
 ## 0.2.0, 16 November 2026
 
 Worklings is now Claude Code with an office around it. A new job is one unmodified Claude Code session on your words,

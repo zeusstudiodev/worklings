@@ -89,7 +89,7 @@ import { planInbox } from '../core/plan.ts';
 import { isPresetId, type ModelsByLevel, MODEL_LEVELS, PRESET_IDS, type PresetId, presetGuidance, PRESETS, SEAT_TITLES, seatEffort } from '../core/presets.ts';
 import { type CompanyShape, seatOf, SOLO_REVIEWER, soloFixLines } from '../core/harness-shape.ts';
 import { emptyWorkBook, foldWork, type WorkBook, type WorkSignal, workView } from '../core/desk-work.ts';
-import { cleanLaunch, PLAIN_PERSON, type PlainDesk, type PlainLaunch, plainStudio } from '../core/plain.ts';
+import { cleanLaunch, OWN_TURN_REASON, PLAIN_PERSON, type PlainDesk, type PlainLaunch, plainStudio, TURN_STOPPED } from '../core/plain.ts';
 import { budgetLevel, cleanBudget, type InstalledCatalogue, multipleWords, presetInfos } from '../core/spending.ts';
 import { readInstalled } from '../server/claude-config.ts';
 import { redactClip, redactSecrets } from '../core/redact.ts';
@@ -1960,6 +1960,16 @@ export class Company implements CompanyHandle, SteeringApi {
     this.refuseIfClosed();
     const q = this.state.questions.find((x) => x.id === questionId);
     if (!q) throw new OrgRefusal('unknown', "There's no question with that id.");
+    // v0.8: a reply typed to a plain session's end of turn while the session went on by itself still reaches it, as a
+    // message, rather than being refused with the words lost.
+    const late = q.withdrawn && q.plainTurn === true && q.withdrawn.reason === OWN_TURN_REASON && this.state.shape === 'plain' ? this.person(q.from) : undefined;
+    const lateWords = late ? cleanBlock(input.text, LIMITS.message) : '';
+    if (late && lateWords) {
+      const m = this.newMessage(STAKEHOLDER, late.id, lateWords, { answers: q.id });
+      this.commit([{ type: 'message', message: m }]);
+      this.deliver(m);
+      return structuredClone(this.question(q.id));
+    }
     if (q.withdrawn) throw new OrgRefusal('closed', `That question was withdrawn: ${q.withdrawn.reason}`);
     if (q.answer) throw new OrgRefusal('conflict', 'That question already has an answer; undo it to change it.');
     const option = input.option;
@@ -2900,7 +2910,7 @@ export class Company implements CompanyHandle, SteeringApi {
     const at = this.now();
     const open = this.state.questions.filter((q) => q.plainTurn === true && q.from === person.id && q.answer === null && q.withdrawn === null).map((q) => q.id);
     const said = cleanBlock(result.text, LIMITS.message);
-    const text = result.ok === true ? said || 'Claude Code ended its turn without words.' : `The turn stopped${result.problem ? `: ${oneLine(result.problem, 300)}` : ''}. Reply to carry on.`;
+    const text = result.ok === true ? said || 'Claude Code ended its turn without words.' : `${TURN_STOPPED}${result.problem ? `: ${oneLine(result.problem, 300)}` : ''}. Reply to carry on.`;
     const q: Question = {
       id: this.alloc('question'), from: person.id, text, options: [], recommended: null, taskId: null, askedAt: at, answer: null, withdrawn: null,
       safe: false, fallback: null, defaultAt: null, plainTurn: true,
@@ -2946,6 +2956,7 @@ export class Company implements CompanyHandle, SteeringApi {
       delivered: (messageId, at, how) => heard('a delivery', () => this.onDelivered(messageId, at, how)),
       session: (person, sessionId, account) => heard('a session', () => this.onSession(person, sessionId, account)),
       turn: (person, result) => heard('a finished turn', () => this.onTurn(person, result)),
+      ownTurn: (person) => heard('a turn of its own', () => this.onOwnTurn(person)),
       limited: (until, message, reason) => heard('a usage limit', () => this.onLimited(until, message, reason)),
       notice: (sentence) => this.warn(sentence),
       work: (person, signals) => heard("a desk's work", () => this.onWork(person, signals)),
@@ -3033,6 +3044,17 @@ export class Company implements CompanyHandle, SteeringApi {
       if (billing !== this.state.settings.billing) events.push({ type: 'settings', settings: { ...this.state.settings, billing } });
     }
     if (events.length > 0) this.commit(events);
+  }
+
+  /**
+   * v0.8: a plain session went on by itself after ending a turn, with no reply from the person (a background subagent or
+   * shell reporting back). The words it ended that turn with are behind it, so they leave the inbox; its next turn's end
+   * puts its new words there. Only a session's latest end of turn is ever open.
+   */
+  private onOwnTurn(person: string): void {
+    if (this.state.shape !== 'plain' || !ROLE_ID.test(person)) return;
+    const open = this.state.questions.filter((q) => q.plainTurn === true && q.from === person && q.answer === null && q.withdrawn === null).map((q) => q.id);
+    if (open.length > 0) this.commit(this.withdrawals(open, OWN_TURN_REASON, this.now()));
   }
 
   private onTurn(person: string, result: TurnResult): void {

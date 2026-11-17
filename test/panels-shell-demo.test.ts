@@ -113,10 +113,12 @@ describe("the demo's library", () => {
 });
 
 describe('the demo lobby', () => {
-  it('lists the café, a proposal waiting, a CEO drafting, a paused company, a finished one and one that cannot run', () => {
+  // v0.8: a plain job beside the team companies, since one Claude Code session is the default.
+  it('lists the café, a plain job, a proposal waiting, a CEO drafting, a paused company, a finished one and one that cannot run', () => {
     const lobby = demoLobby(NOW);
     expect(lobby.companies.map((c) => [c.id, c.phase])).toEqual([
       ['demo', 'running'],
+      ['recipe-box', 'running'],
       ['plant-pal', 'proposed'],
       ['lake-wind', 'founding'],
       ['ledger', 'running'],
@@ -124,7 +126,7 @@ describe('the demo lobby', () => {
       ['old-site', 'stopped'],
     ]);
     // Plant Pal's proposal and its two questions, which the hub puts in the inbox too.
-    expect(lobby.companies.map((c) => c.needsYou)).toEqual([6, 3, 0, 5, 0, 0]);
+    expect(lobby.companies.map((c) => c.needsYou)).toEqual([6, 1, 3, 0, 5, 0, 0]);
     expect(lobby.companies.find((c) => c.id === 'ledger')?.pause?.reason).toBe('stakeholder');
     expect(lobby.companies.find((c) => c.id === 'old-site')?.problem).toMatch(/isn't at/);
     expect(lobby.hub.working).toBe(lobby.companies.reduce((s, c) => s + c.working, 0));
@@ -145,7 +147,7 @@ describe("the demo's overview (v0.2)", () => {
   it("gives every company that can run its lobby summary, the stage in a word, and none to the one that can't", () => {
     const lobby = demoLobby(NOW);
     const stage = Object.fromEntries(lobby.companies.map((c) => [c.id, c.summary?.stage ?? null]));
-    expect(stage).toEqual({ demo: 'waiting', 'plant-pal': 'waiting', 'lake-wind': 'scoping', ledger: 'paused', 'rhine-swim': 'done', 'old-site': null });
+    expect(stage).toEqual({ demo: 'waiting', 'recipe-box': 'waiting', 'plant-pal': 'waiting', 'lake-wind': 'scoping', ledger: 'paused', 'rhine-swim': 'done', 'old-site': null });
     const cafe = lobby.companies.find((c) => c.id === 'demo')?.summary;
     expect(cafe?.goal).toBe('A bilingual website for Café Lumen in Basel where guests order coffee and pastries for pickup and pay with TWINT.');
     expect(cafe?.milestones).toEqual({ done: 1, planned: 3 });

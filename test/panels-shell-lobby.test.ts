@@ -119,8 +119,9 @@ describe("a company's card", () => {
   });
 
   it('puts every stage in a word, waiting for you on the highlighter', () => {
-    expect(STAGES.map((s) => stageWord(s).word)).toEqual(['Scoping', 'Waiting for your OK', 'Working', 'Checking', 'Done', 'Paused', 'Stuck']);
+    expect(STAGES.map((s) => stageWord(s).word)).toEqual(['Scoping', 'Waiting for your OK', 'Your turn', 'Working', 'Checking', 'Done', 'Paused', 'Stuck']);
     expect(stageWord('waiting').tone).toBe('needs');
+    expect(stageWord('your-turn').tone).toBe('needs');
     expect(stageWord('stuck').tone).toBe('error');
   });
 

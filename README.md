@@ -8,14 +8,12 @@
 <p align="center"><strong>Claude Code, with an office around it.</strong></p>
 
 <p align="center">
-  <a href="docs/launch/film/hero.mp4"><img src="docs/launch/film/teaser.gif" width="720" alt="The launch film: a company builds a bakery website with pickup orders from one sentence. The CEO's questions, the sized org, people at their desks, a push approved on a phone, the site they built and the CEO's report"></a>
+  <a href="docs/launch/film/hero.mp4"><img src="docs/launch/film/teaser.gif" width="720" alt="From the launch film: Claude Code at work in a small CLI's office with two helpers and their cost, its todo list on the task board, and its npm test prompt allowed on a phone. Links to the whole film"></a>
 </p>
 
-*Watch [the launch film](docs/launch/film/hero.mp4) (82 seconds): a real company of Claude Code sessions building a
-bakery website with pickup orders, filmed from one sentence to its last report. It was filmed with an earlier version's
-company of roles (a CEO and five people); a new job now runs as one Claude Code session, and a team is an experiment
-(see [The team](#the-team-experimental)). Shots that run faster than real time say so;
-[how it was made](docs/launch/film/how-it-was-made.md).*
+*Watch [the launch film](docs/launch/film/hero.mp4) (39 seconds): three real Claude Code jobs started from one sentence
+each, a small CLI followed from its office to its last words, and its `npm test` prompt answered on a phone. Shots
+that run faster than real time say so; [how it was made](docs/launch/film/how-it-was-made.md).*
 
 <p align="center">
   <a href="https://www.npmjs.com/package/worklings"><img alt="npm" src="https://img.shields.io/npm/v/worklings"></a>
@@ -116,7 +114,7 @@ reads what it does from its stream without changing it.
   `--permission-mode`); anything you leave out is your Claude Code's own default. Effort can also be changed in the
   office, and applies when the desk next opens.
 
-![The inbox in the side panel of a team company: a frontend engineer asks to push the work branch, with the exact command one click away and Allow once, Always allow and Deny, beside the office](docs/images/v3/inbox-approval.png)
+![A plain job's office: Claude Code at the front desk with a helper writing tests beside it, and its permission prompt to run npm install on the inbox card over the talk bar, with the command one click away and Allow once, Always allow and Deny](docs/images/v3/inbox-approval.png)
 
 ### Organization
 
@@ -126,7 +124,7 @@ reads what it does from its stream without changing it.
   session hears only your words.
 - **Timeline and history** of each job.
 
-![The lobby: five made-up companies as small buildings, each with its state and what it has spent](docs/images/v3/lobby.png)
+![The demo lobby: made-up jobs and companies as small buildings, each with its state, what waits for you across them, and "Try it: start a project", which replays a recorded run](docs/images/v3/lobby.png)
 
 ### Granularity
 
@@ -155,10 +153,10 @@ Clips: [dashboards](docs/launch/clips/dashboards.mp4) and [the preview](docs/lau
 ### Fun
 
 The 3D office fills the window, with boards that open over it and shrink it to a live mini-map. On a phone the office
-opens first and the inbox is a sheet; `worklings hub --tailnet` puts it on your phone over
+opens first and what needs you sits on one card over the talk bar; `worklings hub --tailnet` puts it on your phone over
 [Tailscale](https://tailscale.com/) (see [Phone access](#phone-access-with-tailscale)).
 
-<img src="docs/images/v3/phone.png" alt="The office on a phone: the 3D view above, the inbox as a bottom sheet with a question and its answers" width="320">
+<img src="docs/images/v3/phone.png" alt="The same job on a phone: the office above, and the npm install prompt on the inbox card with Allow once, Always allow and Deny" width="320">
 
 ### What differs from plain Claude Code
 

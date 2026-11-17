@@ -978,8 +978,9 @@ export function TalkBar(props: TalkBarProps) {
             Stop and wait
           </button>
         ) : (
-          (!phone || short) && (
-            // A small key: your messages and the replies to them, named for a screen reader and in its tooltip.
+          // A small key: your messages and the replies to them, named for a screen reader and in its tooltip. Phones have
+          // it in the bar too since v0.8: the card takes the place above the talk bar.
+          (
             <button type="button" className={`talkbar__feed${feed.open ? ' is-on' : ''}`} aria-expanded={feed.open} aria-controls={feed.id} aria-label={feed.name} title={feed.name} onClick={feed.toggle}>
               <Glyph name="feed" />
               {feed.count > 0 ? (

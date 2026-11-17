@@ -9,6 +9,7 @@ import {
   fromPalette,
   HIDDEN_FOCUS,
   hiddenFocus,
+  inboxCard,
   inboxKey,
   layoutOf,
   moreKey,
@@ -17,21 +18,20 @@ import {
   open,
   openBoard,
   openCompany,
+  openInbox,
+  openMore,
   openPanel,
   panelTitle,
   scratchOf,
   waitForProposal,
-  panelToggle,
   separator,
   shot,
   sidePanel,
-  switcher,
   switchTo,
   talkBar,
   talkBox,
   viewLinks,
   viewLinkName,
-  viewsKey,
   watchErrors,
 } from './v3-kit.ts';
 import { found } from './v3-world.ts';
@@ -86,103 +86,88 @@ const LAST_STOP = `(() => {
 const tabStop = async (page: Page): Promise<{ hidden: string | null; thing: string; last: boolean }> =>
   (await page.evaluate(`({ hidden: ${HIDDEN_FOCUS}, thing: ${FOCUSED_THING}, last: ${LAST_STOP} })`)) as { hidden: string | null; thing: string; last: boolean };
 
+/** v0.8: a closed side panel leaves nothing on the window's edge after the start: no title, no separator, no pull. */
 async function expectHidden(page: Page): Promise<void> {
   await expect(panelTitle(page)).toBeHidden();
-  await expect(separator(page)).toHaveAttribute('aria-valuenow', '0');
-  await expect(separator(page)).toHaveAttribute('aria-valuetext', 'Hidden');
+  await expect(separator(page)).toHaveCount(0);
 }
-
-/** A phone's peeking inbox sheet: one button, "Open the inbox. Six things need you." */
-const peek = (page: Page): Locator => sidePanel(page).getByRole('button', { name: /^Open the inbox\./ });
 
 /** Puts focus on nothing, as after a click on the office's empty floor. */
 const blur = (page: Page) => page.evaluate('document.activeElement && document.activeElement.blur()');
 
-test.describe('the view switcher', () => {
-  test('three views, the current one marked, each an address of its own; More holds the others', async ({ page }, info) => {
+// v0.8 (SPEC-v0.8.md, "office first"): the bar has no views row; every view is in More, at every size.
+test.describe('the views, in More', () => {
+  test('every view is in More, the current one marked, each an address of its own', async ({ page }, info) => {
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
-    const { short } = layoutOf(page);
-    if (short) {
-      // A phone on its side folds the views into one key named with the current view, a disclosure of every view.
-      await expect(viewsKey(page)).toHaveAccessibleName('Views, Office');
-      await expect(viewsKey(page)).toHaveAttribute('aria-expanded', 'false');
-    }
-    const views = await viewLinks(page);
-    if (short) await expect(viewsKey(page)).toHaveAttribute('aria-expanded', 'true');
-    // Named by their words, shown or not: a narrower bar keeps the glyphs alone, with the words as names and tooltips.
+    await expect(page.getByRole('banner').getByRole('navigation', { name: 'Views' }), 'no views row in the bar').toHaveCount(0);
+    // The Views group of More (More's money line is a link of its own, to Spending).
+    const views = (await viewLinks(page)).getByRole('group', { name: 'Views' });
     const links = views.getByRole('link');
-    const names = short ? ['Progress', 'Office', 'Tasks', 'Org chart', 'Dashboards', 'Decision log', 'Spending', 'Timeline'] : ['Progress', 'Office', 'Tasks'];
+    const names = ['Progress', 'Office', 'Tasks', 'Org chart', 'Dashboards', 'Decision log', 'Spending', 'Timeline'];
     await expect(links).toHaveCount(names.length);
     for (const [i, name] of names.entries()) await expect(links.nth(i)).toHaveAccessibleName(name);
     await expect(views.getByRole('link', { name: 'Office', exact: true })).toHaveAttribute('aria-current', 'page');
-    if (layoutOf(page).phone && !short) {
-      // The phone's views row: three 44 px keys.
-      for (const link of await links.all()) expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    }
     await shot(page, 'h56-views-office', info);
-    if (short) await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
     for (const [view, main] of [['Progress', 'progress'], ['Org', 'org'], ['Tasks', 'tasks'], ['Dashboards', 'dashboards'], ['Decision log', 'decisions'], ['Office', '']] as const) {
       await switchTo(page, view);
       await expectAddress(page, companyAddress(DEMO, { main }), `${view} has its own address`);
+      // More is marked while any view but the office is the main view, so you can always see where you are.
+      if (view === 'Office') await expect(moreKey(page)).not.toHaveAttribute('aria-current', 'true');
+      else await expect(moreKey(page)).toHaveAttribute('aria-current', 'true');
       const name = viewLinkName(view);
-      if (short) await expect(viewsKey(page)).toHaveAccessibleName(`Views, ${name}`);
-      // More is marked while one of its views is the main view, so you can always see where you are.
-      if (!short && ['Org', 'Dashboards', 'Decision log'].includes(view)) await expect(moreKey(page)).toHaveAttribute('aria-current', 'true');
-      if (!short && !['Org', 'Dashboards', 'Decision log'].includes(view)) await expect(moreKey(page)).not.toHaveAttribute('aria-current', 'true');
-      const now = await viewLinks(page, view);
+      const now = (await viewLinks(page)).getByRole('group', { name: 'Views' });
       await expect(now.getByRole('link', { name, exact: true })).toHaveAttribute('aria-current', 'page');
-      // One link is current (counted among the links, so a measuring copy the bar keeps out of the tree doesn't count).
       expect(await now.getByRole('link').evaluateAll(onElements<string[]>("return els.filter((a) => a.getAttribute('aria-current') === 'page').map((a) => a.getAttribute('aria-label') || a.textContent.trim());"))).toEqual([name]);
-      if (short || (await moreKey(page).getAttribute('aria-expanded')) === 'true') await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
       await expectNoSidewaysScroll(page, `${view} at ${info.project.name}`);
     }
     expect(errors).toEqual([]);
   });
 
-  test("a board's link stays current on its sub-views, and More on the views behind it", async ({ page }) => {
-    test.skip(layoutOf(page).short, 'A short window names the current view in its Views key, checked above.');
+  test("a board's link stays current on its sub-views", async ({ page }) => {
     await openCompany(page, DEMO, { main: 'plan' });
-    await expect(switcher(page).getByRole('link', { name: 'Tasks', exact: true }), 'the plan is under Tasks').toHaveAttribute('aria-current', 'page');
-    for (const main of ['decisions', 'dashboards/spend', 'dashboards/timeline']) {
+    await expect((await openMore(page)).getByRole('link', { name: 'Tasks', exact: true }), 'the plan is under Tasks').toHaveAttribute('aria-current', 'page');
+    for (const [main, name] of [['decisions', 'Decision log'], ['dashboards/spend', 'Spending'], ['dashboards/timeline', 'Timeline']] as const) {
       await openCompany(page, DEMO, { main });
       await expect(moreKey(page), `${main} is behind More`).toHaveAttribute('aria-current', 'true');
-      await expect(switcher(page).locator('[aria-current="page"]'), `no switcher link is current on ${main}`).toHaveCount(0);
+      await expect((await openMore(page)).locator('[aria-current="page"]'), `${name} is current on ${main}`).toHaveText(name);
     }
   });
 
-  test("on a desktop the views carry the side panel's view; a phone's views row closes its sheet", async ({ page }) => {
+  test('one panel at a time: a view of its own closes the side panel', async ({ page }) => {
     const errors = watchErrors(page);
     await openPanel(page, DEMO, 'people/ui-designer');
     await expect(panelTitle(page)).toHaveText('Mina');
-    const phone = layoutOf(page).phone;
-    await expect((await viewLinks(page, 'Org')).getByRole('link', { name: 'Org chart', exact: true })).toHaveAttribute('href', companyAddress(DEMO, { main: 'org', panel: phone ? undefined : 'people/ui-designer' }));
+    await expect((await viewLinks(page)).getByRole('link', { name: 'Org chart', exact: true })).toHaveAttribute('href', companyAddress(DEMO, { main: 'org' }));
+    await page.keyboard.press('Escape');
     await switchTo(page, 'Org');
-    if (phone) {
-      await expectAddress(page, companyAddress(DEMO, { main: 'org' }));
-      // The views row drops the side panel's view: Mina's sheet goes (the inbox may peek in its place).
-      await expect(sidePanel(page).getByRole('heading', { level: 2, name: 'Mina' })).toHaveCount(0);
-    } else {
-      await expectAddress(page, companyAddress(DEMO, { main: 'org', panel: 'people/ui-designer' }));
-      await expect(panelTitle(page)).toHaveText('Mina');
-    }
+    await expectAddress(page, companyAddress(DEMO, { main: 'org' }));
+    await expect(sidePanel(page).getByRole('heading', { level: 2, name: 'Mina' })).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 });
 
 test.describe('the side panel', () => {
-  test('a first visit shows it on the inbox, at its default width, with Inbox marked in the bar', async ({ page }, info) => {
+  // v0.8: a first visit is the office, the slim bar and the card; the side panel opens when asked for.
+  test('a first visit shows the office with the side panel closed, and More\'s Inbox opens it at its default width', async ({ page }, info) => {
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
     const { phone, floating } = layoutOf(page);
-    // Phones open on the office with the inbox's sheet only peeking (Robin, 12 Nov 2026); a press opens it.
-    if (phone) await peek(page).click();
-    await expect(panelTitle(page)).toHaveAccessibleName(/^Inbox, .+ needs? you$/);
-    await expect(inboxKey(page)).toHaveAttribute('aria-current', 'true');
+    await expect(inboxCard(page)).toBeVisible();
+    await expectHidden(page);
     await expect(page).toHaveTitle(/^\(\d+\) Café Lumen in Worklings$/);
+    await shot(page, 'h56-first-visit', info);
+    await openInbox(page);
+    await expect(panelTitle(page)).toHaveAccessibleName(/^Inbox, .+ needs? you$/);
+    // The card steps aside while the whole list shows: what needs you is said once.
+    await expect(inboxCard(page)).toHaveCount(0);
+    await openMore(page);
+    await expect(inboxKey(page)).toHaveAttribute('aria-current', 'true');
+    await page.keyboard.press('Escape');
     if (phone) {
       await expect(separator(page)).toHaveCount(0);
-      await expect(panelToggle(page)).toHaveCount(0);
     } else if (floating) {
       await expect(separator(page)).toHaveCount(0);
       await expect.poll(() => widthOf(sidePanel(page))).toBeCloseTo(300, 0);
@@ -195,19 +180,14 @@ test.describe('the side panel', () => {
       await expect(separator(page)).toHaveAccessibleDescription('Left and Right resize it, Enter hides it.');
       await expectWidth(page, sizes.normal, 'the default width');
     }
-    if (!phone) {
-      // v0.2: Inbox is the side panel's toggle.
-      await expect(panelToggle(page)).toHaveAccessibleName(/^Inbox\b/);
-      await expect(panelToggle(page)).toHaveAttribute('aria-expanded', 'true');
-      await expect(panelToggle(page)).toHaveAttribute('title', 'Hide the inbox');
-    }
     await expectNoSidewaysScroll(page);
-    await shot(page, 'h56-first-visit', info);
+    await shot(page, 'h56-inbox-open', info);
     expect(errors).toEqual([]);
   });
 
   test('the main view, the side panel and the talk bar sit where the design puts them', async ({ page }, info) => {
     await openCompany(page, DEMO);
+    if (!layoutOf(page).phone) await openInbox(page);
     const window = page.viewportSize() ?? { width: 1440, height: 900 };
     const { phone, floating } = layoutOf(page);
     const bar = await talkBar(page).boundingBox();
@@ -220,7 +200,7 @@ test.describe('the side panel', () => {
       return;
     }
     const panel = await sidePanel(page).boundingBox();
-    expect(panel, 'the side panel shows on a first visit').not.toBeNull();
+    expect(panel, 'the side panel shows once opened').not.toBeNull();
     if (!panel) return;
     // One gutter from the window's right edge, under the bar's 68 px band.
     expect(window.width - (panel.x + panel.width)).toBeCloseTo(12, 0);
@@ -239,7 +219,7 @@ test.describe('the side panel', () => {
     await shot(page, 'h56-layout', info);
   });
 
-  test('what you open shows in it with focus on its title; Back steps between its views and "Back to the inbox" closes them', async ({ page }, info) => {
+  test('what you open shows in it with focus on its title; Back steps between its views and Close closes them', async ({ page }, info) => {
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
     await fromPalette(page, 'Mina', /^Open Mina\b/);
@@ -255,11 +235,10 @@ test.describe('the side panel', () => {
     await sidePanel(page).getByRole('button', { name: 'Back', exact: true }).click();
     await expect(panelTitle(page)).toHaveText('Mina');
     await expectAddress(page, companyAddress(DEMO, { panel: 'people/ui-designer' }));
-    // The × goes back to the inbox: the entry before is where it leads, so it is a Back, and Forward opens Mina again.
-    await sidePanel(page).getByRole('button', { name: 'Back to the inbox', exact: true }).click();
-    // A phone's sheet goes down to its peek (the person opens the inbox); a desktop's panel shows the inbox.
-    if (layoutOf(page).phone) await expect(peek(page)).toBeVisible();
-    else await expect(panelTitle(page)).toHaveAccessibleName(/^Inbox\b/);
+    // v0.8: the × closes the side panel, since the inbox wasn't open (it leads back to the inbox only when it was). The
+    // entry before is where it leads, so it is a Back, and Forward opens Mina again.
+    await sidePanel(page).getByRole('button', { name: 'Close', exact: true }).click();
+    await expectHidden(page);
     await expectAddress(page, companyAddress(DEMO));
     await page.goForward();
     await expect(panelTitle(page)).toHaveText('Mina');
@@ -276,54 +255,28 @@ test.describe('the side panel', () => {
     await expect(sidePanel(page).getByText("That task isn't on the board any more.")).toBeVisible();
   });
 
-  test('Hide, the pull and Inbox hide it and bring it back, with focus where each leads', async ({ page }, info) => {
-    test.skip(layoutOf(page).phone, 'Phones have sheets, without Hide, the toggle or the pull.');
-    // The walk ends by opening a person's address, a second load of the office.
+  // v0.8: no pull after the start and no Inbox toggle in the bar; Hide closes the panel and More's Inbox opens it.
+  test('Hide closes it and More\'s Inbox brings it back, with focus where each leads', async ({ page }) => {
+    test.skip(layoutOf(page).phone, 'Phones have sheets, without Hide.');
     test.setTimeout(90_000);
     const errors = watchErrors(page);
     const { floating } = layoutOf(page);
     await openCompany(page, DEMO);
+    await openInbox(page);
+    await expect(panelTitle(page)).toBeFocused();
     const shown = floating ? 300 : await valueOf(page);
     await sidePanel(page).getByRole('button', { name: 'Hide the side panel', exact: true }).click();
-    await expect(panelTitle(page)).toBeHidden();
-    await expect(panelToggle(page)).toHaveAttribute('aria-expanded', 'false');
-    await expect(panelToggle(page)).toHaveAttribute('title', 'Show the inbox');
-    if (floating) {
-      // Floating, there is no pull: focus goes to the bar's toggle, Inbox.
-      await expect(panelToggle(page)).toBeFocused();
-    } else {
-      // Docked, the separator collapses into the pull on the window's right edge, 24 x 64, and takes focus.
-      await expectHidden(page);
-      await expect(separator(page)).toBeFocused();
-      await expect(separator(page)).toHaveAccessibleDescription('Enter or a press shows it again.');
-      const pull = await separator(page).boundingBox();
-      expect(pull?.width).toBeCloseTo(24, 0);
-      expect(pull?.height).toBeCloseTo(64, 0);
-      expect((page.viewportSize()?.width ?? 0) - ((pull?.x ?? 0) + (pull?.width ?? 0))).toBeLessThanOrEqual(1);
-      await shot(page, 'h56-hidden-pull', info);
-      // Enter on the pull shows it at its last width, and focus stays on the separator.
-      await page.keyboard.press('Enter');
-      await expect(panelTitle(page)).toBeVisible();
-      await expectWidth(page, shown, 'shown again at its last width');
-      await expect(separator(page)).toBeFocused();
-      // A press on the pull shows it too.
-      await page.keyboard.press('Enter');
-      await expectHidden(page);
-      await separator(page).click();
-      await expect(panelTitle(page)).toBeVisible();
-    }
-    // Inbox in the bar (v0.2, the panel's toggle) hides it while it shows the inbox, focus staying on Inbox, and shows
-    // it again with focus on the inbox's heading.
-    if (await panelTitle(page).isVisible()) await inboxKey(page).click();
-    await expect(panelTitle(page)).toBeHidden();
-    await expect(inboxKey(page)).toBeFocused();
-    await inboxKey(page).click();
+    await expectHidden(page);
+    // Focus goes to the talk bar's box, and the card is back over it.
+    await expect(talkBox(page)).toBeFocused();
+    await expect(inboxCard(page)).toBeVisible();
+    await openInbox(page);
     await expect(panelTitle(page)).toBeVisible();
     await expect(panelTitle(page)).toBeFocused();
-    await expect(inboxKey(page)).toHaveAttribute('aria-expanded', 'true');
-    // While the panel shows something else, Inbox brings the inbox back rather than hiding it.
+    if (!floating) await expectWidth(page, shown, 'shown again at its last width');
+    // While the panel shows something else, Inbox brings the inbox back.
     await openPanel(page, DEMO, 'people/ui-designer');
-    await inboxKey(page).click();
+    await openInbox(page);
     await expect(panelTitle(page)).toHaveAccessibleName(/^Inbox\b/);
     expect(errors).toEqual([]);
   });
@@ -333,6 +286,7 @@ test.describe('the side panel', () => {
     const errors = watchErrors(page);
     const sizes = dockedWidths(page.viewportSize()?.width ?? 1440);
     await openCompany(page, DEMO);
+    await openInbox(page);
     await separator(page).focus();
     await expectWidth(page, sizes.normal, 'the default');
     await page.keyboard.press('ArrowLeft');
@@ -350,21 +304,22 @@ test.describe('the side panel', () => {
     await page.keyboard.press('ArrowLeft');
     await expectWidth(page, sizes.widest, 'never over the widest');
     await shot(page, 'h56-widest', info);
+    // v0.8: Enter closes it (no pull is left to show it again), and More's Inbox opens it at its last width.
     await page.keyboard.press('Enter');
     await expectHidden(page);
-    await expect(separator(page)).toBeFocused();
-    await page.keyboard.press('Enter');
-    await expectWidth(page, sizes.widest, 'Enter shows it at its last width');
-    await expect(separator(page)).toBeFocused();
+    await expect(talkBox(page)).toBeFocused();
+    await openInbox(page);
+    await expectWidth(page, sizes.widest, 'opened again at its last width');
     expect(errors).toEqual([]);
   });
 
-  test('the separator resizes it by drag, a press steps through narrow, default and wide, and the pull drags out', async ({ page }) => {
+  test('the separator resizes it by drag, and a press steps through narrow, default and wide', async ({ page }) => {
     test.skip(layoutOf(page).phone || layoutOf(page).floating, 'Only a docked side panel has a separator.');
     const errors = watchErrors(page);
     const window = page.viewportSize() ?? { width: 1440, height: 900 };
     const sizes = dockedWidths(window.width);
     await openCompany(page, DEMO);
+    await openInbox(page);
     // A press without dragging steps through the three widths, so no width needs a drag (WCAG 2.5.7).
     const pressed = new Set<number>();
     for (let i = 0; i < 3; i++) {
@@ -398,42 +353,29 @@ test.describe('the side panel', () => {
     await page.mouse.move(window.width - 4, at.y, { steps: 10 });
     await page.mouse.up();
     await expect.poll(() => valueOf(page), { message: 'dragged past the narrowest, it stays shown' }).toBe(sizes.narrow);
-    // Hidden, the pull dragged out opens the side panel at the width it is let go at.
-    await page.keyboard.press('Enter');
-    await expectHidden(page);
-    at = await grip();
-    const letGo = window.width - 12 - 400;
-    await page.mouse.move(at.x, at.y);
-    await page.mouse.down();
-    await page.mouse.move(letGo, at.y, { steps: 12 });
-    await page.mouse.up();
-    await expect(panelTitle(page)).toBeVisible();
-    expect(Math.abs((await valueOf(page)) - Math.min(400, sizes.widest))).toBeLessThanOrEqual(24);
     expect(errors).toEqual([]);
   });
 
-  test('its width and whether it is hidden are kept for the next visit, fitted to the window', async ({ page }) => {
+  test('its width is kept for the next visit, fitted to the window, and a visit starts with it closed', async ({ page }) => {
     test.skip(layoutOf(page).phone || layoutOf(page).floating, 'Only a docked side panel has a width to keep.');
     const errors = watchErrors(page);
     const window = page.viewportSize() ?? { width: 1440, height: 900 };
     await openCompany(page, DEMO);
+    await openInbox(page);
     await separator(page).focus();
     await page.keyboard.press('End');
     const widest = dockedWidths(window.width).widest;
     await expectWidth(page, widest, 'the widest');
     await page.reload();
+    await expect(moreKey(page)).toBeVisible();
+    await expectHidden(page);
+    await openInbox(page);
     await expectWidth(page, widest, 'kept across a reload');
     // A narrower window fits what was kept.
     await page.setViewportSize({ width: 1000, height: window.height });
     await page.reload();
+    await openInbox(page);
     await expectWidth(page, dockedWidths(1000).widest, 'fitted to a narrower window');
-    await page.setViewportSize(window);
-    await separator(page).focus();
-    await page.keyboard.press('Enter');
-    await expectHidden(page);
-    await page.reload();
-    await expect(switcher(page)).toBeVisible();
-    await expectHidden(page);
     expect(errors).toEqual([]);
   });
 
@@ -442,6 +384,7 @@ test.describe('the side panel', () => {
     const errors = watchErrors(page);
     await page.addInitScript(`Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('The operation is insecure.', 'SecurityError'); } });`);
     await openCompany(page, DEMO);
+    await openInbox(page);
     await expectWidth(page, dockedWidths(page.viewportSize()?.width ?? 1440).normal, 'the default width');
     await separator(page).focus();
     await page.keyboard.press('ArrowLeft');
@@ -453,12 +396,13 @@ test.describe('the side panel', () => {
     test.skip(!layoutOf(page).phone, 'Sheets are the phone layout.');
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
-    // The inbox's sheet peeks on arrival; a press opens it as an entry of its own (it has no address), so Back puts it
-    // away again and the company stays.
-    await peek(page).click();
+    // v0.8: the card over the talk bar is the way in; See all raises the inbox's sheet as an entry of its own (it has no
+    // address), so Back puts it away again and the company stays.
+    await inboxCard(page).getByRole('button', { name: 'See all', exact: true }).click();
     await expect(panelTitle(page)).toHaveAccessibleName(/^Inbox\b/);
     await page.goBack();
-    await expect(peek(page)).toBeVisible();
+    await expectHidden(page);
+    await expect(inboxCard(page)).toBeVisible();
     await expectAddress(page, companyAddress(DEMO));
     await openPanel(page, DEMO, 'people/ui-designer');
     await expect(panelTitle(page)).toHaveText('Mina');
@@ -475,8 +419,10 @@ test.describe('Escape and focus', () => {
   test('Escape closes a menu first, then the board; never from the side panel or the talk bar', async ({ page }) => {
     test.skip(layoutOf(page).phone, "Phones' boards are sheets, closed by Back and Close (v3-boards).");
     const errors = watchErrors(page);
-    await openBoard(page, DEMO, 'tasks');
-    const board = companyAddress(DEMO, { main: 'tasks' });
+    // v0.8: the side panel shows once something opens in it; here a person beside the board.
+    await openBoard(page, DEMO, 'tasks', { panel: 'people/ui-designer' });
+    // The address as it was opened (the query as the browser writes it), which no Escape but the board's may change.
+    const board = addressOf(page);
     // An open menu closes, with focus back on its button, and the board stays.
     const company = moreKey(page);
     await company.click();
@@ -498,7 +444,7 @@ test.describe('Escape and focus', () => {
     // On nothing, the board closes, and focus goes to the office's heading (nothing opened it on this page).
     await blur(page);
     await page.keyboard.press('Escape');
-    await expectAddress(page, companyAddress(DEMO));
+    await expectAddress(page, companyAddress(DEMO, { panel: 'people/ui-designer' }));
     await expect(page.getByRole('heading', { level: 1, name: 'Café Lumen office' })).toBeFocused();
     expect(errors).toEqual([]);
   });
@@ -510,7 +456,7 @@ test.describe('Escape and focus', () => {
     await expect(talkBox(page)).toBeFocused();
   });
 
-  test('the skip links come first and lead to the talk bar and the side panel', async ({ page }) => {
+  test('the skip links come first and lead to the talk bar and the side panel, which opens on the inbox', async ({ page }) => {
     test.skip(layoutOf(page).phone, 'Checked at desktop sizes, where the side panel and the talk bar are both on screen.');
     await openCompany(page, DEMO);
     await focusTop(page);
@@ -567,17 +513,17 @@ for (const [width, height] of [
   test.describe(`a short window, ${width} x ${height} (final gates, F2)`, () => {
     test.use({ viewport: { width, height }, hasTouch: true });
 
-    test('the office shows between the inbox peek and the talk bar', async ({ page }, info) => {
+    // v0.8: no peek and no front desk sign; the office shows between the bar and the card over the talk bar.
+    test('the office shows between the bar and the inbox card', async ({ page }, info) => {
       test.skip(info.project.name !== 'v3', 'One project drives every size here.');
       const errors = watchErrors(page);
       await openCompany(page, DEMO);
-      const sign = page.getByRole('button', { name: /^Front desk/ });
-      await expect(sign).toBeVisible();
-      const peekBox = await peek(page).boundingBox();
+      const card = await inboxCard(page).boundingBox();
       const talk = await talkBar(page).boundingBox();
-      const at = await sign.boundingBox();
-      expect(at?.y ?? 0, 'the front desk sign is under the peek').toBeGreaterThanOrEqual((peekBox?.y ?? 0) + (peekBox?.height ?? 0));
-      expect((at?.y ?? 0) + (at?.height ?? 0), 'and above the talk bar').toBeLessThanOrEqual(talk?.y ?? 0);
+      expect(card, 'the card shows').not.toBeNull();
+      expect((card?.y ?? 0) + (card?.height ?? 0), 'the card ends above the talk bar').toBeLessThanOrEqual(talk?.y ?? 0);
+      await expect(page.getByRole('main', { name: 'Café Lumen office' }).locator('canvas')).toBeVisible();
+      await expectNoSidewaysScroll(page);
       await shot(page, `f2-office-${width}x${height}`, info);
       expect(errors).toEqual([]);
     });

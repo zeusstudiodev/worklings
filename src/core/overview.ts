@@ -84,6 +84,8 @@ export interface StageInput {
   questions: readonly Question[];
   approvals: readonly Approval[];
   working: readonly AtWork[];
+  /** v0.8: a plain session's helpers still running after its turn ended; none when not given. */
+  helping?: number;
 }
 
 /** Each plan task's kind, from every version (a later one wins), for tasks made from older versions too. */
@@ -105,10 +107,15 @@ function waitsOnYou(i: Pick<StageInput, 'questions' | 'approvals' | 'working'>, 
   return i.working.every((w) => held.has(w.id));
 }
 
+/** Whether all that waits is a plain session's words at the end of its turn: nothing asks for an OK. */
+function onlyTurnWords(i: Pick<StageInput, 'questions' | 'approvals'>, now: number): boolean {
+  return !i.approvals.some((a) => isOpenItem(a, now)) && i.questions.filter((q) => isOpenItem(q, now)).every((q) => q.plainTurn === true);
+}
+
 /**
  * Where the company stands, in a word. A company that can't run is stuck whatever its phase; then founding is scoping,
  * a proposal or a plan waiting is waiting, stalled work is stuck, a pause (or a stopped company not done) is paused,
- * a finished plan is done, an open inbox with nobody else at work is waiting, an open final review or re-check is
+ * a finished plan is done, an open inbox with nobody else at work is waiting (your turn when all it holds is a plain session's last words), an open final review or re-check is
  * checking, and anything else is working. The plan's own final review counts once it is under way: approval queues
  * it with every other plan task, long before its turn.
  */
@@ -121,7 +128,8 @@ export function stageOf(i: StageInput, now: number): CompanyStage {
   if (i.pause !== null) return 'paused';
   if (i.done !== null) return 'done';
   if (i.phase === 'stopped') return 'paused';
-  if (waitsOnYou(i, now)) return 'waiting';
+  // A plain session whose turn ended while its helpers still run is at work, not waiting for your reply.
+  if (waitsOnYou(i, now)) return !onlyTurnWords(i, now) ? 'waiting' : (i.helping ?? 0) > 0 ? 'working' : 'your-turn';
   const kinds = planKinds(i.plan);
   const checking = i.tasks.some((t) => {
     if (!isOpenTask(t)) return false;
@@ -247,6 +255,7 @@ export function summaryInputOfView(c: CompanyView): SummaryInput {
     working: c.people
       .filter((p) => isAtWork(p.desk.state))
       .map((p) => ({ id: p.id, name: p.name, task: p.task ? (c.tasks.find((t) => t.id === p.task)?.title ?? null) : null })),
+    helping: (c.helpers ?? []).filter((h) => h.state === 'working').length,
     spent: c.spending?.budget.spent ?? c.people.reduce((s, p) => s + p.cost, 0),
     budget: c.spending?.budget.company ?? c.settings.budget.company,
     checklist: c.checklist?.counts ?? null,

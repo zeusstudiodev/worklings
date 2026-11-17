@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { boardFrame, inboxKey, layoutOf, nameFor, open, scratchOf, shot, sheetUp, sendKey, sidePanel, switcher, switchTo, talkBox, watchErrors } from './v3-kit.ts';
+import { boardFrame, layoutOf, nameFor, open, scratchOf, shot, sheetUp, sendKey, sidePanel, switchTo, talkBox, watchErrors, openInbox, inboxCard } from './v3-kit.ts';
 import { folderFor, view } from './v3-world.ts';
 
 const PEOPLE = ['Noor', 'Ada', 'Lea', 'Kai', 'Ben', 'Sam', 'Ivo', 'Tom'];
@@ -93,7 +93,8 @@ test.describe('a new company', () => {
     // Start: the company runs and its people are at their desks (the People tab lists all nine, off duty until they have work).
     // A new company waits for the stakeholder's approval of the plan, so nobody has work yet.
     await page.getByRole('button', { name: 'Start the company' }).first().click();
-    await expect(switcher(page)).toBeVisible({ timeout: 60_000 });
+    // v0.8: the company runs on its office, the side panel closed and the plan's approval on the card.
+    await expect(inboxCard(page)).toBeVisible({ timeout: 60_000 });
     await switchTo(page, 'Org');
     const org = boardFrame(page, 'Org chart');
     // The board reads "Opening…" until the company's first snapshot after Start arrives, which takes a while on a busy machine.
@@ -106,7 +107,7 @@ test.describe('a new company', () => {
     await expect.poll(async () => (await view(request, name)).steering?.plan?.versions.length ?? 0, { timeout: 60_000 }).toBe(1);
     expect((await view(request, name)).tasks).toEqual([]);
     // It waits in the inbox as an item of its own, with a way in.
-    await inboxKey(page).click();
+    await openInbox(page);
     await page.getByRole('link', { name: 'Open the plan', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'The plan' }).first()).toBeVisible();
     await expect(page.getByText('Waits for you').first()).toBeVisible();

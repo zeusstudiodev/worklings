@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { origin, ports } from './addresses.ts';
-import { boardFrame, card, column, findAnAction, layoutOf, moveMenu, shot, sidePanel, strip, talk, talkBox, theTo, titlesIn, watchErrors } from './v3-kit.ts';
+import { boardFrame, card, column, findAnAction, layoutOf, moveMenu, shot, sidePanel, strip, talk, talkBox, theTo, titlesIn, watchErrors, showStrip } from './v3-kit.ts';
 
 // "In the demo company" for each steering feature (checklist H39 to H46): the demo office's made-up café company holds
 // the plan, messages and traces, the board, the decision log and the leashes, and the office's own steering actions
@@ -64,6 +64,8 @@ test.describe('every steering feature in the demo company', () => {
 
   test('a message to everyone from the talk bar shows in the strip', async ({ page }, info) => {
     const errors = watchErrors(page);
+    // v0.8: the strip is off by default; this test is about it, so it shows it.
+    await showStrip(page);
     // The composer's old address opens the office with everyone as the To and focus in the talk bar.
     await page.goto(demo('send/everyone'));
     await expect(theTo(page)).toHaveAccessibleName(/^To (everyone|all hands)/i, { timeout: 30_000 });

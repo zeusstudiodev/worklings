@@ -64,6 +64,7 @@ export function shortenPaths(text: string, known: readonly string[] = [], max = 
 const STAGE_WORDS: Readonly<Record<CompanyStage, { word: string; tone: StateTone }>> = {
   scoping: { word: 'Scoping', tone: 'neutral' },
   waiting: { word: 'Waiting for your OK', tone: 'needs' },
+  'your-turn': { word: 'Your turn', tone: 'needs' },
   working: { word: 'Working', tone: 'working' },
   checking: { word: 'Checking', tone: 'working' },
   done: { word: 'Done', tone: 'done' },

@@ -1,6 +1,6 @@
 {
   "name": "worklings",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Claude Code with an office around it: watch, approve and steer your own Claude Code from a 3D office, or staff any project with an AI studio.",
   "type": "module",
   "license": "MIT",

@@ -3,7 +3,8 @@
 //
 //   node scripts/launch/screenshots.mjs [--only <name>[,<name>]] [--out <folder>] [--web-dir <built web app>] [--cpu]
 //
-// Names: proposal, people-at-work, inbox-approval, plan-approval, dashboards, lobby, phone, office. The first seven go to
+// Names: proposal, people-at-work, inbox-approval, plan-approval, dashboards, lobby, phone, office. inbox-approval, phone
+// and office show the demo lobby's plain job (Recipe box); the rest show the team demo. The first seven go to
 // docs/images/v3 (or --out); `office` goes to docs/launch/office-screenshot.png (or --out), 1440x900 like the others.
 // Needs Playwright's Chromium. About 40 seconds, nothing is published.
 //
@@ -11,7 +12,7 @@
 // Claude Code), and the pages open the hub's made-up demo company (Cafe Lumen and its four neighbours in the lobby:
 // web/src/company/demo.ts). The desktop shots are 1440x900; the phone shot is 375x812 at twice the pixels. Nothing real
 // shows: the script stops if this machine's user name or home folder is ever in the page text or a page logs an error.
-/* global document, getComputedStyle */
+/* global document */
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { homedir, tmpdir, userInfo } from 'node:os';
@@ -70,8 +71,10 @@ const SHOTS = {
     await sleep(2500);
   },
   async 'inbox-approval'(page) {
-    await open(page, '/c/demo?panel=inbox/a-3');
-    await side(page).getByRole('button', { name: 'Allow once' }).first().waitFor({ timeout: 30_000 });
+    // A plain job's office (v0.8): Claude Code at the desk, its helpers beside it, and its permission prompt on the inbox
+    // card over the talk bar.
+    await open(page, '/c/recipe-box?demo');
+    await page.locator('[data-inbox-card]').getByRole('button', { name: 'Allow once' }).waitFor({ timeout: 30_000 });
     await sceneReady(page);
   },
   async 'plan-approval'(page) {
@@ -90,21 +93,13 @@ const SHOTS = {
     await sceneReady(page);
   },
   async phone(page) {
-    // The inbox's sheet up over the office, opened on the CEO's question about card payments.
-    await open(page, '/c/demo?panel=inbox/q-4');
-    const question = side(page).getByText('Should guests be able to pay by card').first();
-    await question.waitFor({ timeout: 30_000 });
+    // The same plain job on a phone (v0.8): the office first, the prompt on the inbox card above the talk bar.
+    await open(page, '/c/recipe-box?demo');
+    await page.locator('[data-inbox-card]').getByRole('button', { name: 'Allow once' }).waitFor({ timeout: 30_000 });
     await sceneReady(page);
-    // The sheet scrolls the item to its foot; put the question at the top, with its heading above it.
-    await question.evaluate((el) => {
-      let box = el.parentElement;
-      while (box && !(box.scrollHeight > box.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(box).overflowY))) box = box.parentElement;
-      if (box) box.scrollTop += el.getBoundingClientRect().top - box.getBoundingClientRect().top - 70;
-    });
-    await sleep(600);
   },
   async office(page) {
-    await open(page, '/c/demo');
+    await open(page, '/c/recipe-box?demo');
     await sceneReady(page);
     await sleep(2500);
   },

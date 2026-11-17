@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { companyAddress, expectAddress, open, openCompany, person, running, shot, sheetUp, watchErrors } from './v3-kit.ts';
+import { companyAddress, expectAddress, open, openCompany, person, running, shot, sheetUp, watchErrors, inboxCard, moreKey } from './v3-kit.ts';
 import { HUB, say, TOKEN, view } from './v3-world.ts';
 
 test.describe.configure({ mode: 'serial' });
@@ -46,13 +46,14 @@ test.describe('the inbox', () => {
       };
     })()`);
     await open(page, `/c/${id}`);
-    await expect(page.getByRole('button', { name: 'Inbox', exact: true })).toBeVisible({ timeout: 30_000 });
-    // Record when the top bar first says something needs the stakeholder. (Page code as a string: the tests' TypeScript has no DOM types.)
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
+    // v0.8: what needs you shows on the card over the talk bar. Record when it first names Ivo. (Page code as a string: the
+    // tests' TypeScript has no DOM types.)
     await page.evaluate(`(() => {
       window.__needsAt = 0;
       const check = () => {
         if (window.__needsAt) return;
-        if ([...document.querySelectorAll('button')].some((b) => /^Inbox.*needs you/.test(b.getAttribute('aria-label') ?? ''))) window.__needsAt = Date.now();
+        if ((document.querySelector('[data-inbox-card]')?.textContent ?? '').includes('Ivo')) window.__needsAt = Date.now();
       };
       new MutationObserver(check).observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
     })()`);
@@ -66,7 +67,7 @@ test.describe('the inbox', () => {
         return askedAt;
       }, { timeout: 60_000, intervals: [25] })
       .toBeGreaterThan(0);
-    const bar = page.getByRole('button', { name: /^Inbox.*one needs you/ });
+    const bar = inboxCard(page).filter({ hasText: 'Ivo' });
     await expect(bar).toBeVisible({ timeout: 5_000 });
     const needsAt = Number(await page.evaluate('window.__needsAt'));
     expect(needsAt).toBeGreaterThan(0);
@@ -80,9 +81,8 @@ test.describe('the inbox', () => {
     expect(hubAt - askedAt, said).toBeLessThan(1_000);
     expect(needsAt - askedAt, said).toBeLessThan(5_000);
 
-    // Inbox shows the inbox, or (v0.2, desktops) hides the side panel when the inbox already shows there: press it only
-    // where the inbox isn't showing.
-    if ((await bar.getAttribute('aria-current')) !== 'true') await bar.click();
+    // The whole inbox, from the card's See all, where the answer's line stays once it applies.
+    await bar.getByRole('button', { name: 'See all', exact: true }).click();
     const needs = page.getByRole('region', { name: 'Needs you' });
     await expect(needs).toContainText('Ivo, backend engineer, wants your OK', { timeout: 15_000 });
     await expect(needs).toContainText('Push HEAD to origin');
@@ -95,7 +95,7 @@ test.describe('the inbox', () => {
     // The answer applies after the undo window; then the person's hook hears it and the turn goes on.
     await expect(needs).toContainText('Allowed once at', { timeout: 30_000 });
     await expect(needs).toContainText('Ivo carries on.');
-    await expect(page.getByRole('button', { name: 'Inbox', exact: true })).toBeVisible();
+    await expect.poll(() => page.title(), { message: 'the title counts nothing waiting' }).not.toMatch(/^\(/);
     await expect.poll(async () => person(await view(request, id), 'backend-engineer').desk.state, { timeout: 60_000 }).toBe('idle');
     const company = await view(request, id);
     expect(company.approvals.find((a) => a.person === 'backend-engineer')?.answer).toMatchObject({ decision: 'allow', always: false });

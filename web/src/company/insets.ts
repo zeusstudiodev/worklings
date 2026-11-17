@@ -62,19 +62,24 @@ export interface StageFrame {
    * absent otherwise. The office then stands in what the column leaves, as it does beside a docked side panel.
    */
   progress?: number | null;
+  /** v0.8: the inbox card's measured height while it shows over the talk bar; null or absent while there is none. */
+  card?: number | null;
 }
 
 const GUTTER = { desktop: 12, phone: 8 };
-/** The bar's band: 12 + 44 + 12 on desktops; phones add the views row (8 + 44 + 8 + 56 + 8), short windows fold it in. */
-const BAND = { desktop: 68, phone: 124, short: 60 };
+/** The bar's band: 12 + 44 + 12 on desktops; 8 + 44 + 8 on phones, whose views moved into More in v0.8. */
+const BAND = { desktop: 68, phone: 60, short: 60 };
 /** A one-line talk bar. The fit always keeps this much, so a message growing to six lines never moves the camera. */
 const TALK_ONE_LINE = 56;
 const STRIP_LINE = { desktop: 30, phone: 36 };
 const STRIP_GAP = 4;
 /** Between the talk bar and the strip's first line. */
 const ABOVE_TALK = 8;
-/** The pull a hidden docked side panel leaves on the window's right edge, and its gutter. */
-const PULL = 24;
+/**
+ * What the camera keeps for the inbox card while one shows (v0.8): a fixed share, not its measure, so answering an item
+ * whose card is taller or shorter never moves the office. The labels keep clear of the card's measured height.
+ */
+const CARD_FIT = { desktop: 220, phone: 96 };
 
 /**
  * The two insets for a layout. The fit: the bar's band at the top; on the right a docked side panel and its two gutters
@@ -88,15 +93,16 @@ export function stageInsets(frame: StageFrame): StageInsets {
   const gutter = GUTTER.desktop;
   const docked = frame.layout === 'docked';
   const shows = frame.side !== null;
-  const fitRight = docked ? (shows ? (frame.side as number) + 2 * gutter : PULL + gutter) : 0;
+  const fitRight = docked && shows ? (frame.side as number) + 2 * gutter : 0;
   // Beside the progress column the office takes what is right of it, one gutter clear.
   const column = frame.progress != null && frame.progress > 0 ? Math.round(frame.progress) + gutter : null;
-  const fit: Insets = { top: BAND.desktop, right: fitRight, bottom: gutter + TALK_ONE_LINE + ABOVE_TALK + STRIP_LINE.desktop, left: column ?? 0 };
+  const card = frame.card ?? null;
+  const fit: Insets = { top: BAND.desktop, right: fitRight, bottom: gutter + TALK_ONE_LINE + ABOVE_TALK + (card !== null ? CARD_FIT.desktop : STRIP_LINE.desktop), left: column ?? 0 };
   const under = Math.max(frame.caption ?? 0, frame.keys ?? 0);
   const labels: Insets = {
     top: Math.max(BAND.desktop, under > 0 ? under + 8 : 0),
-    right: shows ? (frame.side as number) + 2 * gutter : docked ? PULL + gutter : gutter,
-    bottom: gutter + frame.talk + ABOVE_TALK + 3 * STRIP_LINE.desktop + 2 * STRIP_GAP,
+    right: shows ? (frame.side as number) + 2 * gutter : gutter,
+    bottom: gutter + frame.talk + ABOVE_TALK + Math.max(3 * STRIP_LINE.desktop + 2 * STRIP_GAP, card !== null ? card + 8 : 0),
     left: column ?? gutter,
   };
   return { fit, labels, covered: frame.feed ?? null };
@@ -108,7 +114,10 @@ function phoneInsets(frame: StageFrame): StageInsets {
   const top = short ? BAND.short : BAND.phone;
   // Short windows hide the strip: the talk bar is all there is at the foot.
   const strip = short ? 0 : STRIP_LINE.phone + gutter;
-  const foot = (talk: number) => gutter + talk + (short ? gutter : ABOVE_TALK + strip) + frame.safeBottom;
+  const card = frame.card ?? null;
+  // The inbox card rides on the talk bar in short windows too, where there is no strip.
+  const above = (measured: boolean) => (card !== null ? (measured ? card : CARD_FIT.phone) + gutter : short ? 0 : strip);
+  const foot = (talk: number, measured = false) => gutter + talk + (short ? gutter : ABOVE_TALK) + above(measured) + frame.safeBottom;
   // A sheet up over the office: what is left is the part above it, a gutter clear of its edge.
   // In short windows the sheet hangs from under the bar instead, so it moves the top edge, never the foot.
   const sheet = short || frame.sheet === null ? null : Math.max(0, frame.height - frame.sheet + gutter);
@@ -116,7 +125,7 @@ function phoneInsets(frame: StageFrame): StageInsets {
   const fit: Insets = { top: hung, right: 0, bottom: sheet ?? foot(TALK_ONE_LINE), left: 0 };
   // A short window's sheet fully up covers the room: no label may show (or take focus) under it.
   if (short && frame.sheet !== null && frame.sheetBottom == null) return { fit, labels: { top: frame.height, right: gutter, bottom: 0, left: gutter }, covered: null };
-  const labels: Insets = { top: hung, right: gutter, bottom: sheet ?? foot(frame.talk) - (short ? 0 : gutter), left: gutter };
+  const labels: Insets = { top: hung, right: gutter, bottom: sheet ?? foot(frame.talk, true) - (short ? 0 : gutter), left: gutter };
   return { fit, labels, covered: null };
 }
 

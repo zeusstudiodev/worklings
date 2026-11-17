@@ -50,16 +50,24 @@ const sidePanel = (page: Page) => page.getByRole('complementary', { name: 'Side 
 const feed = (page: Page): Locator => page.getByRole('region', { name: 'Feed', exact: true });
 
 async function sheetUp(page: Page): Promise<void> {
+  // v0.8: the side panel opens when asked for (the inbox from More, or the card's See all); a proposal still peeks on phones.
+  const more = page.getByRole('banner').getByRole('button', { name: 'More', exact: true });
+  await expect(more).toBeVisible({ timeout: 30_000 });
   const peek = sidePanel(page).getByRole('button', { name: /^Open the / });
-  await expect(peek.or(sidePanel(page).getByRole('heading', { level: 2 }).first())).toBeVisible({ timeout: 30_000 });
+  const title = sidePanel(page).getByRole('heading', { level: 2 }).first();
   if (await peek.isVisible()) await peek.click();
+  else if (!(await title.isVisible())) {
+    await more.click();
+    await page.getByRole('banner').getByRole('button', { name: /^Inbox\b/ }).click();
+  }
+  await expect(title).toBeVisible();
   await expect(peek).toHaveCount(0);
 }
 
 /** A company's view at its own address (the site's base path in front), waiting for its frame to draw. */
 async function go(page: Page, company: string, board = ''): Promise<void> {
   await page.goto(`${SITE}c/${company}${board ? `/${board}` : ''}`);
-  await expect(page.getByRole('banner').getByRole('button', { name: /^Inbox\b/ })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('banner').getByRole('button', { name: 'More', exact: true })).toBeVisible({ timeout: 30_000 });
   if (board) {
     const title = board.startsWith('org') ? 'Org chart' : board.startsWith('tasks') ? 'Tasks' : 'Dashboards';
     const frame = page.getByRole('region', { name: title, exact: true });
@@ -73,9 +81,9 @@ const noSidewaysScroll = async (page: Page, where: string) => {
   expect(over, `${where} scrolls sideways by ${over} px`).toBeLessThanOrEqual(0);
 };
 
-/** Opens the feed: the Feed key beside the talk bar, or the strip on a phone. */
-async function openFeed(page: Page, info: TestInfo): Promise<Locator> {
-  const opener = phone(info) ? page.getByRole('button', { name: /^Open the feed\b/ }) : page.getByRole('form', { name: 'Talk bar' }).getByRole('button', { name: /^Feed\b/ });
+/** Opens the feed with the Feed key in the talk bar, on phones too since v0.8 (the live strip is off by default). */
+async function openFeed(page: Page): Promise<Locator> {
+  const opener = page.getByRole('form', { name: 'Talk bar' }).getByRole('button', { name: /^Feed\b/ });
   await opener.click();
   await expect(feed(page)).toBeVisible();
   return feed(page);
@@ -101,7 +109,7 @@ test.describe('the static demo, every state', () => {
     await go(page, 'lake-wind');
     // A phone has no way into the feed before the start: the CEO's suggestions stand where the strip does.
     if (!phone(info)) {
-      const list = await openFeed(page, info);
+      const list = await openFeed(page);
       await expect(list.getByRole('article').first()).toBeVisible();
       await shot(page, 'lakewind-feed', info);
       await page.keyboard.press('Escape');
@@ -141,7 +149,7 @@ test.describe('the static demo, every state', () => {
     await noSidewaysScroll(page, 'the 100-task board');
     await shot(page, 'ledger-tasks', info);
     await go(page, 'ledger');
-    await openFeed(page, info);
+    await openFeed(page);
     await noSidewaysScroll(page, "Ledger's feed");
     await shot(page, 'ledger-feed', info);
   });
@@ -149,7 +157,7 @@ test.describe('the static demo, every state', () => {
   test('keyboard focus: Tab through the open feed never hides focus under it', async ({ page }, info) => {
     test.setTimeout(180_000);
     await go(page, 'demo');
-    await openFeed(page, info);
+    await openFeed(page);
     const problems = await walk(page, 24, 'the open feed');
     await shot(page, 'tab-feed', info);
     expect(problems).toEqual([]);
@@ -179,7 +187,7 @@ test.describe('the static demo, every state', () => {
     };
     await go(page, 'demo');
     await look('the office');
-    await openFeed(page, info);
+    await openFeed(page);
     await look('the feed');
     await shot(page, 'reduced-feed', info);
     for (const board of ['org', 'tasks', 'dashboards']) {

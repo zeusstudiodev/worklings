@@ -11,6 +11,7 @@ import { called, nameOf, roomName } from '../people/peopleModel.ts';
 import { Clamp, CompanyLink } from '../people/shared.tsx';
 import { planPath } from '../plan/planModel.ts';
 import { companyHref, goBack, parseCompanyAddress, useLocation } from '../router.ts';
+import { requestInbox } from '../showInbox.ts';
 import type { TabProps } from '../types.ts';
 import { StatePill } from '../ui/StatePill.tsx';
 import { CreatedLine, NewTaskForm, NO_STEER, OFFLINE, TaskSteering } from './Board.tsx';
@@ -95,7 +96,8 @@ function ShowTheInbox({ companyId }: { companyId: string }) {
       onClick={(event) => {
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
-        goBack(href);
+        // v0.8: the shell opens the inbox, as More's Inbox does (the side panel's home is closed by default).
+        requestInbox();
       }}
     >
       Show the inbox

@@ -4,7 +4,7 @@
 // portfolio > company > person, each a click apart, at 1440 and 375 px.
 import { expect, type Page, test } from '@playwright/test';
 import type { StudioLobbyView } from '../../src/studio/model.ts';
-import { inboxKey, open, openCompany, panelToggle, running, shot, sidePanel, watchErrors } from './v3-kit.ts';
+import { open, openCompany, running, shot, sidePanel, watchErrors, moreKey, openInbox } from './v3-kit.ts';
 import { api } from './v3-world.ts';
 
 const studioLobby = async (request: Parameters<typeof api>[0]) => (await api<StudioLobbyView>(request, 'api/lobby')).body;
@@ -95,7 +95,8 @@ test.describe('the studio over many companies', () => {
 
     // Company, then person: the answer opens the company, whose CEO is a click away.
     await log.getByRole('link', { name: 'Open Plant Pal' }).last().click();
-    await expect(page).toHaveURL(/\/c\/[^/]+\/progress$/);
+    // v0.8: a company opens on its office.
+    await expect(page).toHaveURL(/\/c\/[^/?]+$/);
 
     // The shared budget, spent: both pause, and the portfolio says so.
     await expect.poll(async () => (await studioLobby(request)).portfolios.find((p) => p.id === id)?.spent ?? 0, { timeout: 30_000 }).toBeGreaterThanOrEqual(0.01);
@@ -107,15 +108,11 @@ test.describe('the studio over many companies', () => {
     await shot(page, 'studio-portfolio-held', info);
 
     // In the company, the inbox says why and where to raise it.
-    // The inbox is the side panel's home: beside the office on desktops, the sheet a phone brings up from its peek.
-    // (The kit's sheetUp takes any "Open the ..." button for the peek, and the callout's own "Open the portfolio" is one.)
+    // v0.8: the inbox opens on request, at every size: More's Inbox.
     await openCompany(page, plant);
-    await expect(inboxKey(page)).toBeVisible({ timeout: 30_000 });
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
     const callout = sidePanel(page).getByRole('group', { name: 'State of the company' });
-    const peek = sidePanel(page).getByRole('button', { name: /^Open the (inbox|side panel)/ });
-    const toggle = panelToggle(page);
-    // A phone's peeking sheet comes up with Inbox, and a desktop that hid its side panel shows it again the same way.
-    if ((await peek.isVisible()) || ((await toggle.count()) > 0 && (await toggle.getAttribute('aria-expanded')) === 'false')) await inboxKey(page).click();
+    await openInbox(page);
     await expect(callout).toContainText(`the ${name} portfolio's $0.01 budget is spent`);
     await shot(page, 'studio-company-held', info);
     await callout.getByRole('button', { name: 'Open the portfolio' }).click();

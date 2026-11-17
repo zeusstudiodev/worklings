@@ -36,9 +36,9 @@ test.describe('changed by talking to the CEO', () => {
     await expect.poll(async () => (await view(request, id)).rooms.map((r) => r.id), { timeout: 60_000 }).toContain('games');
     const room = (await view(request, id)).rooms.find((r) => r.id === 'games');
     expect(room).toMatchObject({ title: 'Games room', kind: 'games' });
-    await open(page, `/c/${id}`);
-    // Room signs are drawn on desktops only: a phone's scene strip carries no signs.
-    if (info.project.name === 'v3') await expect(page.getByRole('main').getByText('Games room', { exact: true })).toBeVisible({ timeout: 30_000 });
+    // v0.8: a room shows its sign only while someone works in it, so the new, empty games room is found in Customize's rooms.
+    await openPanel(page, id, 'customize');
+    await expect(sidePanel(page).getByText('Games room', { exact: true }).first()).toBeVisible({ timeout: 30_000 });
     await shot(page, 'h23-games-room', info);
     expect(studio()).toContain('Games room');
     expect(studio()).toContain('arcade');
@@ -76,8 +76,9 @@ test.describe('changed by talking to the CEO', () => {
       await expect.poll(async () => (await view(request, id)).theme, { timeout: 60_000 }).toBe(theme);
       await open(page, `/c/${id}`);
       await expect(page.locator('canvas')).toBeVisible();
-      // Let the scene settle (light, props) before the picture: wait for the labels, which draw after the first frame.
-      if (info.project.name === 'v3') await expect(page.getByRole('main').getByText('Games room', { exact: true })).toBeVisible({ timeout: 30_000 });
+      // Let the scene settle (light, props) before the picture: wait for the labels' layer, which draws after the first frame
+      // (v0.8: the games room, empty, carries no sign).
+      await expect(page.locator('.labels--office')).toBeAttached({ timeout: 30_000 });
       await shot(page, `h26-theme-${theme}`, info);
     }
     expect(studio()).toContain('theme: garden');

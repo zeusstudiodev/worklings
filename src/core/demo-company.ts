@@ -59,6 +59,7 @@ import {
 } from './steering.ts';
 import type { FiredRole, Level, Look, OfficeRoom, RoleModel, Studio, StudioDepartment } from './studio.ts';
 import { ZERO_USAGE } from './usage.ts';
+import { DEFAULT_LAUNCH, PLAIN_PERSON, PLAIN_TITLE, plainStudio } from './plain.ts';
 
 /** The demo company's id: `/c/demo` opens it. */
 export const DEMO_COMPANY = 'demo';
@@ -1964,11 +1965,12 @@ const DEMO_ROOTS: Record<string, string> = {
   'lake-wind': 'C:\\Users\\you\\Sites\\lake-wind',
   ledger: 'C:\\Users\\you\\Projects\\ledger',
   'old-site': 'C:\\Users\\you\\Projects\\old-site',
+  'recipe-box': 'C:\\Users\\you\\Projects\\recipe-box',
 };
 
 /** Every company in the demo lobby, by id. */
 export function demoCompanies(now: number): CompanyView[] {
-  return [demoCompanyView(now), demoProposalView(now), demoFoundingView(now), demoPausedView(now), demoFinishedView(now), demoBrokenView(now)];
+  return [demoCompanyView(now), demoPlainView(now), demoProposalView(now), demoFoundingView(now), demoPausedView(now), demoFinishedView(now), demoBrokenView(now)];
 }
 
 /** Where a demo company's folder is. */
@@ -2034,6 +2036,8 @@ export interface StudioExtras {
 
 /** The studio a company's office draws: its rooms and people as studio.yaml records them. */
 export function studioOf(view: CompanyView, extras: StudioExtras = {}): Studio {
+  // A plain job's office is the hub's own: one desk, with nothing written into the project.
+  if (view.shape === 'plain') return plainStudio(view.name);
   const known = extras.departments ?? CAFE_ROOMS;
   const rooms = [...new Set(view.people.map((p) => p.room))];
   const departments: StudioDepartment[] = rooms.map((id) => known.find((r) => r.id === id) ?? { id, name: isBase(id) ? DEPARTMENT_NAMES[id] : id, style: isBase(id) ? id : 'engineering' });
@@ -2078,9 +2082,67 @@ function agentOf(p: PersonView, view: CompanyView): AgentState | null {
   };
 }
 
+/** A plain job's helpers as the office sees them: subagents standing beside the desk that started them. */
+function helperAgents(view: CompanyView): AgentState[] {
+  return (view.helpers ?? []).map((h) => ({
+    key: `helper:${h.id}`, sessionId: `${view.id}-session`, agentId: h.id, agentType: h.type, kind: 'role', roleId: h.person, name: "Claude Code's helper", task: h.description,
+    purpose: null, briefedAt: null, status: h.state === 'working' ? 'working' : 'done', statusSince: h.endedAt ?? h.startedAt, busySince: h.startedAt, tool: null, skill: null,
+    startedAt: h.startedAt, lastEventAt: h.endedAt ?? h.startedAt, endedAt: h.endedAt, toolCalls: 0, toolErrors: 0, files: [], usage: ZERO_USAGE, requests: 0, models: {},
+    costEstimate: h.costUsd, costReported: null, reportedRequests: 0, unpricedTokens: 0, lastMessage: null, reportedAt: null, contextTokens: h.tokens, question: null,
+    waitingFor: null, refused: null, error: null, errorFrom: null, helperOf: h.person,
+  }));
+}
+
+/**
+ * Recipe box: a plain job, Worklings' default since v0.7. One Claude Code session on the person's own words, in an existing
+ * project: its todo list half done, an Explore helper finished and a test-writing helper at work beside the desk, and one
+ * of its own permission prompts waiting in the inbox.
+ */
+export function demoPlainView(now: number): CompanyView {
+  const since = now - 26 * MIN;
+  const status: StatusLine = { person: PLAIN_PERSON, text: 'Matching titles and ingredients as you type.', taskId: null, at: now - 40_000 };
+  const builder: PersonView = {
+    id: PLAIN_PERSON, name: PLAIN_TITLE, title: PLAIN_TITLE, level: 'ceo', room: 'desk', reportsTo: null, look: {}, model: 'inherit',
+    desk: { person: PLAIN_PERSON, state: 'working', sessionId: 'recipe-box-session', since: now - 3 * MIN, context: 0.31, problem: null, queue: null },
+    task: null, status, agentKey: 'recipe-box-session:lead', cost: 0.84, context: { tokens: 49_600, fresh: 0 },
+  };
+  const view: CompanyView = {
+    ...emptyCompany('recipe-box', 'Recipe box'),
+    branch: null,
+    phase: 'running',
+    shape: 'plain',
+    launch: { ...DEFAULT_LAUNCH },
+    prompt: 'Add search to the recipe list: by title or ingredient, as you type, and keep it fast with 2,000 recipes.',
+    theme: 'office',
+    people: [builder],
+    todos: [
+      { id: '1', text: 'Read how recipes are loaded and listed', status: 'completed' },
+      { id: '2', text: 'Add a search box above the list', status: 'completed' },
+      { id: '3', text: 'Match titles and ingredients as you type', status: 'in_progress' },
+      { id: '4', text: 'Keep it fast with 2,000 recipes', status: 'pending' },
+      { id: '5', text: 'Run the tests and fix what breaks', status: 'pending' },
+    ],
+    helpers: [
+      { id: 'toolu-recipe-1', person: PLAIN_PERSON, type: 'Explore', description: 'Find every place recipes are filtered', state: 'done', costUsd: 0.06, tokens: 41_200, startedAt: now - 19 * MIN, endedAt: now - 16 * MIN },
+      { id: 'toolu-recipe-2', person: PLAIN_PERSON, type: 'general-purpose', description: 'Write tests for ingredient search', state: 'working', costUsd: 0.11, tokens: 63_800, startedAt: now - 2 * MIN, endedAt: null },
+    ],
+    approvals: [
+      {
+        id: 'rb-a1', person: PLAIN_PERSON, tool: 'Bash', summary: 'Claude Code asks: Run npm install fuse.js', detail: 'npm install fuse.js', kind: 'other', askedAt: now - 50_000,
+        expiresAt: now + 9 * MIN, alwaysRule: { rule: 'Bash(npm install:*)', sentence: 'Always allow installing packages with npm in this project.' }, answer: null, withdrawn: null,
+      },
+    ],
+    statuses: [status],
+    spend: spendFor({ [PLAIN_PERSON]: 1.01 }, since, now, 'recipe-box', null),
+    desks: { working: 1, waiting: 0, max: 8 },
+  };
+  view.inbox = inboxOf(view);
+  return withSpending(view, now);
+}
+
 /** The office's snapshot with the company in it, as the hub would send it for a demo. */
 export function demoSnapshot(view: CompanyView, root: string, now: number, extras: StudioExtras = {}): Snapshot {
-  const agents = view.people.map((p) => agentOf(p, view)).filter((a): a is AgentState => a !== null);
+  const agents = [...view.people.map((p) => agentOf(p, view)).filter((a): a is AgentState => a !== null), ...helperAgents(view)];
   const cost = view.people.reduce((s, p) => s + p.cost, 0);
   const lastHour = view.spend.samples.filter((s) => s.at > now - HOUR).reduce((s, x) => s + x.cost, 0);
   const aside = emptyAsideView(now - HOUR);

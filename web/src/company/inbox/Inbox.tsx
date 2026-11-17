@@ -12,7 +12,7 @@ import { CompanyLink } from '../people/shared.tsx';
 import { navigate as goTo } from '../router.ts';
 import { planWait } from '../plan/planModel.ts';
 import type { TabProps } from '../types.ts';
-import { useAnswers } from './answers.ts';
+import { draftingOf, useAnswers } from './answers.ts';
 import { batchCards } from './asksModel.ts';
 import { BatchCard } from './BatchCard.tsx';
 import { HandoverCard } from './HandoverCard.tsx';
@@ -65,7 +65,7 @@ export function Inbox({ snapshot, company, companyId, actions, navigate, announc
     return [item ? undoUntil(item, p, skew) : p.at + UNDO_MS];
   });
   const now = useCompanyClock(snapshot.serverTime, online, wake);
-  const view = inboxView(company, presses, { now, openedAt, skew });
+  const view = inboxView(company, presses, { now, openedAt, skew, drafting: draftingOf(state) });
   const conversations = conversationsOf(company);
   const proposal = company.phase === 'proposed' && company.proposal !== null;
   const planWaiting = planWait(company);

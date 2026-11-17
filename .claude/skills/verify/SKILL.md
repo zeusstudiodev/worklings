@@ -24,8 +24,8 @@ description: How to run and exercise Worklings (the studio generator, the 3D off
    `v3-changes`, `v3-moments`, `v3-fullscreen`, `v3-every-state` (every state of each screen), `v3-first-run` (the
    Claude Code callout, the cost line, watching a project), `v3-site-storage` (the static demo with the browser's site
    data blocked) and the web-fixes specs. Their kit is `test/e2e/v3-kit.ts`: `openPanel(page, id, panel)` and `openBoard(page, id, board)` open
-   a company at a `?panel=` view or a board; `sheetUp` raises a phone's peeking side-panel sheet (phones open on the
-   office); `talk(page, to, words)` says something through the talk bar, with leading `@` mentions picking who hears
+   a company at a `?panel=` view or a board; `sheetUp` opens the inbox in the side panel when it isn't up (v0.8: it is
+   closed until asked for), `openInbox` does it through More, and `inboxCard` is the card over the talk bar; `talk(page, to, words)` says something through the talk bar, with leading `@` mentions picking who hears
    it; `cardDrag` drags a task card on desktop sizes. Its `running()` founds a company and starts it with plan
    approval off, because the default ("before work") refuses `assign` until the plan is approved; pass `planApproval`
    to keep the default. The plan specs and the new-company spec exercise the default: the fake desk's `byText` rule
@@ -104,7 +104,7 @@ description: How to run and exercise Worklings (the studio generator, the 3D off
       out of the repo.
 12. **Phone layout without a phone**: the `v3-phone` project (375 px, a Pixel 7 profile) and the screenshots it writes;
     `v3-phone-side` (812 x 375) for a phone on its side. On a phone the side panel and the boards are sheets, and the
-    office opens with the inbox sheet peeking. This is Chromium; it does not reproduce iOS Safari. By hand: the demo
+    office opens with the inbox card as a sheet over the talk bar. This is Chromium; it does not reproduce iOS Safari. By hand: the demo
     company at `/c/demo` with the window at 375 px, then `/c/demo?panel=settings`.
 13. **Proof** for a report: the check output, the integration test and e2e results and the screenshots you looked at.
     Say which of 5 to 12 you ran. Not covered by any of this, and only the maintainer can check:

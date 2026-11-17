@@ -38,9 +38,9 @@ test.describe('the lobby', () => {
     }
     await shot(page, 'lobby-two', info);
 
-    // Into the bakery: v0.2's cards land on its progress, its own people at work.
+    // Into the bakery: v0.8's cards land on its office, its own people at work.
     await entry(bakery).click();
-    await expect(page).toHaveURL(new RegExp(`/c/${bakery}/progress$`));
+    await expect(page).toHaveURL(new RegExp(`/c/${bakery}$`));
     await expect(page.getByRole('banner')).toContainText('Corner Bakery');
     await shot(page, 'lobby-bakery', info);
     // Its own Kai is at work: opened beside the office, his panel says so.
@@ -51,7 +51,7 @@ test.describe('the lobby', () => {
     await page.getByRole('link', { name: 'Lobby' }).click();
     await expect(entry(plant)).toBeVisible();
     await entry(plant).click();
-    await expect(page).toHaveURL(new RegExp(`/c/${plant}/progress$`));
+    await expect(page).toHaveURL(new RegExp(`/c/${plant}$`));
     await expect(page.getByRole('banner')).toContainText('Plant Pal');
     await fromPalette(page, 'Kai', /^Open Kai\b/);
     await expect(sidePanel(page).getByRole('region', { name: 'What Kai is doing' })).toContainText('Working');

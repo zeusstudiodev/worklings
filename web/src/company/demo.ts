@@ -107,6 +107,8 @@ import {
 } from './demoModel.ts';
 import { baseName, insideOf, joinPath, parentOf, sameFolder } from './paths.ts';
 import type { CompanyActions, SteeringActions } from './types.ts';
+import { ReplayPlayer } from './replay/player.ts';
+import { isRecording, type Recording } from './replay/replayModel.ts';
 
 // ---------------------------------------------------------------------------------------------------------------
 // The demo's folders, for Start a company
@@ -149,6 +151,17 @@ interface DemoCompany {
 
 type Live = Snapshot & { company: CompanyView };
 
+/** What every press a recorded run can't take says (SPEC-v0.8.md, "The demo replay"). */
+export const RECORDED_REFUSAL = "This is a recorded run, so nothing reaches it. Answer what it asks on the card; start your own with Worklings.";
+/** The recorded run's company: one plain job, replayed when the demo starts a session. */
+export const REPLAY_ID = 'haiku-check';
+/** The recording, loaded when the demo first needs it, so the lobby never waits for it. */
+export async function loadRecording(): Promise<Recording> {
+  const raw: unknown = (await import('./replay/recording.json')).default;
+  if (!isRecording(raw)) throw new Error('The recorded run in replay/recording.json is not a recording.');
+  return raw;
+}
+
 export class DemoHub {
   private companies: DemoCompany[];
   private removed: DemoCompany[] = [];
@@ -171,6 +184,8 @@ export class DemoHub {
   private talkAt = 0;
   private talked: TalkMade[] = [];
   private readonly isStill: () => boolean;
+  /** The recorded runs the visitor started, by company id (v0.8). */
+  private replays = new Map<string, ReplayPlayer>();
 
   /** `still` says whether the office is still (the person's switch or the system's reduced motion): the café stops talking then. */
   constructor(now: number, still: () => boolean = () => false) {
@@ -199,7 +214,13 @@ export class DemoHub {
 
   lobby = (): LobbyView => {
     this.lobbyCache ??= {
-      companies: this.companies.map((c) => lobbyEntryOf(c.view, c.root, this.changed)),
+      companies: [
+        ...this.companies.map((c) => lobbyEntryOf(c.view, c.root, this.changed)),
+        ...[...this.replays.values()].flatMap((r) => {
+          const live = r.snapshot();
+          return live ? [lobbyEntryOf(live.company, r.recording.folder, this.changed)] : [];
+        }),
+      ],
       hub: { maxDesks: this.maxDesks, working: this.companies.reduce((s, c) => s + c.view.desks.working, 0) },
       serverTime: this.changed,
     };
@@ -207,6 +228,8 @@ export class DemoHub {
   };
 
   snapshot = (id: string): Live | null => {
+    const replay = this.replays.get(id);
+    if (replay) return replay.snapshot();
     if (!this.snapshots.has(id)) {
       const c = this.find(id);
       this.snapshots.set(id, c ? { ...demoSnapshot(c.view, c.root, this.changed, c.extras), company: c.view } : null);
@@ -214,7 +237,53 @@ export class DemoHub {
     return this.snapshots.get(id) ?? null;
   };
 
-  has = (id: string): boolean => this.find(id) !== undefined;
+  has = (id: string): boolean => this.find(id) !== undefined || this.replays.has(id);
+
+  /** The recorded run playing as this company, if it is one. */
+  replayOf = (id: string): ReplayPlayer | null => this.replays.get(id) ?? null;
+
+  /**
+   * How far the company's clock runs ahead of this browser's: a sped-up replay's runs ahead (its times are the run's); the
+   * made-up companies' are this browser's own.
+   */
+  skewOf = (id: string): number => {
+    const replay = this.replays.get(id);
+    return replay ? replay.serverNow() - this.changed : 0;
+  };
+
+  /** Starts (or starts again) the recorded run as its company in the lobby. */
+  async startReplay(): Promise<string> {
+    const known = this.replays.get(REPLAY_ID);
+    if (known) {
+      known.start();
+      return REPLAY_ID;
+    }
+    const player = new ReplayPlayer(await loadRecording(), () => this.emit());
+    this.replays.set(REPLAY_ID, player);
+    player.start();
+    return REPLAY_ID;
+  }
+
+  /** A recorded run's actions: its prompts and last words answered on the card, everything else refused in a sentence. */
+  private replayActions(player: ReplayPlayer): CompanyActions {
+    const done: Partial<CompanyActions> = {
+      decide: async (approval, decision, always, note) => player.decide(approval, decision, always, note),
+      answer: async (question, option, text) => player.answer(question, option, text),
+      undo: async (item) => player.undo(item),
+      looked: async () => undefined,
+      markSeen: async () => undefined,
+      earlierMessages: async () => ({ messages: [], acks: [], more: false }),
+      screenshotUrl: () => '',
+    };
+    return new Proxy(done as CompanyActions, {
+      get: (target, key: string) =>
+        Object.hasOwn(target, key)
+          ? target[key as keyof CompanyActions]
+          : async () => {
+              throw refused(409, RECORDED_REFUSAL, 'replay');
+            },
+    });
+  }
 
   private find(id: string): DemoCompany | undefined {
     return this.companies.find((c) => c.view.id === id);
@@ -413,6 +482,8 @@ export class DemoHub {
   }
 
   actions(id: string): CompanyActions {
+    const replay = this.replays.get(id);
+    if (replay) return this.replayActions(replay);
     return {
       say: async (to, text) => {
         const person = this.person(id, to);
@@ -659,6 +730,13 @@ export class DemoHub {
    * plan version for an edit, one copy per person for a room, and a decision for every change it makes.
    */
   steering(id: string): SteeringActions {
+    if (this.replays.has(id)) {
+      return new Proxy({} as SteeringActions, {
+        get: () => async () => {
+          throw refused(409, RECORDED_REFUSAL, 'replay');
+        },
+      });
+    }
     const company = (): DemoCompany => {
       const c = this.find(id);
       if (!c) throw refused(404, "That company isn't in the lobby any more.", 'gone');
@@ -1210,9 +1288,14 @@ export class DemoHub {
 
   hub(): HubActions {
     return {
-      createCompany: async (folder, prompt, _work) => {
+      createCompany: async (folder, prompt, work) => {
         const root = folder.trim().replace(/[\\/]+$/, '');
         const words = prompt.trim();
+        // v0.8: nothing runs in the browser, so one Claude Code session is the recorded run, replayed (the form says so).
+        if (work === 'plain') {
+          if (!words) throw refused(400, 'Say what to build.', 'invalid');
+          return { id: await this.startReplay() };
+        }
         if (!/^[A-Za-z]:\\/.test(root) && !root.startsWith('/')) throw refused(400, `Give the folder's full path, like ${HOME}\\plant-pal.`, 'bad-folder');
         if (sameFolder(root, HOME)) throw refused(400, "That's your home folder. Pick a folder in it.", 'bad-folder');
         for (const c of this.companies) {
@@ -1237,6 +1320,13 @@ export class DemoHub {
         return { id: this.found(root, words) };
       },
       removeCompany: async (companyId) => {
+        const replay = this.replays.get(companyId);
+        if (replay) {
+          replay.stop();
+          this.replays.delete(companyId);
+          this.emit();
+          return;
+        }
         const c = this.find(companyId);
         if (!c) throw refused(404, "That company isn't in the lobby any more.", 'gone');
         this.companies = this.companies.filter((x) => x !== c);

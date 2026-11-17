@@ -26,6 +26,7 @@ import {
   until,
   waitForProposal,
   watchErrors,
+  showStrip,
 } from './v3-kit.ts';
 import { api, found, view } from './v3-world.ts';
 
@@ -282,10 +283,11 @@ test.describe('typing', () => {
 
   test('Feed opens the feed with focus on its heading and closes it back to Feed, by keyboard; so does the strip', async ({ page }, info) => {
     const errors = watchErrors(page);
+    // v0.8: the strip is off by default; this test shows it to check it too. Feed is in the talk bar on phones as well.
+    await showStrip(page);
     await openCompany(page, DEMO);
     const phone = layoutOf(page).phone;
-    // On phones the strip is the way in, Feed's count at its end.
-    const opener = phone ? strip(page) : feedKey(page);
+    const opener = feedKey(page);
     await opener.focus();
     await expect(opener).toHaveAttribute('aria-expanded', 'false');
     const controls = await opener.getAttribute('aria-controls');
@@ -302,7 +304,7 @@ test.describe('typing', () => {
     await shot(page, 'h57-feed-open', info);
     await page.keyboard.press('Escape');
     await expect(feed(page)).toBeHidden();
-    await expect(phone ? strip(page) : feedKey(page)).toBeFocused();
+    await expect(feedKey(page)).toBeFocused();
     if (!phone) {
       await strip(page).focus();
       await page.keyboard.press('Enter');
@@ -523,6 +525,7 @@ test.describe('sending to the office', () => {
 
   test('the strip shows a relay within a second of it happening, and opens the feed at it', async ({ page, request }, info) => {
     const errors = watchErrors(page);
+    await showStrip(page);
     await openCompany(page, id);
     // The page notes when the strip first shows this relay, so the second is the office's own (from the relay's time on the
     // server to the strip, one machine's clock), not the test runner's round trips, which a busy machine stretches.
@@ -560,6 +563,8 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 test.describe('the strip and the feed, final gates', () => {
   test("the strip's name holds the words it shows, after what the key does (2.5.3)", async ({ page }) => {
     const errors = watchErrors(page);
+    // v0.8: the strip is off by default; this test is about it, so it shows it.
+    await showStrip(page);
     await openCompany(page, DEMO);
     await expect(strip(page)).toBeVisible();
     const words = await strip(page).locator('.livestrip__words').last().innerText();

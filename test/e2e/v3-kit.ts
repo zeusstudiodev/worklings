@@ -221,10 +221,10 @@ export const switcher = (page: Page): Locator => page.getByRole('banner').getByR
  */
 export const viewsKey = (page: Page): Locator => page.getByRole('banner').getByRole('button', { name: /^Views(, |$)/ });
 
-/** Opens a company at an address of the stage and dock and waits for its shell: the company bar with Inbox in it. */
+/** Opens a company at an address of the stage and dock and waits for its shell: the company bar with More in it. */
 export async function openCompany(page: Page, id: string, where: { main?: string; panel?: string } = {}, hub = HUB): Promise<void> {
   await open(page, companyAddress(id, where), hub);
-  await expect(inboxKey(page)).toBeVisible({ timeout: 30_000 });
+  await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
 }
 
 /** In the page: what has focus, in a few words for a failure message (focusedThing, and walks that ask more at once). */
@@ -244,18 +244,14 @@ export async function focusedThing(page: Page): Promise<string> {
  * Where a view's link is: the switcher (Progress, Office, Tasks), More for the org chart, the dashboards and the decision
  * log (opened here first), or in a short window what its Views key discloses, which lists all of them.
  */
-export async function viewLinks(page: Page, view: ViewName = 'Office'): Promise<Locator> {
-  if (!layoutOf(page).short) return MORE_VIEWS[view] ? openMore(page) : switcher(page);
-  const key = viewsKey(page);
-  if ((await key.getAttribute('aria-expanded')) !== 'true') await key.click();
-  const id = await key.getAttribute('aria-controls');
-  if (!id) throw new Error('The Views key controls nothing.');
-  return page.locator(`[id="${id}"]`);
+export async function viewLinks(page: Page): Promise<Locator> {
+  // v0.8 (SPEC-v0.8.md, "office first"): every view's link is in More, at every size.
+  return openMore(page);
 }
 
 /** Goes to a main view the way a person does: its link in the switcher or More, through the Views key in a short window. */
 export async function switchTo(page: Page, view: ViewName): Promise<void> {
-  await (await viewLinks(page, view)).getByRole('link', { name: viewLinkName(view), exact: true }).click();
+  await (await viewLinks(page)).getByRole('link', { name: viewLinkName(view), exact: true }).click();
 }
 
 /** Opens a company's progress view, where every entry point lands, and waits for its heading. */
@@ -271,8 +267,17 @@ export const sidePanel = (page: Page): Locator => page.getByRole('complementary'
 export const panelTitle = (page: Page): Locator => sidePanel(page).getByRole('heading', { level: 2 }).first();
 /** The side panel's left edge, a window splitter; hidden, the same control is the pull on the window's right edge. */
 export const separator = (page: Page): Locator => page.getByRole('separator', { name: 'Resize the side panel' });
-/** Inbox in the company bar ("Inbox", "Inbox, 6 need you"). */
+/** Inbox in the company bar's More ("Inbox", "Inbox, 6 need you"); v0.8 moved it there from the bar. Open More first. */
 export const inboxKey = (page: Page): Locator => page.getByRole('banner').getByRole('button', { name: /^Inbox\b/ });
+
+/** Opens the whole inbox the way a person does since v0.8: More, then Inbox. */
+export async function openInbox(page: Page): Promise<void> {
+  await openMore(page);
+  await inboxKey(page).click();
+}
+
+/** The inbox card over the talk bar (v0.8): the next thing that needs you, one at a time. */
+export const inboxCard = (page: Page): Locator => page.locator('[data-inbox-card]');
 /**
  * The side panel's toggle on desktops (v0.2): Inbox, which shows the inbox in the panel and hides the panel when the
  * inbox already shows there (`aria-expanded` says whether the panel shows). Phones have no toggle: Inbox raises a sheet.
@@ -286,9 +291,13 @@ export const panelToggle = (page: Page): Locator => inboxKey(page).and(page.loca
  * desktop, a `?panel=` address on a phone) it does nothing.
  */
 export async function sheetUp(page: Page): Promise<void> {
+  // v0.8: the side panel opens only when asked for, on desktops too, and a phone's inbox no longer peeks (the card over
+  // the talk bar is the way in): what isn't up yet comes up with More's Inbox. A proposal still peeks on phones.
+  await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
   const peek = sidePanel(page).getByRole('button', { name: /^Open the / });
-  await expect(peek.or(panelTitle(page))).toBeVisible({ timeout: 30_000 });
-  if (await peek.isVisible()) await inboxKey(page).click();
+  if (await peek.isVisible()) await peek.click();
+  else if (!(await panelTitle(page).isVisible())) await openInbox(page);
+  await expect(panelTitle(page)).toBeVisible();
   await expect(peek).toHaveCount(0);
 }
 
@@ -361,6 +370,9 @@ export const feedKey = (page: Page): Locator => talkBar(page).getByRole('button'
 export const feed = (page: Page): Locator => page.getByRole('region', { name: 'Feed', exact: true });
 /** The live strip, on the Office view only (v0.2): one button, "Open the feed" (or "Open the feed, 2 new replies"), its lines inside it as text. */
 export const strip = (page: Page): Locator => page.getByRole('button', { name: /^Open the feed\b/ });
+
+/** v0.8: the live strip is off by default; this turns it on for the page's visits, as More's "Show the live strip" does. */
+export const showStrip = async (page: Page): Promise<void> => void (await page.addInitScript("try { localStorage.setItem('worklings-live-strip', 'shown'); } catch {}"));
 
 /** The list the box opens (`@`, `/`, a command's choices): the listbox its `aria-controls` names. */
 export async function talkList(page: Page): Promise<Locator> {

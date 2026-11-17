@@ -16,15 +16,16 @@ import {
   openBoard,
   openCompany,
   panelTitle,
-  panelToggle,
   shot,
   sidePanel,
-  switcher,
   switchTo,
   talkBox,
   theTo,
   type ViewName,
   watchErrors,
+  moreKey,
+  openMore,
+  addressOf,
 } from './v3-kit.ts';
 
 // H59 (AC35), boards over the map (docs/design-v3.md, "Boards over the map"): Org, Tasks and Dashboards open over the
@@ -73,8 +74,8 @@ test.describe('boards over the map', () => {
         await expectLive(page);
         const corner = await miniMap(page).boundingBox();
         const window = page.viewportSize() ?? { width: 1440, height: 900 };
-        // The main view's bottom right, left of a docked side panel.
-        const panel = await sidePanel(page).boundingBox();
+        // The main view's bottom right, left of a docked side panel when one shows (v0.8: closed until asked for).
+        const panel = (await panelTitle(page).isVisible()) ? await sidePanel(page).boundingBox() : null;
         expect((corner?.x ?? 0) + (corner?.width ?? 0)).toBeLessThanOrEqual((layoutOf(page).floating || !panel ? window.width : panel.x) - 12 + 1);
         expect((corner?.y ?? 0) + (corner?.height ?? 0)).toBeLessThanOrEqual(window.height - 12 + 1);
       }
@@ -86,7 +87,8 @@ test.describe('boards over the map', () => {
 
   test('the whole mini-map where the main view has room, the thumbnail where it has not', async ({ page }, info) => {
     test.skip(layoutOf(page).phone, 'Phones have no mini-map.');
-    await openBoard(page, DEMO, 'tasks');
+    // v0.8: the side panel is closed until something opens in it; here a person does.
+    await openBoard(page, DEMO, 'tasks', { panel: 'people/ui-designer' });
     const window = page.viewportSize() ?? { width: 1440, height: 900 };
     const size = async () => {
       const b = await miniMap(page).boundingBox();
@@ -95,8 +97,8 @@ test.describe('boards over the map', () => {
     // With the side panel shown the main view is under 1288 px at every desktop size here: a 104 x 56 thumbnail in its frame.
     expect((await size()).width).toBeLessThan(140);
     if (window.width >= 1324 && !layoutOf(page).floating) {
-      // Hidden, the main view is the window less the pull's 36 px: the whole 240 x 150 map with its caption.
-      await panelToggle(page).click();
+      // Closed, the main view is the whole window (no pull since v0.8): the whole 240 x 150 map with its caption.
+      await sidePanel(page).getByRole('button', { name: 'Close', exact: true }).click();
       await expect.poll(async () => (await size()).width).toBeGreaterThanOrEqual(240);
       await expect(miniMap(page)).toContainText('Back to the office');
       await shot(page, 'h59-whole-mini-map', info);
@@ -108,22 +110,21 @@ test.describe('boards over the map', () => {
     test.skip(layoutOf(page).phone, 'Phones return with Office and Back, checked below.');
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
-    // v0.2: Tasks is the board the switcher opens (the org chart is behind More).
-    const tasks = switcher(page).getByRole('link', { name: 'Tasks', exact: true });
+    // v0.8: Tasks and Office are in More, which takes focus back when a choice in it is made.
     const office = companyAddress(DEMO);
     const ways: [string, () => Promise<void>][] = [
       ['Escape on its title', () => page.keyboard.press('Escape')],
       ['a press on the mini-map', () => miniMap(page).click()],
       ['"Back to the office"', () => boardFrame(page, 'Tasks').getByRole('button', { name: 'Back to the office', exact: true }).click()],
-      ['Office in the switcher', () => switcher(page).getByRole('link', { name: 'Office', exact: true }).click()],
+      ['Office in More', () => switchTo(page, 'Office')],
     ];
     for (const [way, close] of ways) {
-      await tasks.click();
+      await switchTo(page, 'Tasks');
       await expect(title(page, 'tasks')).toBeFocused();
       await close();
       await expectAddress(page, office, `${way} goes back to the office`);
       await expect(boardFrame(page, 'Tasks')).toBeHidden();
-      if (way !== 'Office in the switcher') await expect(tasks, `${way}: focus returns to what opened the board`).toBeFocused();
+      if (way !== 'Office in More') await expect(moreKey(page), `${way}: focus returns to More, which opened the board`).toBeFocused();
     }
     await shot(page, 'h59-back-to-the-office', info);
     expect(errors).toEqual([]);
@@ -132,12 +133,12 @@ test.describe('boards over the map', () => {
   test('the camera comes back as it was left, not refitted', async ({ page }) => {
     test.skip(layoutOf(page).phone, 'Checked where the office shows beside the mini-map.');
     await openCompany(page, DEMO);
-    // A room's sign near the middle of the office. Which of them stays in the labels' area through a step of zoom
-    // depends on the room the window leaves (the floating side panel narrows it), so the sign is the first that shows
-    // after the zoom.
-    const signs = page.getByRole('main').getByText(/^(Kitchen|Reception|Meeting room)$/);
+    // A room's sign. Which of them stays in the labels' area through a step of zoom depends on the room the window leaves,
+    // so the sign is the first that shows after the zoom. v0.8: signs show over rooms where someone works, and the
+    // camera's keys are in More.
+    const signs = page.getByRole('main').getByText(/^(Design|Engineering|Content|Quality)$/);
     await expect(signs.filter({ visible: true }).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+    await (await openMore(page)).getByRole('button', { name: 'Zoom in', exact: true }).click();
     await expect(signs.filter({ visible: true }).first()).toBeVisible();
     const sign = page.getByRole('main').getByText((await signs.filter({ visible: true }).first().innerText()).trim(), { exact: true });
     // The zoom steps the camera; the sign settles where the zoom left it.
@@ -200,8 +201,10 @@ test.describe('boards over the map', () => {
 
   test('Escape in the side panel or the talk bar never closes a board; in the board or on nothing it does', async ({ page }) => {
     test.skip(layoutOf(page).phone, 'Phones close a board with Office and Back.');
-    await openBoard(page, DEMO, 'org');
-    const org = companyAddress(DEMO, { main: 'org' });
+    // v0.8: the side panel shows once something opens in it; here a person beside the board.
+    await openBoard(page, DEMO, 'org', { panel: 'people/ui-designer' });
+    // The address as it was opened (the query as the browser writes it), which neither Escape may change.
+    const org = addressOf(page);
     await panelTitle(page).focus();
     await page.keyboard.press('Escape');
     await expectAddress(page, org, 'from the side panel');
@@ -211,7 +214,7 @@ test.describe('boards over the map', () => {
     await expect(talkBox(page)).toBeFocused();
     await title(page, 'org').focus();
     await page.keyboard.press('Escape');
-    await expectAddress(page, companyAddress(DEMO), 'from the board');
+    await expectAddress(page, companyAddress(DEMO, { panel: 'people/ui-designer' }), 'from the board');
     // Opened by its address, nothing on the page opened it: focus goes to the office's heading.
     await expect(page.getByRole('heading', { level: 1, name: 'Café Lumen office' })).toBeFocused();
   });
@@ -249,18 +252,19 @@ test.describe('boards over the map', () => {
   test('at 768 a floating side panel leaves the board the width beside it, and its head fits', async ({ page }, info) => {
     test.skip(!layoutOf(page).floating, 'The side panel floats from 721 to 895 px.');
     for (const main of ['org', 'tasks', 'dashboards']) {
-      const frame = await openBoard(page, DEMO, main);
+      // v0.8: the side panel shows once something opens in it.
+      const frame = await openBoard(page, DEMO, main, { panel: 'people/ui-designer' });
       const panel = await sidePanel(page).boundingBox();
       const board = await frame.boundingBox();
-      expect(panel, 'the side panel shows on a first visit').not.toBeNull();
+      expect(panel, 'the side panel shows a person').not.toBeNull();
       // Nothing of the board lies under the floating side panel.
       expect((board?.x ?? 0) + (board?.width ?? 0), `${main} ends left of the side panel`).toBeLessThanOrEqual((panel?.x ?? 0) - 12 + 1);
       await expect(frame.getByRole('button', { name: 'Back to the office', exact: true })).toBeVisible();
       await expectNoSidewaysScroll(page, main);
       await shot(page, `h59-768-${main}`, info);
     }
-    // Hidden, the board takes the whole width again.
-    await panelToggle(page).click();
+    // Closed, the board takes the whole width again.
+    await sidePanel(page).getByRole('button', { name: 'Close', exact: true }).click();
     await expect(panelTitle(page)).toBeHidden();
     const frame = boardFrame(page, 'Dashboards');
     expect((await frame.boundingBox())?.width ?? 0).toBeGreaterThan(700);

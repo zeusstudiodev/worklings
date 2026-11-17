@@ -827,7 +827,13 @@ export class Switchboard {
         break;
       case 'state':
         if (desk.phase === 'starting') desk.phase = 'open';
-        if (e.state === 'running') this.startTurn(seat, desk);
+        if (e.state === 'running') {
+          // Nothing the office wrote waits to start it: Claude Code took this turn by itself (a background task it started
+          // reported back), and whatever it said at the end of its last turn is behind it now.
+          const own = !desk.turnRunning && desk.sawInit && ![...desk.written.values()].some((w) => !w.started);
+          this.startTurn(seat, desk);
+          if (own) this.tell(() => this.o.events.ownTurn?.(seat.id));
+        }
         return;
       case 'turn-line':
         for (const id of e.opened) desk.openTools.add(id);

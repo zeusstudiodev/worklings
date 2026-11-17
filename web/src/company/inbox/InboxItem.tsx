@@ -236,14 +236,14 @@ export function InboxItem({ item, view, company, companyId, now, online, navigat
               if (store.toggleOwn(itemKey)) focus.box(itemKey);
             }}
           >
-            Answer in your own words
+            {lines.asks ? 'Answer in your own words' : 'Reply in your own words'}
           </button>
           {messageLink()}
         </div>
         {typing && (
           <form className="inbox-own" onSubmit={sendOwn}>
             <label className="inbox-why__label" htmlFor={boxId}>
-              Your answer
+              {lines.asks ? 'Your answer' : 'Your reply'}
             </label>
             <textarea
               id={boxId}
@@ -263,7 +263,7 @@ export function InboxItem({ item, view, company, companyId, now, online, navigat
                 </span>
               )}
               <button type="submit" className="button button--primary" aria-disabled={!online || !text.trim() || count.over || undefined}>
-                Send answer
+                {lines.asks ? 'Send answer' : 'Send reply'}
               </button>
             </div>
           </form>

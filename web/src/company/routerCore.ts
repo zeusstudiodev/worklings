@@ -69,6 +69,11 @@ export interface NavigateOptions {
    * iPhone's back swipe should close. A reload of that entry shows the page without it.
    */
   mark?: string;
+  /**
+   * With `mark`: push the marked entry at `address` even though another place shows (v0.8: a desktop's inbox opened over a
+   * board is the office with the inbox over it, one entry, so Back returns to the board).
+   */
+  elsewhere?: boolean;
 }
 
 export interface Router {
@@ -169,7 +174,8 @@ export function createRouter(browser: RouterBrowser): Router {
   function navigate(address: string, options: NavigateOptions = {}) {
     if (options.at !== undefined && current !== null && current.key !== options.at) return;
     if (options.mark !== undefined) {
-      if (!isHere(address) || entryState()?.mark === options.mark) return;
+      const here = isHere(address);
+      if ((!here && !options.elsewhere) || (here && entryState()?.mark === options.mark)) return;
       push(address, options.mark);
     } else if (isHere(address)) {
       return;

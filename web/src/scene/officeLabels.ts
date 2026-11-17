@@ -17,6 +17,19 @@ export const URGENT_BUBBLES: ReadonlySet<BubbleTone> = new Set<BubbleTone>(['nee
 /** Whether a person's bubble shows: the person picked or asked always, else every bubble, or only urgent ones when quiet. */
 export const bubbleShown = (tone: BubbleTone, quiet: boolean, picked: boolean): boolean => picked || !quiet || URGENT_BUBBLES.has(tone);
 
+/**
+ * v0.8 (SPEC-v0.8.md, "office first"): a company's office labels only what happens now. A bubble shows for someone at
+ * work on a step, stuck, in a meeting or answering you; the rest (done, "Next for a desk", waiting on you, which the
+ * inbox card says) stays quiet. The person picked or asked always shows.
+ */
+const NOW_BUBBLES: ReadonlySet<BubbleTone> = new Set<BubbleTone>(['stuck', 'meeting', 'answering']);
+export const happensNow = (m: { bubble: { tone: BubbleTone } | null; status: string; inLine: number | null }): boolean =>
+  m.bubble !== null && m.inLine === null && (NOW_BUBBLES.has(m.bubble.tone) || (m.bubble.tone === 'on-it' && (m.status === 'working' || m.status === 'thinking')));
+
+/** The rooms where someone works now, whose signs a company's office shows (v0.8). */
+export const roomsAtWork = (cast: readonly { room: string | null; status: string }[]): Set<string> =>
+  new Set(cast.flatMap((m) => (m.room !== null && (m.status === 'working' || m.status === 'thinking') ? [m.room] : [])));
+
 export interface OfficeSign {
   /** The label's id, which is also its anchor's (the scenery registers `room:<id>` over every room). */
   id: string;

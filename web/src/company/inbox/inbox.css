@@ -545,3 +545,194 @@
 .handover .check__text {
   font-size: 0.875rem;
 }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   v0.8 (SPEC-v0.8.md, decision 2): the inbox as one card, docked over the talk bar. Badge paper like the talk bar, its
+   head a quiet row (Needs you, "1 of N", Next, Skip, See all), its body the inbox's own item, capped and scrolling inside. */
+
+.dock__above--stack {
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.inbox-card {
+  display: flex;
+  flex-direction: column;
+  max-height: min(46vh, 420px);
+  /* The small viewport's height, so iOS's address bar coming and going never resizes the card. */
+  max-height: min(46svh, 420px);
+  color: var(--ink);
+  background: var(--badge);
+  border-radius: 16px;
+  box-shadow: var(--bevel), var(--lift-2);
+}
+
+.inbox-card__head {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 6px 4px 16px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.inbox-card__title {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-14);
+  font-weight: 600;
+}
+
+.inbox-card__count {
+  margin: 0 0 0 6px;
+  padding: 1px 8px;
+  font-size: var(--text-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--highlighter);
+  border-radius: 999px;
+}
+
+.inbox-card__gap {
+  flex: 1;
+}
+
+/* Where to go from this item: after it in the Tab order, under it on the paper (a thumb's reach on a phone). */
+.inbox-card__foot {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 6px 4px;
+  border-top: 1px solid var(--badge-line);
+}
+
+.inbox-card__key {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-width: 44px;
+  height: 36px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+}
+
+.inbox-card__key:hover {
+  background: var(--badge-hover);
+}
+
+.inbox-card__key:active {
+  background: var(--badge-pressed);
+}
+
+.inbox-card__key--all {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.inbox-card__pressed .inbox-item,
+.inbox-card__body .inbox-item {
+  border-bottom: 0;
+}
+
+.inbox-card__pressed {
+  flex: none;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--badge-line);
+}
+
+.inbox-card__body {
+  min-height: 0;
+  padding: 0 12px 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: inbox-card-in var(--t-move) var(--ease-out);
+}
+
+@keyframes inbox-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inbox-card__body {
+    animation: none;
+  }
+}
+
+[data-still] .inbox-card__body {
+  animation: none;
+}
+
+/* Phones: a bottom sheet riding on the talk bar, the grip on top saying it is a sheet; while the talk bar's box has focus it
+   folds to its head, so the box and the keyboard are never under it. Typing in its own box, the talk bar steps aside and
+   the card rides on the keyboard instead. */
+.inbox-card--sheet {
+  border-radius: 16px 16px 12px 12px;
+}
+
+.inbox-card--sheet .inbox-card__head {
+  padding-left: 12px;
+}
+
+.inbox-card--sheet .inbox-card__title {
+  font-size: var(--text-13);
+}
+
+.dock--phone:has(.talkbar__box:focus) .inbox-card__body,
+.dock--phone:has(.talkbar__box:focus) .inbox-card__pressed,
+.dock--phone:has(.talkbar__box:focus) .inbox-card__foot {
+  display: none;
+}
+
+.dock--phone:has(.inbox-card :is(textarea, input):focus) .dock__bar {
+  visibility: hidden;
+}
+
+.dock--phone:has(.inbox-card :is(textarea, input):focus) .dock__above--stack {
+  bottom: calc(var(--gutter) + max(env(safe-area-inset-bottom, 0px), var(--keyboard, 0px)));
+}
+
+.dock--phone:has(.inbox-card :is(textarea, input):focus) .inbox-card {
+  max-height: calc(100vh - var(--keyboard, 0px) - 80px);
+  max-height: calc(100svh - var(--keyboard, 0px) - 80px);
+}
+
+@media (forced-colors: active) {
+  .inbox-card {
+    border: 1px solid CanvasText;
+  }
+
+  .inbox-card__count {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* The proposal or the plan waiting: its sentence, then its one key. */
+.inbox-card__waits {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.dock--phone:has(.talkbar__box:focus) .inbox-card__head {
+  border-bottom: 0;
+}
+
+/* Beside the progress column on desktops the card stands over the office, right of the column, never over its foot. */
+.dock:not(.dock--phone) .dock__above--stack {
+  left: var(--progress-right, 0px);
+}

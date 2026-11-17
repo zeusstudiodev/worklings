@@ -126,6 +126,7 @@ export type Heard =
   | { kind: 'delivered'; messageId: string; at: number; how: 'next-step' | 'new-turn' | undefined }
   | { kind: 'session'; person: string; sessionId: string; at: number }
   | { kind: 'turn'; person: string; result: TurnResult; at: number }
+  | { kind: 'own-turn'; person: string; at: number }
   | { kind: 'limited'; until: number | null; message: string; reason: string; at: number }
   | { kind: 'notice'; sentence: string; at: number };
 
@@ -148,6 +149,7 @@ export function recorder(): Recorder {
       delivered: (messageId, at, how) => push({ kind: 'delivered', messageId, at, how }),
       session: (person, sessionId) => push({ kind: 'session', person, sessionId, at: Date.now() }),
       turn: (person, result) => push({ kind: 'turn', person, result, at: Date.now() }),
+      ownTurn: (person) => push({ kind: 'own-turn', person, at: Date.now() }),
       limited: (until, message, reason) => push({ kind: 'limited', until, message, reason, at: Date.now() }),
       notice: (sentence) => push({ kind: 'notice', sentence, at: Date.now() }),
     },
@@ -183,6 +185,7 @@ function describe(e: Heard): string {
   if (e.kind === 'session') return `session ${e.person}`;
   if (e.kind === 'turn') return `turn ${e.person} ${e.result.ok ? 'ok' : `failed: ${e.result.problem}`}`;
   if (e.kind === 'notice') return `notice ${e.sentence}`;
+  if (e.kind === 'own-turn') return `own turn ${e.person}`;
   return `limited ${e.reason}`;
 }
 

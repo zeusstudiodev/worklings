@@ -5,7 +5,6 @@ import {
   companyAddress,
   expectAddress,
   fromPalette,
-  inboxKey,
   layoutOf,
   nameFor,
   open,
@@ -19,6 +18,7 @@ import {
   switchTo,
   until,
   watchErrors,
+  openInbox,
 } from './v3-kit.ts';
 import { api, folderFor } from './v3-world.ts';
 
@@ -76,47 +76,30 @@ test.describe('history', () => {
     await step({ name: 'the lobby', address: '/', shows: (p) => expect(p.getByRole('heading', { name: 'Companies', level: 2, exact: true })).toBeVisible() });
     // Every company of the suite's hub is a Plant Pal: this one's row by the key the lobby gives it.
     await page.locator(`[data-focus="company-${id}"]`).click();
-    // v0.2: a company's card lands on its progress.
+    // v0.8: a company's card lands on its office, the side panel closed; one panel at a time after that.
+    await step({ name: 'the office, the side panel closed', address: c(), shows: noPanel });
     if (phone) {
-      // A phone opens progress with no sheet over it; Inbox brings the inbox's sheet up, and Back puts it away and stays.
-      await at(page, { name: 'progress', address: c('progress'), shows: noPanel });
-      await inboxKey(page).click();
-      await at(page, { name: 'the inbox sheet', address: c('progress'), shows: (p) => panel(p, /^Inbox\b/) });
+      // A phone's Inbox brings the inbox's sheet up as an entry of its own, and Back puts it away and stays.
+      await openInbox(page);
+      await at(page, { name: 'the inbox sheet', address: c(), shows: (p) => panel(p, /^Inbox\b/) });
       await page.goBack();
-      await step({ name: 'progress again', address: c('progress'), shows: noPanel });
-      await switchTo(page, 'Org');
-      await step({ name: 'Org', address: c('org'), shows: (p) => board(p, 'Org chart') });
-      await switchTo(page, 'Tasks');
-      await step({ name: 'Tasks', address: c('tasks'), shows: (p) => board(p, 'Tasks') });
-      await card(page, TASK).click();
-      await step({ name: 'the task', address: c('tasks', 'tasks/t-1'), shows: (p) => panel(p, TASK) });
-      // A press in the views row puts the task's sheet away: the views row drops the side panel's view.
-      await switchTo(page, 'Dashboards');
-      await step({ name: 'Dashboards', address: c('dashboards'), shows: (p) => board(p, 'Dashboards') });
+      // The same entry as before the sheet, so not a step of its own.
+      await at(page, { name: 'the office again', address: c(), shows: noPanel });
     } else {
-      // Progress opens with the side panel closed on a desktop; Noor, opened from the palette, opens it beside progress.
-      await step({ name: 'progress, the side panel closed', address: c('progress'), shows: noPanel });
+      // Noor, opened from the palette, opens the side panel beside the office.
       await fromPalette(page, 'Noor', /^Open Noor\b/);
-      await step({ name: 'Noor', address: c('progress', 'people/ceo'), shows: (p) => panel(p, 'Noor') });
-      // On a desktop the side panel keeps its view when the main view changes.
-      await switchTo(page, 'Tasks');
-      await step({ name: 'Tasks beside Noor', address: c('tasks', 'people/ceo'), shows: async (p) => {
-        await board(p, 'Tasks');
-        await panel(p, 'Noor');
-      } });
-      await card(page, TASK).click();
-      await step({ name: 'the task', address: c('tasks', 'tasks/t-1'), shows: (p) => panel(p, TASK) });
-      await switchTo(page, 'Dashboards');
-      await step({ name: 'Dashboards beside the task', address: c('dashboards', 'tasks/t-1'), shows: async (p) => {
-        await board(p, 'Dashboards');
-        await panel(p, TASK);
-      } });
+      await step({ name: 'Noor', address: c('', 'people/ceo'), shows: (p) => panel(p, 'Noor') });
     }
-    await inboxKey(page).click();
-    await step({ name: 'the inbox over Dashboards', address: c('dashboards'), shows: async (p) => {
-      await board(p, 'Dashboards');
-      await panel(p, /^Inbox\b/);
-    } });
+    // A board of its own closes the side panel.
+    await switchTo(page, 'Tasks');
+    await step({ name: 'Tasks', address: c('tasks'), shows: (p) => board(p, 'Tasks') });
+    await card(page, TASK).click();
+    await step({ name: 'the task', address: c('tasks', 'tasks/t-1'), shows: (p) => panel(p, TASK) });
+    await switchTo(page, 'Dashboards');
+    await step({ name: 'Dashboards', address: c('dashboards'), shows: (p) => board(p, 'Dashboards') });
+    // The inbox closes the board and opens over the office.
+    await openInbox(page);
+    await step({ name: 'the inbox over the office', address: c(), shows: (p) => panel(p, /^Inbox\b/) });
     await sidePanel(page).getByRole('link', { name: 'Open the plan', exact: true }).click();
     await step({ name: 'the plan', address: c('plan'), shows: (p) => expect(p.getByRole('heading', { name: 'The plan' }).first()).toBeVisible() });
     await shot(page, 'history-walked', info);
@@ -239,8 +222,8 @@ test.describe('history', () => {
   });
 });
 
-/** Neither another view of the side panel nor a sheet: a desktop's side panel on the inbox, a phone's put away. */
+/** Neither a view of the side panel nor a sheet. */
 async function noPanelOrInbox(page: Page) {
-  if (layoutOf(page).phone) await noPanel(page);
-  else await panel(page, /^Inbox\b/);
+  // v0.8: the side panel stays closed until asked for, at every size.
+  await noPanel(page);
 }

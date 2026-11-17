@@ -11,6 +11,10 @@
 // Simpler still (Robin, 13 Nov 2026): who is at work, the burn, Actions ("Find an action", still Ctrl+K) and Full
 // screen moved into More, the money into one meter, and the side panel's own toggle into Inbox. Nothing was removed:
 // every address, command and shortcut still works.
+//
+// v0.8 (SPEC-v0.8.md, "office first"): a slim bar, Lobby, the name, its status, the budget meter and More. The three views,
+// Inbox and the office's camera keys moved into More (Inbox with its count first), and the inbox card over the talk bar is
+// the way to what needs you. Their addresses and the palette's commands are unchanged.
 import { type KeyboardEvent, type MouseEvent, type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { CompanyView } from '../../../src/core/company.ts';
 import type { Snapshot } from '../../../src/core/snapshot.ts';
@@ -53,7 +57,7 @@ const MORE_VIEWS: (ViewLink & { steering?: boolean })[] = [
 ];
 
 /** More is marked current while one of its views is the main view, so you can always see where you are. */
-const inMore = (m: MainView): boolean => m.kind === 'org' || m.kind === 'dashboards' || m.kind === 'decisions';
+const inMore = (m: MainView): boolean => m.kind !== 'office';
 
 export interface CompanyBarProps {
   snapshot: Snapshot;
@@ -69,12 +73,10 @@ export interface CompanyBarProps {
   /** A view's address, which the switcher's links carry (the side panel's view kept on desktops). */
   viewHref: (main: MainView) => string;
   onView: (main: MainView) => void;
-  /** The side panel shows the inbox: Inbox is marked current. */
+  /** The side panel shows the inbox: More's Inbox is marked current. */
   inboxCurrent: boolean;
-  /** Desktops: whether the side panel shows; Inbox shows and hides it. */
-  panelShown: boolean;
   onLobby: () => void;
-  /** Desktops: the inbox in the side panel, or the side panel hidden when it shows the inbox already. Phones: the inbox's sheet. */
+  /** The whole inbox: in the side panel on desktops, its sheet on phones. */
   onInbox: () => void;
   onPreview: () => void;
   onCustomize: () => void;
@@ -195,7 +197,6 @@ function BarRow(props: RowProps) {
           </span>
         )}
       </div>
-      <Views {...props} words={step < 1} />
       <span className="cbar__gap" aria-hidden="true" />
       {step < 3 && (
         // The money in one figure; what it means is in its tooltip, More and the Spending view it opens.
@@ -215,7 +216,6 @@ function BarRow(props: RowProps) {
           {meter.share !== null && <span className="cbar__meter-bar" aria-hidden="true" />}
         </a>
       )}
-      <InboxKey company={company} current={props.inboxCurrent} expanded={props.panelShown} words={step < 3} onInbox={props.onInbox} />
       <div className="cbar__tile cbar__keys">
         {preview && (
           <button type="button" className="cbar__key" onClick={props.onPreview}>
@@ -246,56 +246,7 @@ function LobbyLink({ elsewhere, words, onLobby, phone = false }: { elsewhere: nu
   );
 }
 
-/** Inbox: on desktops it shows the inbox in the side panel and hides the panel when the inbox already shows there. */
-function InboxKey({ company, current, expanded, words, onInbox, phone = false }: { company: CompanyView; current: boolean; expanded?: boolean; words: boolean; onInbox: () => void; phone?: boolean }) {
-  return (
-    <button
-      type="button"
-      className={`cbar__inbox${phone ? ' cbar__inbox--phone' : ''}`}
-      aria-current={current || undefined}
-      aria-expanded={phone ? undefined : expanded}
-      aria-controls={phone ? undefined : 'company-panel'}
-      aria-label={nameWithCount('Inbox', company.inbox)}
-      title={phone ? undefined : current ? 'Hide the inbox' : 'Show the inbox'}
-      onClick={onInbox}
-    >
-      {(phone || !words) && <Icon name="inbox" />}
-      {words && !phone && <span className="cbar__word">Inbox</span>}
-      <Count n={company.inbox} />
-    </button>
-  );
-}
-
-/** The view switcher: a nav of four links, not tabs, since each is a place with an address. */
-function Views({ main, viewHref, onView, words, row = false }: CompanyBarProps & { words: boolean; row?: boolean }) {
-  return (
-    <nav className={row ? 'cbar__views-row' : 'cbar__tile cbar__views'} aria-label="Views">
-      {VIEWS.map((v) => {
-        const current = v.current(main);
-        return (
-          <a
-            key={v.word}
-            className="cbar__view"
-            href={viewHref(v.main)}
-            aria-current={current ? 'page' : undefined}
-            aria-label={words ? undefined : v.word}
-            title={words ? undefined : v.word}
-            onClick={(event) => {
-              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-              event.preventDefault();
-              onView(v.main);
-            }}
-          >
-            <Icon name={v.icon} />
-            {words && <span className="cbar__word">{v.word}</span>}
-          </a>
-        );
-      })}
-    </nav>
-  );
-}
-
-/** The phone's bar: Lobby, the name with a stage dot, Inbox and More; the views as a row under it, or one Views menu in a short window. */
+/** The phone's bar: Lobby, the name with a stage dot, and More (v0.8: the views and Inbox are in More, the card is over the talk bar). */
 function PhoneBar(props: CompanyBarProps & Noting & { stillNote: string }) {
   const { company, state, elsewhere, layout } = props;
   const short = layout === 'short';
@@ -311,53 +262,11 @@ function PhoneBar(props: CompanyBarProps & Noting & { stillNote: string }) {
             <span className="visually-hidden">{state.sentence}</span>
           </span>
         </div>
-        {short && <ViewsMenu {...props} />}
         <span className="cbar__gap" aria-hidden="true" />
-        <InboxKey company={company} current={props.inboxCurrent} words={false} onInbox={props.onInbox} phone />
         <CompanyMenu {...props} folded previewInBar={false} phoneItems />
       </div>
-      {!short && <Views {...props} words row />}
       <StillNote text={props.stillNote} />
     </header>
-  );
-}
-
-/** A short window's one Views key: the current view's glyph and a caret, a menu of every view with the current one marked. */
-function ViewsMenu(props: CompanyBarProps) {
-  const { main } = props;
-  const all = [...VIEWS, ...MORE_VIEWS.filter((v) => !v.steering || props.onDecisions)];
-  const current = all.find((v) => v.current(main)) ?? VIEWS[0];
-  return (
-    <Disclosure
-      label={current ? `Views, ${current.word}` : 'Views'}
-      buttonClass="cbar__standing cbar__views-key"
-      button={
-        <>
-          {current && <Icon name={current.icon} />}
-          <Icon name="down" size={16} className="cbar__caret" />
-        </>
-      }
-    >
-      {(close) =>
-        all.map((v) => (
-          <a
-            key={v.word}
-            className="cbar__item"
-            href={props.viewHref(v.main)}
-            aria-current={v.current(main) ? 'page' : undefined}
-            onClick={(event) => {
-              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-              event.preventDefault();
-              close();
-              props.onView(v.main);
-            }}
-          >
-            <Icon name={v.icon} />
-            {v.word}
-          </a>
-        ))
-      }
-    </Disclosure>
   );
 }
 
@@ -380,7 +289,7 @@ function CompanyMenu(props: CompanyBarProps & Noting & { folded: boolean; previe
   const running = company.phase === 'running' && !company.problem;
   const paused = company.pause?.reason === 'stakeholder';
   const office = props.main.kind === 'office';
-  const views = MORE_VIEWS.filter((v) => !v.steering || props.onDecisions);
+  const views = [...VIEWS, ...MORE_VIEWS.filter((v) => !v.steering || props.onDecisions)];
   const item = (label: string, run: () => void, extra: { disabled?: boolean; pressed?: boolean } = {}) => (close: () => void) => (
     <button
       type="button"
@@ -420,9 +329,7 @@ function CompanyMenu(props: CompanyBarProps & Noting & { folded: boolean; previe
         ]
       : []),
     ...(previewInBar ? [] : [item('Preview', props.onPreview)]),
-    ...(phoneItems && office
-      ? [item('Fit the office in view', props.onFit), item('Zoom in', () => props.onZoom(1)), item('Zoom out', () => props.onZoom(-1))]
-      : []),
+    ...(office ? [item('Fit the office in view', props.onFit), item('Zoom in', () => props.onZoom(1)), item('Zoom out', () => props.onZoom(-1))] : []),
     ...(fullscreenable ? [item(full ? 'Exit full screen' : 'Full screen', props.onFullScreen)] : []),
     item('Customize the office', props.onCustomize),
     item('Settings', props.onSettings),
@@ -456,6 +363,20 @@ function CompanyMenu(props: CompanyBarProps & Noting & { folded: boolean; previe
     >
       {(close) => (
         <>
+          <button
+            type="button"
+            className="cbar__item cbar__item--inbox"
+            aria-current={props.inboxCurrent || undefined}
+            aria-label={nameWithCount('Inbox', company.inbox)}
+            onClick={() => {
+              close();
+              props.onInbox();
+            }}
+          >
+            Inbox
+            <Count n={company.inbox} />
+          </button>
+          <span className="cbar__group-rule" aria-hidden="true" />
           <MoreFigures id={figuresId} snapshot={snapshot} company={company} onSpending={() => {
             close();
             props.onView(SPENDING);

@@ -14,7 +14,7 @@ import type { Bubble, CastMember } from './cast.ts';
 import { ASK_LABEL, type LabelStore, OfficeLabelsContext, SCREEN_LABEL } from './labels.tsx';
 import type { Layout } from './layout.ts';
 import { COUNTER_TOP } from './office/fronts.ts';
-import { bubbleShown, frontDeskSign, itemPath, nightLine, officeSigns } from './officeLabels.ts';
+import { bubbleShown, frontDeskSign, happensNow, itemPath, nightLine, officeSigns, roomsAtWork } from './officeLabels.ts';
 import { DEPARTMENT_HUE } from './palette.ts';
 import './labels.css';
 
@@ -99,7 +99,13 @@ export function LabelLayer({ store, layout, cast, selection, selectedKey, runnin
       unpinDoor();
     };
   }, [store, sign, door]);
-  const desk = office ? frontDeskSign(cast) : null;
+  // v0.8: a company's office is calm. The inbox card is the front desk's sign now, and signs and bubbles show where
+  // something happens.
+  const calm = office !== null && shell !== null;
+  const desk = office && !calm ? frontDeskSign(cast) : null;
+  const atWork = calm ? roomsAtWork(cast) : null;
+  // The CEO (a plain job's Claude Code) works in the CEO's office, whatever room their department names.
+  if (atWork && office && cast.some((m) => m.level === 'ceo' && (m.status === 'working' || m.status === 'thinking'))) atWork.add(office.ceo.id);
   const night = office && shell ? nightLine(shell.company) : null;
   const [live, setLive] = useState(false);
   useEffect(() => store.watchScreen(setLive), [store]);
@@ -107,7 +113,10 @@ export function LabelLayer({ store, layout, cast, selection, selectedKey, runnin
 
   const room = selectedRoom ? layout.rooms.find((r) => r.id === selectedRoom) : undefined;
   const shown = (m: CastMember) =>
-    m.key === selectedKey || m.key === figure || (m.bubble !== null && bubbleShown(m.bubble.tone, urgentOnly, false));
+    m.key === selectedKey || m.key === figure || (m.bubble !== null && bubbleShown(m.bubble.tone, urgentOnly, false) && (!calm || happensNow(m)));
+  // A room's sign or key with focus stays while it has it, whoever starts or stops working there meanwhile (v0.8).
+  const [held, setHeld] = useState<{ sign: string | null; quiet: string | null }>({ sign: null, quiet: null });
+  const hold = (kind: 'sign' | 'quiet', room: string | null) => setHeld((h) => (h[kind] === room ? h : { ...h, [kind]: room }));
   const roomSign = (id: string, name: string, hue: string, more: number) => (
     <div key={id} ref={store.node(`room:${id}`)} className="label">
       <div className={`room-sign${selectedRoom === id ? ' is-selected' : ''}`}>
@@ -116,6 +125,8 @@ export function LabelLayer({ store, layout, cast, selection, selectedKey, runnin
           className="room-sign__button"
           style={{ ['--hue' as string]: hue }}
           aria-pressed={selectedRoom === id}
+          onFocus={() => hold('sign', id)}
+          onBlur={() => hold('sign', null)}
           onClick={() => onSelect(selectedRoom === id ? null : { kind: 'room', id })}
         >
           {name}
@@ -174,12 +185,33 @@ export function LabelLayer({ store, layout, cast, selection, selectedKey, runnin
       )}
       {!thumbnail &&
         (office
-          ? officeSigns(layout).map((s) => {
+          ? officeSigns(layout).filter((s) => atWork === null || atWork.has(s.room) || s.room === selectedRoom || s.room === held.sign).map((s) => {
             if (!s.department) return plainSign(s.id, s.name);
             const r = layout.rooms.find((x) => x.id === s.room);
             return roomSign(s.room, s.name, DEPARTMENT_HUE[s.department], r?.morePosters ?? 0);
           })
           : layout.rooms.map((r) => roomSign(r.id, r.name, DEPARTMENT_HUE[r.style], r.morePosters)))}
+      {/* v0.8: the rooms nobody works in now have no sign over them, and stay one key away: a keyboard reaches each of them
+          here, the key showing where it has focus (the pointer has the rooms themselves). */}
+      {!thumbnail && atWork !== null && (
+        <div className="quiet-rooms" role="group" aria-label="Rooms where nobody works now">
+          {officeSigns(layout)
+            .filter((s) => s.department !== null && ((!atWork.has(s.room) && s.room !== selectedRoom) || s.room === held.quiet))
+            .map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className="quiet-rooms__key"
+                style={{ ['--hue' as string]: DEPARTMENT_HUE[s.department ?? 'engineering'] }}
+                onFocus={() => hold('quiet', s.room)}
+                onBlur={() => hold('quiet', null)}
+                onClick={() => onSelect({ kind: 'room', id: s.room })}
+              >
+                {s.name}
+              </button>
+            ))}
+        </div>
+      )}
       {!thumbnail && !office && (
         <>
           <div ref={store.node('room:lobby')} className="label">

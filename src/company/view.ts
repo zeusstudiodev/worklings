@@ -340,6 +340,7 @@ export function lobbyEntryOf(i: ViewInput): LobbyCompany {
       planApproval: s.steering.settings.planApproval,
       people: i.people,
       working,
+      helping: (i.work?.helpers ?? []).filter((h) => h.state === 'working').length,
       spent: spend,
       budget: s.settings.budget.company,
       checklist: checklistOf(s)?.counts ?? null,

@@ -276,7 +276,9 @@ and optional fields.
 
 Since the stage and dock (`docs/design-v3.md`, "Stage and dock"; `docs/design-hud.md` for the look) a company has no tab
 strip. The office fills the window, and the pieces sit over it. `Shell.tsx` routes between them, counts what needs you,
-keeps focus and measures what the camera must keep clear of. A phone opens on the office with the inbox sheet peeking.
+keeps focus and measures what the camera must keep clear of. Since v0.8 every size opens on the office with the side panel closed and the inbox card over the talk bar
+(`SPEC-v0.8.md`; `inbox/InboxCard.tsx`, `inbox/cardModel.ts`); the demo's recorded run plays from `replay/`
+(`player.ts`, `replayModel.ts`, `ReplayBanner.tsx`) through the demo hub (`demo.ts`, `startReplay`).
 
 | Folder or file | Holds |
 |---|---|

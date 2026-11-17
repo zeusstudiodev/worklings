@@ -11,7 +11,7 @@ import { LeashBadge } from '../leash/LeashBadge.tsx';
 import { useCompanyClock } from '../people/clock.ts';
 import { called, isAtWork, workOf } from '../people/peopleModel.ts';
 import { Clamp, CompanyLink, refusalOf } from '../people/shared.tsx';
-import { companyHref, goBack, parseCompanyAddress, useLocation } from '../router.ts';
+import { requestInbox } from '../showInbox.ts';
 import { TraceSummary } from '../trace/TraceSummary.tsx';
 import type { TabProps } from '../types.ts';
 import { StatePill } from '../ui/StatePill.tsx';
@@ -361,7 +361,7 @@ function Entry({ entry, company, companyId, snapshot, who, online, now, navigate
 
 // ---------------------------------------------------------------------------------------------------------------
 
-function Gone({ snapshot, companyId, actions, announce, online, person, fired, onRehired }: Props & { fired: Fired | null; onRehired: () => void }) {
+function Gone({ snapshot, actions, announce, online, person, fired, onRehired }: Props & { fired: Fired | null; onRehired: () => void }) {
   const record: FiredRole | undefined = snapshot.studio?.fired.find((f) => f.id === person);
   // Rehire takes Undo's place when Undo goes, on the clock the Undo line keeps: this browser's.
   const undoOver = useReached(fired?.until ?? null);
@@ -410,18 +410,17 @@ function Gone({ snapshot, companyId, actions, announce, online, person, fired, o
       )}
       {note && <p className="person__problem">{note}</p>}
       <p>
-        <ShowTheInbox companyId={companyId} />
+        <ShowTheInbox />
       </p>
     </article>
   );
 }
 
 /** "Show the inbox": the side panel's home, over the main view that is open, going back when that is where it leads. */
-function ShowTheInbox({ companyId }: { companyId: string }) {
-  const location = useLocation();
-  const main = parseCompanyAddress(location.path, location.search)?.route.main ?? { kind: 'office' };
+function ShowTheInbox() {
+  // v0.8: the shell opens the inbox, as More's Inbox does (the side panel's home is closed by default).
   return (
-    <button type="button" className="link" onClick={() => goBack(companyHref(companyId, { main, panel: null }))}>
+    <button type="button" className="link" onClick={requestInbox}>
       Show the inbox
     </button>
   );

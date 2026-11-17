@@ -1,0 +1,124 @@
+/* The banner over a replayed run (SPEC-v0.8.md, "The demo replay"): a tile of badge paper under the bar, centred over
+   the office, with the highlighter's edge while the run waits on the visitor. */
+.replay-banner {
+  position: absolute;
+  top: calc(var(--gutter) + 44px + var(--gutter) + var(--reconnect-h, 0px));
+  left: 50%;
+  z-index: 16;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  width: min(560px, calc(100% - var(--gutter) * 2 - var(--main-right, 0px)));
+  padding: 10px 10px 10px 16px;
+  color: var(--ink);
+  background: var(--badge);
+  border-left: 4px solid var(--rest);
+  border-radius: 12px;
+  box-shadow: var(--bevel), var(--lift-2);
+  transform: translateX(calc(-50% - var(--main-right, 0px) / 2));
+}
+
+.replay-banner--waiting {
+  border-left-color: var(--highlighter);
+}
+
+.replay-banner__title {
+  grid-column: 1;
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: var(--text-14);
+  font-weight: 600;
+}
+
+.replay-banner__line {
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--ink-soft);
+}
+
+.replay-banner__words {
+  grid-column: 1;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-13);
+  font-style: italic;
+  color: var(--ink-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replay-banner__keys {
+  display: flex;
+  grid-row: 1 / span 3;
+  grid-column: 2;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Beside the progress column, the banner keeps to the office's side, clear of the column's head. */
+.shell:has([data-progress]) .replay-banner {
+  left: auto;
+  right: calc(var(--gutter) + var(--main-right, 0px));
+  width: min(420px, calc(100% - 560px - var(--gutter) * 4 - var(--main-right, 0px)));
+  transform: none;
+}
+
+.replay-banner__key {
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--pill);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: var(--bevel);
+}
+
+.replay-banner__key:hover {
+  background: var(--badge-hover);
+}
+
+.replay-banner__key:active {
+  background: var(--badge-pressed);
+  box-shadow: none;
+}
+
+/* Phones: under the bar, the line kept to the state, the key beside the title. */
+@media (max-width: 45em) {
+  .replay-banner {
+    padding: 6px 6px 6px 12px;
+  }
+
+  /* A phone's progress fills the screen under the bar: the run's state is on the card meanwhile. */
+  .shell:has([data-progress]) .replay-banner,
+  .replay-banner__words {
+    display: none;
+  }
+
+  .replay-banner__keys {
+    grid-row: 1 / span 2;
+  }
+
+  .replay-banner__line {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .replay-banner__key {
+    min-height: 40px;
+    font-size: var(--text-13);
+  }
+}
+
+@media (forced-colors: active) {
+  .replay-banner {
+    border: 1px solid CanvasText;
+  }
+}

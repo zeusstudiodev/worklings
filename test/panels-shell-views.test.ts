@@ -31,29 +31,34 @@ describe("the stage under a main view", () => {
   });
 });
 
-describe('the side panel beside progress', () => {
+// v0.8 (SPEC-v0.8.md, "office first"): on desktops the side panel shows only what you asked for, on every main view.
+describe('the side panel, office first', () => {
   const progress: MainView = { kind: 'progress' };
-  const at = (o: Partial<Parameters<typeof sideShownAt>[0]>) => sideShownAt({ phone: false, main: progress, panel: null, overlay: false, homeSheet: false, hidden: false, inboxBeside: false, ...o });
+  const at = (o: Partial<Parameters<typeof sideShownAt>[0]>) => sideShownAt({ phone: false, main: office, panel: null, overlay: false, homeSheet: false, hidden: false, inboxOpen: false, founding: false, ...o });
 
-  it('opens progress with the panel closed on desktops, though you keep it open elsewhere', () => {
+  it('stays closed until you ask for something, on the office, progress and the boards alike', () => {
     expect(at({})).toBe(false);
-    expect(at({ main: office })).toBe(true);
-    expect(at({ main: tasks })).toBe(true);
-    expect(at({ main: office, hidden: true })).toBe(false);
+    expect(at({ main: progress })).toBe(false);
+    expect(at({ main: tasks })).toBe(false);
   });
 
-  it('shows it for a view opened into it, an inbox item from a needs-you link, an overlay, or the inbox you asked for', () => {
+  it('shows for a view opened into it, an overlay, or the inbox you opened', () => {
     expect(at({ panel: { kind: 'inbox', item: 'q-1' } })).toBe(true);
-    expect(at({ panel: { kind: 'task', task: 't-1' }, hidden: true })).toBe(true);
+    expect(at({ main: progress, panel: { kind: 'task', task: 't-1' }, hidden: true })).toBe(true);
     expect(at({ overlay: true })).toBe(true);
-    expect(at({ inboxBeside: true })).toBe(true);
-    expect(at({ inboxBeside: true, hidden: true })).toBe(false);
+    expect(at({ inboxOpen: true })).toBe(true);
+  });
+
+  it('shows the proposal before the start unless you hid it, but not beside progress', () => {
+    expect(at({ founding: true })).toBe(true);
+    expect(at({ founding: true, hidden: true })).toBe(false);
+    expect(at({ founding: true, main: progress })).toBe(false);
   });
 
   it("leaves phones to their sheets", () => {
     expect(at({ phone: true })).toBe(false);
     expect(at({ phone: true, homeSheet: true })).toBe(true);
-    expect(at({ phone: true, main: office, hidden: false })).toBe(false);
+    expect(at({ phone: true, inboxOpen: true })).toBe(false);
   });
 });
 

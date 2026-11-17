@@ -9,12 +9,13 @@ import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '../styles.css';
 import './site.css';
-import { lazy, StrictMode, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, StrictMode, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { demoHub, demoSteering } from '../company/demo.ts';
 import { Lobby } from '../company/lobby/Lobby.tsx';
 import { Boundary } from '../company/mounts.tsx';
+import { ReplayBanner } from '../company/replay/ReplayBanner.tsx';
 import { useDemoCompany, useDemoLobby } from '../company/useHub.ts';
 import { type Address, type Location, parseAddress, useLocation } from './router.ts';
 
@@ -31,7 +32,7 @@ function Site() {
   const address = parseAddress(location.path, location.search, location.hash);
   return (
     <div className="site">
-      <DemoLine />
+      <DemoLine company={address.kind === 'company' ? address.company : null} />
       <div className="site__app">
         {address.kind === 'company' ? (
           // A company the demo doesn't have says so in the lobby (the shell's "gone").
@@ -56,7 +57,14 @@ function lineHidden(): boolean {
   }
 }
 
-function DemoLine() {
+/** Whether the company shown is the demo's recorded run (v0.8), which is real, not made up. */
+function useReplaying(company: string | null): boolean {
+  const hub = demoHub();
+  return useSyncExternalStore(hub.subscribe, () => company !== null && hub.replayOf(company) !== null);
+}
+
+function DemoLine({ company }: { company: string | null }) {
+  const replaying = useReplaying(company);
   const [hidden, setHidden] = useState(lineHidden);
   if (hidden) return null;
   const hide = () => {
@@ -72,7 +80,16 @@ function DemoLine() {
   return (
     <aside className="site-line" aria-label="About this demo">
       <p className="site-line__text">
-        A demo with made-up data.<span className="site-line__more"> Nothing here runs Claude Code or leaves your browser.</span>{' '}
+        {replaying ? (
+          // The recorded run is a real one: saying "made-up data" over it would be untrue.
+          <>
+            A recorded Claude Code run, replayed in your browser.<span className="site-line__more"> Nothing here runs Claude Code.</span>{' '}
+          </>
+        ) : (
+          <>
+            A demo with made-up data.<span className="site-line__more"> Nothing here runs Claude Code or leaves your browser.</span>{' '}
+          </>
+        )}
         <a className="site-line__install" href={INSTALL_URL}>
           Install it
         </a>
@@ -107,7 +124,7 @@ function DemoCompany({ address, location }: { address: CompanyAddress; location:
   return (
     <Boundary fallback={<NoOffice />}>
       <Suspense fallback={<Opening />}>
-        <Shell companyId={address.company} route={address.route} old={address.old} intent={address.talk} location={location} stream={stream} lobby={lobby.data} actions={actions} hub={hub} demo token={null} steer={steer} />
+        <Shell companyId={address.company} route={address.route} old={address.old} intent={address.talk} location={location} stream={stream} lobby={lobby.data} actions={actions} hub={hub} demo token={null} steer={steer} banner={<ReplayBanner companyId={address.company} />} />
       </Suspense>
     </Boundary>
   );

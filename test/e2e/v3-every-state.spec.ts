@@ -8,7 +8,6 @@ import {
   focusedThing,
   focusTop,
   hiddenFocus,
-  inboxKey,
   layoutOf,
   nameFor,
   onElement,
@@ -20,7 +19,6 @@ import {
   shot,
   sheetUp,
   sidePanel,
-  strip,
   switchTo,
   talkBox,
   tell,
@@ -28,6 +26,7 @@ import {
   until,
   waitForProposal,
   watchErrors,
+  moreKey,
 } from './v3-kit.ts';
 import { api, found } from './v3-world.ts';
 
@@ -40,9 +39,9 @@ import { api, found } from './v3-world.ts';
 const DEMO = 'demo';
 const phoneOf = (page: Page): boolean => layoutOf(page).phone;
 
-/** Opens the feed the way the layout offers it: the Feed key, or the strip on a phone. */
+/** Opens the feed with Feed, in the talk bar at every size since v0.8. */
 async function openFeed(page: Page): Promise<Locator> {
-  const opener = phoneOf(page) ? strip(page) : feedKey(page);
+  const opener = feedKey(page);
   await opener.click();
   await expect(feed(page)).toBeVisible();
   return feed(page);
@@ -69,12 +68,17 @@ async function closeFeed(page: Page): Promise<void> {
 }
 
 /** The 3D office has drawn: its room signs, which the labels put over it once the scene is projected, are there. */
-const officeDrawn = (page: Page) => expect(page.locator('.room-sign:visible').first()).toBeVisible({ timeout: 30_000 });
+// v0.8: a room's sign shows only while someone works there, so the office counts as drawn once its canvas and its labels'
+// layer are on the page.
+const officeDrawn = async (page: Page) => {
+  await expect(page.locator('.stage canvas')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.labels--office')).toBeAttached({ timeout: 30_000 });
+};
 
 /** The demo companies live in the page: the tab enters the demo at the café, then opens one by its address. */
 async function enterDemo(page: Page): Promise<void> {
   await open(page, `/c/${DEMO}`);
-  await expect(inboxKey(page)).toBeVisible({ timeout: 30_000 });
+  await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
 }
 
 /** A board of a company, opened at its address, with its frame drawn. */
@@ -503,7 +507,7 @@ test.describe('the live company, states the hub makes', () => {
     // The refusal: a fresh feed, the ask fails, and the sentence says why with Try again.
     await closeFeed(page);
     await page.reload();
-    await expect(inboxKey(page)).toBeVisible({ timeout: 30_000 });
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
     const again = await openFeed(page);
     await again.getByRole('button', { name: 'Show earlier lines' }).click();
     await expect(again.getByRole('alert')).toContainText("Couldn't load earlier lines. The office is busy.");

@@ -21,6 +21,8 @@ import {
 } from '../web/src/company/inbox/inboxModel.ts';
 import { officeNow } from '../web/src/company/people/clock.ts';
 import { hourMinute } from '../web/src/lib/format.ts';
+import { demoPlainView } from '../src/core/demo-company.ts';
+import { PLAIN_PERSON } from '../src/core/plain.ts';
 import { approval, company, message, min, NOW, question, report, sec, task } from './panels-work-kit.ts';
 
 // Times beside facts carry their day when it isn't today: the suite's clock sits on the day of its fixtures.
@@ -61,6 +63,35 @@ describe('what needs you', () => {
     expect(lines.options).toEqual([{ label: '15-minute windows', pick: true }, { label: '30-minute windows', pick: false }]);
     expect(questionLines(c, question('q2', 'ceo', 'Cards too?', ['Yes', 'No']), NOW).who).toBe('The CEO asks you.');
     expect(questionLines(c, question('q3', 'qa-engineer', 'Retry?', ['Yes', 'No']), NOW).who).toBe('The QA engineer asks you. Ben has a copy.');
+  });
+
+  // v0.8: a plain session's last words ask you only when they end in a question.
+  it("says Claude Code asks you only when its last words end in a question, and that it finished its turn otherwise", () => {
+    const c = demoPlainView(NOW);
+    const words = (text: string): Question => ({ ...question('q9', PLAIN_PERSON, text, []), plainTurn: true, askedAt: NOW - min(2) });
+    const asked = questionLines(c, words('Done. Should the search also match tags?'), NOW);
+    expect([asked.who, asked.asked, asked.asks]).toEqual(['Claude Code asks you.', 'Asked 2 min ago.', true]);
+    const said = questionLines(c, words('I built tidewatch. npm test passes: 9 tests, 0 failures.'), NOW);
+    expect([said.who, said.asked, said.asks]).toEqual(['Claude Code finished its turn.', '2 min ago.', false]);
+    expect(questionLines(c, words('**Want me to push it?**'), NOW).asks).toBe(true);
+    expect(questionLines(c, words('Shall I push it? 🙂'), NOW).asks).toBe(true);
+    expect(questionLines(c, words('これでいいですか？'), NOW).asks).toBe(true);
+    expect(questionLines(c, words('Done 🙂'), NOW).asks).toBe(false);
+    expect(questionLines(c, words('The turn stopped: overloaded. Reply to carry on.'), NOW).who).toBe("Claude Code's turn stopped.");
+    // Everyone else's questions read as before.
+    expect(questionLines(company({}), question('q2', 'ceo', 'Cards too?', ['Yes', 'No']), NOW)).toMatchObject({ who: 'The CEO asks you.', asks: true });
+  });
+
+  it('keeps words the session went on from on the card while a reply to them is written, and says the reply went as a message', () => {
+    const base = demoPlainView(NOW);
+    const q: Question = { ...question('q9', PLAIN_PERSON, 'Both subagents are running.', []), plainTurn: true, askedAt: NOW - min(2), withdrawn: { reason: 'Claude Code went on by itself.', at: NOW - sec(5) } };
+    const c = { ...base, questions: [q], approvals: [] };
+    const item = { kind: 'question' as const, question: q };
+    const ctx = { now: NOW, openedAt: NOW - min(1), skew: 0 };
+    expect(itemView(c, item, undefined, ctx).kind).toBe('gone');
+    expect(itemView(c, item, undefined, { ...ctx, drafting: new Set(['q9']) })).toEqual({ kind: 'open', refusal: null });
+    const press: Press = { state: 'sent', at: NOW, error: null, undid: null, answer: { kind: 'question', option: null, text: 'Also add tags.' } };
+    expect(itemView(c, item, press, { ...ctx, drafting: new Set(['q9']) })).toEqual({ kind: 'gone', text: 'Sent to Claude Code as a message.' });
   });
 
   it('says what an approval asks for, what Always allow adds and when silence counts as a no', () => {

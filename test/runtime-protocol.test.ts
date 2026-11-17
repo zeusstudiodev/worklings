@@ -55,6 +55,29 @@ describe('reading what a desk writes', () => {
     expect(first?.usage).toEqual({ input: 2, output: 160, cacheRead: 16_842, cacheWrite: 23_993 });
   });
 
+  // v0.8: what the switchboard calls a turn of Claude Code's own (DeskEvents.ownTurn). In this recording a background shell
+  // finished after the turn's result: Claude Code went idle, said task_notification and began a new turn by itself, with
+  // nothing written by the office and no message started.
+  it('shows a background task notification restarting the session on its own after a result', () => {
+    const all = recorded('priority-now-human.jsonl');
+    const firstResult = all.findIndex((e) => e.from === 'claude' && e.line?.type === 'result');
+    expect(firstResult).toBeGreaterThan(0);
+    const after = all.slice(firstResult + 1);
+    expect(after.some((e) => e.from === 'switchboard' && e.line?.type === 'user')).toBe(false);
+    const events = after.flatMap((e) => (e.from === 'claude' && e.line ? [parseLine(JSON.stringify(e.line))] : []));
+    const idle = events.findIndex((e) => e.kind === 'state' && e.state === 'idle');
+    const notified = after.findIndex((e) => e.line?.type === 'system' && e.line.subtype === 'task_notification');
+    const running = events.findIndex((e) => e.kind === 'state' && e.state === 'running');
+    expect(idle).toBeGreaterThanOrEqual(0);
+    expect(notified).toBeGreaterThanOrEqual(0);
+    expect(running).toBeGreaterThan(idle);
+    // The new turn: init and the model's own lines, and no message of anyone's started it.
+    const turn = events.slice(running);
+    expect(turn.some((e) => e.kind === 'init')).toBe(true);
+    expect(turn.some((e) => e.kind === 'turn-line')).toBe(true);
+    expect(turn.some((e) => e.kind === 'lifecycle' && e.state === 'started')).toBe(false);
+  });
+
   it('follows each message through command_lifecycle and the session through its states', () => {
     const events = deskSaid('busy-message.jsonl');
     const states = events.flatMap((e) => (e.kind === 'lifecycle' ? [e.state] : []));

@@ -10,7 +10,7 @@
 // started the turn names it too. Eight words in a row from another company's records (a list it read, say) are refused
 // the same way. A turn sends at most three messages, one per company, and none to a CEO that hasn't answered the last.
 import { randomBytes } from 'node:crypto';
-import type { CompanyView, LobbyCompany, Message, NeedsYouItem } from '../core/company.ts';
+import type { CompanyStage, CompanyView, LobbyCompany, Message, NeedsYouItem } from '../core/company.ts';
 import { STAKEHOLDER } from '../core/company.ts';
 import { safeId } from '../core/events.ts';
 import { redactClip } from '../core/redact.ts';
@@ -110,8 +110,8 @@ export function namesCompany(words: string, name: string): boolean {
 }
 const money = (n: number): string => (n >= 10 ? `$${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`);
 
-const STAGE: Record<string, string> = {
-  scoping: 'scoping', waiting: 'waiting for the stakeholder', working: 'working', checking: 'checking', done: 'done', paused: 'paused', stuck: 'stuck',
+const STAGE: Record<CompanyStage, string> = {
+  scoping: 'scoping', waiting: 'waiting for the stakeholder', 'your-turn': "waiting for the stakeholder's reply", working: 'working', checking: 'checking', done: 'done', paused: 'paused', stuck: 'stuck',
 };
 
 /** Where the stakeholder clicks for a needs-you item, in words. */

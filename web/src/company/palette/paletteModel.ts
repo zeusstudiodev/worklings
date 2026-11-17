@@ -3,6 +3,7 @@
 // be tested; Palette only draws it and runs what is picked.
 import { type CompanyView, LIMITS, STAKEHOLDER, type Task } from '../../../../src/core/company.ts';
 import { clip, countWord, plainText } from '../../../../src/core/now.ts';
+import { isPlainPerson } from '../../../../src/core/plain.ts';
 import type { CatalogRole, ReshapeAction, Snapshot } from '../../../../src/core/snapshot.ts';
 import { type Decision, type Effort, type Leash, type NewTaskInput, PLAN_LIMITS, type Recipient, type SettingsChange } from '../../../../src/core/steering.ts';
 import { capital } from '../../../../src/core/words.ts';
@@ -867,7 +868,8 @@ export function talkChips(commands: readonly PaletteCommand[], company: Pick<Com
       const ceo = company.people.find((p) => p.level === 'ceo');
       const c = ceo ? suggested.find((x) => x.id === `message:person:${ceo.id}`) : undefined;
       // By their name, as the talk bar's box says it ("Say something to Mara"); "the CEO" when they have none of their own.
-      const who = ceo && ceo.name.trim() && ceo.name !== ceo.title ? ceo.name : 'the CEO';
+      // A plain job's one person is Claude Code itself, never "the CEO".
+      const who = ceo && isPlainPerson(ceo) ? ceo.title : ceo && ceo.name.trim() && ceo.name !== ceo.title ? ceo.name : 'the CEO';
       if (ceo && c) out.push({ id: c.id, label: `Ask ${who} how it's going`, draft: 'How is it going?' });
       continue;
     }

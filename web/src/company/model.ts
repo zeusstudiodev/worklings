@@ -169,8 +169,12 @@ const AT_WORK_DESKS: readonly string[] = ['starting', 'working', 'stopping'];
 export const heldCount = (c: Pick<CompanyView, 'people' | 'questions' | 'approvals'>, now: number): number =>
   c.people.filter((p) => AT_WORK_DESKS.includes(p.desk.state) && waitsOf(c, p.id, now).some((w) => !(w.kind === 'question' && w.question.gate))).length;
 
-/** The people really at work, for the bar's ledger: the desks at work, less those held for you. */
-export const workingNow = (c: Pick<CompanyView, 'people' | 'questions' | 'approvals' | 'desks'>, now: number): number => Math.max(0, c.desks.working - heldCount(c, now));
+/**
+ * Who is really at work, for More's figures: the desks at work, less those held for you, and (v0.8) a plain session's
+ * helpers still running, which work on after the session's own turn has ended.
+ */
+export const workingNow = (c: Pick<CompanyView, 'people' | 'questions' | 'approvals' | 'desks' | 'helpers'>, now: number): number =>
+  Math.max(0, c.desks.working - heldCount(c, now)) + (c.helpers ?? []).filter((h) => h.state === 'working').length;
 
 /** The state input from a company's full view. */
 /** `now` is the office's clock (useOfficeClock), never this browser's: who is held for you depends on it. */
@@ -195,7 +199,8 @@ export function stateOfCompany(c: CompanyView, now: number): StateInput {
     phase: c.phase,
     pause: c.pause,
     problem: c.problem,
-    working: Math.max(0, c.desks.working - held),
+    // v0.8: as More's figure (workingNow) counts them: the desks at work and a plain session's running helpers.
+    working: workingNow(c, now),
     held,
     waiting: c.desks.waiting,
     milestone: c.goal?.milestones.find((m) => m.doneAt === null)?.title ?? null,

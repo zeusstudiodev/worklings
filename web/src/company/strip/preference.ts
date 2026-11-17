@@ -1,15 +1,16 @@
-// "Hide the live strip" (docs/design-v3.md, "The live strip"): one preference for this browser, for anyone the moving
-// lines distract (WCAG 2.2.2). The Company menu sets it and the strip reads it, both through this hook. Storage that is
-// switched off or blocked leaves the strip shown, and the menu still hides it for as long as the page is open.
+// "Show the live strip" (docs/design-v3.md, "The live strip"): one preference for this browser. Since v0.8 (SPEC-v0.8.md,
+// decision 1) the strip is off by default, its lines all in the feed; More turns it on. A browser that chose to hide it
+// before keeps it hidden. Storage that is switched off or blocked leaves it hidden, and More still shows it for as long as
+// the page is open.
 import { useSyncExternalStore } from 'react';
 
 const KEY = 'worklings-live-strip';
 
 function read(): boolean {
   try {
-    return window.localStorage.getItem(KEY) === 'hidden';
+    return window.localStorage.getItem(KEY) !== 'shown';
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -23,7 +24,7 @@ function subscribe(listener: () => void): () => void {
   // Another tab of this browser changed it.
   const onStorage = (event: StorageEvent) => {
     if (event.key !== KEY) return;
-    hidden = event.newValue === 'hidden';
+    hidden = event.newValue !== 'shown';
     listener();
   };
   window.addEventListener('storage', onStorage);
@@ -36,8 +37,8 @@ function subscribe(listener: () => void): () => void {
 export function setLiveStripHidden(next: boolean): void {
   hidden = next;
   try {
-    if (next) window.localStorage.setItem(KEY, 'hidden');
-    else window.localStorage.removeItem(KEY);
+    if (next) window.localStorage.removeItem(KEY);
+    else window.localStorage.setItem(KEY, 'shown');
   } catch {
     // Kept for this page only where storage is switched off.
   }
@@ -46,5 +47,5 @@ export function setLiveStripHidden(next: boolean): void {
 
 /** Whether the live strip is hidden, and the setter the Company menu's "Hide the live strip" uses. */
 export function useLiveStripHidden(): [hidden: boolean, setHidden: (hidden: boolean) => void] {
-  return [useSyncExternalStore(subscribe, current, () => false), setLiveStripHidden];
+  return [useSyncExternalStore(subscribe, current, () => true), setLiveStripHidden];
 }

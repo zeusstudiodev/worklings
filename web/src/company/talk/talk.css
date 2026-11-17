@@ -206,8 +206,9 @@
   display: block;
 }
 
-/* Under 360 px the To is its face alone; its words stay in its name. */
-@media (max-width: 22.4375em) {
+/* Under 400 px the To is its face alone; its words stay in its name. (360 until v0.8, when Feed joined the phone's
+   talk bar and the box needed the room.) */
+@media (max-width: 24.9375em) {
   .talkbar--phone .talkbar__to-words--short {
     display: none;
   }

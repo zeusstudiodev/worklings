@@ -3,18 +3,19 @@
 // it is and what it has cost, what needs you, the checklist, the milestones with their tasks as status words, and what
 // happened since you last looked. On desktops it is paper on the left of the stage and the office stands in what it
 // leaves; on phones it fills the room between the bar and the talk bar. The words are progressModel.ts's.
-import { type CSSProperties, type MouseEvent, useId, useState } from 'react';
+import { type CSSProperties, type MouseEvent, useId } from 'react';
 import { countWord } from '../../../../src/core/now.ts';
 import { capital } from '../../../../src/core/words.ts';
 import { companyHref, type CompanyRoute, navigate } from '../router.ts';
 import type { TabProps } from '../types.ts';
 import { StatePill } from '../ui/StatePill.tsx';
+import { useMediaQuery } from '../../lib/hooks.ts';
 import { checkRows, countsLine } from './checklistModel.ts';
 import { ChecklistRows } from './ChecklistRows.tsx';
 import { type MilestoneRow, progressView, type SinceView, waitingWords } from './progressModel.ts';
 
-/** How many needs-you rows show before "Show all". */
-const NEEDS_SHOWN = 3;
+/** "Three things need you.", "One thing needs you." */
+const needsLine = (n: number): string => `${capital(countWord(n))} ${n === 1 ? 'thing needs' : 'things need'} you.`;
 
 /** A link that moves inside the app: a plain press navigates, a modified one opens as the browser would. */
 function follow(href: string) {
@@ -29,10 +30,9 @@ function follow(href: string) {
 export function Progress(props: TabProps & { now: number; onInbox: () => void }) {
   const { company, companyId, now, onInbox } = props;
   const id = useId();
-  const [allNeeds, setAllNeeds] = useState(false);
   const view = progressView(company, now);
-  // The oldest few lead; the rest are a press away, so the checklist and the milestones stay in reach.
-  const needs = allNeeds ? view.needs : view.needs.slice(0, NEEDS_SHOWN);
+  // A phone's progress fills the screen and the card waits for the office (Shell.tsx, showsCard).
+  const narrow = useMediaQuery('(max-width: 720px), (max-height: 480px)');
   const here = (panel: CompanyRoute['panel']): string => companyHref(companyId, { main: { kind: 'progress' }, panel });
   const openTask = (task: string) => navigate(here({ kind: 'task', task }));
   const nameOf = (person: string) => company.people.find((p) => p.id === person)?.name ?? 'Someone who left';
@@ -49,6 +49,11 @@ export function Progress(props: TabProps & { now: number; onInbox: () => void })
               Progress
             </h2>
             <StatePill label={view.stage.word} tone={view.stage.tone} />
+            <span className="progress__gap" aria-hidden="true" />
+            {/* One panel at a time (v0.8): Progress closes back to the office, as a board does. */}
+            <a className="button progress__close" href={companyHref(companyId, { main: { kind: 'office' }, panel: null })} onClick={follow(companyHref(companyId, { main: { kind: 'office' }, panel: null }))}>
+              Back to the office
+            </a>
           </div>
           {view.goal ? (
             <figure className="progress__goal">
@@ -88,42 +93,24 @@ export function Progress(props: TabProps & { now: number; onInbox: () => void })
           )}
         </header>
 
-        <section className="progress__section" aria-labelledby={`${id}-needs`}>
+        {/* v0.8 (SPEC-v0.8.md): one line, not a second list of the inbox's items; the card over the talk bar shows the next. */}
+        <section className="progress__section progress__section--needs" aria-labelledby={`${id}-needs`}>
           <h3 id={`${id}-needs`} className="progress__h3">
             Needs you
-            {view.needs.length > 0 && <span className="progress__h3-count">{view.needs.length}</span>}
           </h3>
-          {view.needs.length === 0 ? (
-            <p className="progress__muted">
-              {(company.done ?? null) !== null ? "Nothing needs you. The work is done, and the CEO's handover is in the inbox." : 'Nothing needs you. The company carries on by itself and asks here when it needs you.'}
-            </p>
-          ) : (
-            <ul className="needs-rows">
-              {needs.map((n) => {
-                const href = n.open ? companyHref(companyId, n.open.route) : null;
-                return (
-                  <li key={n.key} className={`needs-row${n.open ? '' : ' needs-row--stuck'}`}>
-                    <p className="needs-row__kind">{n.kind}</p>
-                    <p className="needs-row__text">{n.text}</p>
-                    <p className="needs-row__meta">
-                      <span>{n.meta}</span>
-                      {href && n.open && (
-                        // Named with what it opens ("Answer: Which pickup window…"): a hidden span read "Answer : …".
-                        <a className="needs-row__open" href={href} aria-label={`${n.open.label}: ${n.text}`} onClick={follow(href)}>
-                          {n.open.label}
-                        </a>
-                      )}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {view.needs.length > NEEDS_SHOWN && (
-            <button type="button" className="link progress__more" aria-expanded={allNeeds} onClick={() => setAllNeeds((a) => !a)}>
-              {allNeeds ? 'Show fewer' : `Show all ${countWord(view.needs.length)}`}
+          {/* The card shows the inbox's items; someone stuck is on the list (and the board) only. */}
+          <p className="progress__muted">
+            {view.needs.length === 0
+              ? (company.done ?? null) !== null
+                ? "Nothing needs you. The work is done, and the handover is in the inbox."
+                : 'Nothing needs you. The work carries on by itself and asks above the talk bar when it needs you.'
+              : company.inbox > 0 && !narrow
+                ? `${needsLine(view.needs.length)} The next one is above the talk bar.`
+                : needsLine(view.needs.length)}{' '}
+            <button type="button" className="link" onClick={onInbox}>
+              {view.needs.length === 0 ? 'Open the inbox' : 'See all'}
             </button>
-          )}
+          </p>
         </section>
 
         <section className="progress__section" aria-labelledby={`${id}-checklist`}>

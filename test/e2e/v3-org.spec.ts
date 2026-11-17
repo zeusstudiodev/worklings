@@ -4,7 +4,6 @@ import {
   expectAddress,
   expectNoSidewaysScroll,
   hiddenFocus,
-  inboxKey,
   layoutOf,
   nameFor,
   onElements,
@@ -18,6 +17,7 @@ import {
   talkBox,
   theTo,
   watchErrors,
+  moreKey,
 } from './v3-kit.ts';
 import { view } from './v3-world.ts';
 
@@ -533,7 +533,7 @@ test.describe('the chart at 8, 18 and 40 people', () => {
     const errors = watchErrors(page);
     // Ledger is the demo's second company: the tab enters the demo at the café, then opens it by its address.
     await open(page, `/c/${DEMO}`);
-    await expect(inboxKey(page)).toBeVisible({ timeout: 30_000 });
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
     const frame = await openBoard(page, LEDGER, 'org');
     const tree = frame.getByRole('tree', { name: 'Org chart' });
     await expect(tree.getByRole('treeitem').first()).toBeVisible({ timeout: 15_000 });

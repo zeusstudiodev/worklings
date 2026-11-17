@@ -113,12 +113,12 @@
   --z-top: 30;
 }
 
-/* The phone layout (a width of 720 px or less, or a height of 480 px or less): an 8 px gutter, and the views row under
-   the bar, except in short windows (under 560 px tall), where the views fold into the bar. */
+/* The phone layout (a width of 720 px or less, or a height of 480 px or less): an 8 px gutter. Since v0.8 the views are in
+   More, at every height, so nothing sits under the bar. */
 @media (max-width: 720px), (max-height: 480px) {
   :root {
     --gutter: 8px;
-    --stage-top: calc(var(--gutter) * 3 + var(--bar-h) + var(--views-h));
+    --stage-top: calc(var(--gutter) * 2 + var(--bar-h));
   }
 }
 
@@ -3829,6 +3829,30 @@ html[data-still='on'] *::after {
 
 .lobby-head .panel-title {
   margin: 8px 0 4px;
+}
+
+.lobby-try {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin: 12px 0 8px;
+  padding: 14px 16px 16px;
+  background: var(--warn-fill);
+  border-left: 3px solid var(--highlighter);
+  border-radius: 12px;
+}
+
+.lobby-try__title {
+  margin: 0;
+  font-family: var(--font-narrow);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.lobby-try__text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink);
 }
 
 .lobby-desks {

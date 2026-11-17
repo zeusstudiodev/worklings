@@ -1,7 +1,7 @@
 // What each person in a company is doing, in the words People, Now, the inbox and a person's panel share
 // (docs/design-v3.md, "People and a person": the desk-and-work table), how the office names them, and the org as an
 // outline. Pure, so it can be tested; the components only draw it.
-import { isPlainPerson, PLAIN_TITLE } from '../../../../src/core/plain.ts';
+import { endsInQuestion, isPlainPerson, PLAIN_TITLE } from '../../../../src/core/plain.ts';
 import {
   type Approval,
   type CompanyView,
@@ -183,7 +183,9 @@ function statusWithAge(text: string, at: number, now: number): string {
 export function waitLine(w: WaitItem, now: number): string {
   const waited = `${capital(coarseDuration(now - waitAt(w)))}.`;
   if (w.kind === 'approval') return `Waiting for your OK: ${clip(inLine(w.approval.summary), 110)}. ${waited}`;
-  return `Waiting for your answer: ${endSentence(shown(w.question.text, 110))} ${waited}`;
+  // v0.8: a plain session's last words that ask nothing wait for a reply, not an answer.
+  const reply = w.question.plainTurn === true && !endsInQuestion(w.question.text);
+  return `Waiting for your ${reply ? 'reply' : 'answer'}: ${endSentence(shown(w.question.text, 110))} ${waited}`;
 }
 
 /** What someone is doing and what their row says, from their desk, their task and what waits on you. */
@@ -209,7 +211,9 @@ export function workOf(company: CompanyView, p: PersonView, now: number): Work {
   if (waits) {
     // A crash behind an open question is said too: answering won't show it, and the person may not come back by themselves.
     const alsoStuck = crashed ? [`Also stuck for ${coarseDuration(failedFor)}.`, why].filter(Boolean).join(' ') : null;
-    return make(waits.kind === 'approval' ? 'needs-ok' : 'needs-answer', waitLine(waits, now), waitAt(waits), { item: waitId(waits), problem: alsoStuck });
+    const work = make(waits.kind === 'approval' ? 'needs-ok' : 'needs-answer', waitLine(waits, now), waitAt(waits), { item: waitId(waits), problem: alsoStuck });
+    // v0.8: a plain session's last words that ask nothing: it is the person's turn, not a question to answer.
+    return waits.kind === 'question' && waits.question.plainTurn === true && !endsInQuestion(waits.question.text) ? { ...work, word: 'Your turn' } : work;
   }
   if (crashed) {
     // Stuck is a dead end without a way on: the office restarts a failed desk when it gets a message.

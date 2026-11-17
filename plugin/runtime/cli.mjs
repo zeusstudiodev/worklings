@@ -108,6 +108,10 @@ var STEERING_VIEW_LIMITS = {
 /** The one person of a plain company: the Claude Code session at the desk. */
 var PLAIN_PERSON = "builder";
 var PLAIN_TITLE = "Claude Code";
+/** v0.8: why a plain session's end-of-turn words leave the inbox when it goes on without a reply from the person. */
+var OWN_TURN_REASON = "Claude Code went on by itself.";
+/** How the office begins the words it puts in the inbox for a plain turn that stopped (not Claude Code's own words). */
+var TURN_STOPPED = "The turn stopped";
 var PLAIN_ROOM = "desk";
 /**
 * A plain company's studio, kept in memory only. Writing one to the project (agent files, a block in CLAUDE.md) would
@@ -214,7 +218,7 @@ function openBrowser(url, o = {}) {
 		noBrowser();
 	}
 }
-// ../headcount-v02/node_modules/yaml/dist/nodes/identity.js
+// node_modules/yaml/dist/nodes/identity.js
 var require_identity = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var ALIAS = Symbol.for("yaml.alias");
 	var DOC = Symbol.for("yaml.document");
@@ -263,7 +267,7 @@ var require_identity = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.isScalar = isScalar;
 	exports.isSeq = isSeq;
 }));
-// ../headcount-v02/node_modules/yaml/dist/visit.js
+// node_modules/yaml/dist/visit.js
 var require_visit = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var BREAK = Symbol("break visit");
@@ -453,7 +457,7 @@ var require_visit = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.visit = visit;
 	exports.visitAsync = visitAsync;
 }));
-// ../headcount-v02/node_modules/yaml/dist/doc/directives.js
+// node_modules/yaml/dist/doc/directives.js
 var require_directives = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var visit = require_visit();
@@ -616,7 +620,7 @@ var require_directives = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Directives.defaultTags = { "!!": "tag:yaml.org,2002:" };
 	exports.Directives = Directives;
 }));
-// ../headcount-v02/node_modules/yaml/dist/doc/anchors.js
+// node_modules/yaml/dist/doc/anchors.js
 var require_anchors = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var visit = require_visit();
@@ -682,7 +686,7 @@ var require_anchors = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.createNodeAnchors = createNodeAnchors;
 	exports.findNewAnchor = findNewAnchor;
 }));
-// ../headcount-v02/node_modules/yaml/dist/doc/applyReviver.js
+// node_modules/yaml/dist/doc/applyReviver.js
 var require_applyReviver = /* @__PURE__ */ __commonJSMin(((exports) => {
 	/**
 	* Applies the JSON.parse reviver algorithm as defined in the ECMA-262 spec,
@@ -723,7 +727,7 @@ var require_applyReviver = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.applyReviver = applyReviver;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/toJS.js
+// node_modules/yaml/dist/nodes/toJS.js
 var require_toJS = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	/**
@@ -759,7 +763,7 @@ var require_toJS = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.toJS = toJS;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/Node.js
+// node_modules/yaml/dist/nodes/Node.js
 var require_Node = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var applyReviver = require_applyReviver();
 	var identity = require_identity();
@@ -792,7 +796,7 @@ var require_Node = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.NodeBase = NodeBase;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/Alias.js
+// node_modules/yaml/dist/nodes/Alias.js
 var require_Alias = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var anchors = require_anchors();
 	var visit = require_visit();
@@ -887,7 +891,7 @@ var require_Alias = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.Alias = Alias;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/Scalar.js
+// node_modules/yaml/dist/nodes/Scalar.js
 var require_Scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Node = require_Node();
@@ -913,7 +917,7 @@ var require_Scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.Scalar = Scalar;
 	exports.isScalarValue = isScalarValue;
 }));
-// ../headcount-v02/node_modules/yaml/dist/doc/createNode.js
+// node_modules/yaml/dist/doc/createNode.js
 var require_createNode = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Alias = require_Alias();
 	var identity = require_identity();
@@ -975,7 +979,7 @@ var require_createNode = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.createNode = createNode;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/Collection.js
+// node_modules/yaml/dist/nodes/Collection.js
 var require_Collection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var createNode = require_createNode();
 	var identity = require_identity();
@@ -1095,7 +1099,7 @@ var require_Collection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.collectionFromPath = collectionFromPath;
 	exports.isEmptyPath = isEmptyPath;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringifyComment.js
+// node_modules/yaml/dist/stringify/stringifyComment.js
 var require_stringifyComment = /* @__PURE__ */ __commonJSMin(((exports) => {
 	/**
 	* Stringifies a comment.
@@ -1114,7 +1118,7 @@ var require_stringifyComment = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.lineComment = lineComment;
 	exports.stringifyComment = stringifyComment;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/foldFlowLines.js
+// node_modules/yaml/dist/stringify/foldFlowLines.js
 var require_foldFlowLines = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var FOLD_FLOW = "flow";
 	var FOLD_BLOCK = "block";
@@ -1233,7 +1237,7 @@ var require_foldFlowLines = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.FOLD_QUOTED = FOLD_QUOTED;
 	exports.foldFlowLines = foldFlowLines;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringifyString.js
+// node_modules/yaml/dist/stringify/stringifyString.js
 var require_stringifyString = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var foldFlowLines = require_foldFlowLines();
@@ -1456,7 +1460,7 @@ var require_stringifyString = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.stringifyString = stringifyString;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringify.js
+// node_modules/yaml/dist/stringify/stringify.js
 var require_stringify = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var anchors = require_anchors();
 	var identity = require_identity();
@@ -1563,7 +1567,7 @@ var require_stringify = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.createStringifyContext = createStringifyContext;
 	exports.stringify = stringify;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringifyPair.js
+// node_modules/yaml/dist/stringify/stringifyPair.js
 var require_stringifyPair = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Scalar = require_Scalar();
@@ -1659,7 +1663,7 @@ var require_stringifyPair = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.stringifyPair = stringifyPair;
 }));
-// ../headcount-v02/node_modules/yaml/dist/log.js
+// node_modules/yaml/dist/log.js
 var require_log = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var node_process = __require("process");
 	function debug(logLevel, ...messages) {
@@ -1674,7 +1678,7 @@ var require_log = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.debug = debug;
 	exports.warn = warn;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/merge.js
+// node_modules/yaml/dist/schema/yaml-1.1/merge.js
 var require_merge = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Scalar = require_Scalar();
@@ -1716,7 +1720,7 @@ var require_merge = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.isMergeKey = isMergeKey;
 	exports.merge = merge;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/addPairToJSMap.js
+// node_modules/yaml/dist/nodes/addPairToJSMap.js
 var require_addPairToJSMap = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var log = require_log();
 	var merge = require_merge();
@@ -1766,7 +1770,7 @@ var require_addPairToJSMap = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.addPairToJSMap = addPairToJSMap;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/Pair.js
+// node_modules/yaml/dist/nodes/Pair.js
 var require_Pair = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var createNode = require_createNode();
 	var stringifyPair = require_stringifyPair();
@@ -1798,7 +1802,7 @@ var require_Pair = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.Pair = Pair;
 	exports.createPair = createPair;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringifyCollection.js
+// node_modules/yaml/dist/stringify/stringifyCollection.js
 var require_stringifyCollection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var stringify = require_stringify();
@@ -1915,7 +1919,7 @@ var require_stringifyCollection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.stringifyCollection = stringifyCollection;
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/YAMLMap.js
+// node_modules/yaml/dist/nodes/YAMLMap.js
 var require_YAMLMap = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var stringifyCollection = require_stringifyCollection();
 	var addPairToJSMap = require_addPairToJSMap();
@@ -2023,7 +2027,7 @@ var require_YAMLMap = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.YAMLMap = YAMLMap;
 	exports.findPair = findPair;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/common/map.js
+// node_modules/yaml/dist/schema/common/map.js
 var require_map = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var YAMLMap = require_YAMLMap();
@@ -2039,7 +2043,7 @@ var require_map = /* @__PURE__ */ __commonJSMin(((exports) => {
 		createNode: (schema, obj, ctx) => YAMLMap.YAMLMap.from(schema, obj, ctx)
 	};
 }));
-// ../headcount-v02/node_modules/yaml/dist/nodes/YAMLSeq.js
+// node_modules/yaml/dist/nodes/YAMLSeq.js
 var require_YAMLSeq = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var createNode = require_createNode();
 	var stringifyCollection = require_stringifyCollection();
@@ -2144,7 +2148,7 @@ var require_YAMLSeq = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.YAMLSeq = YAMLSeq;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/common/seq.js
+// node_modules/yaml/dist/schema/common/seq.js
 var require_seq = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var YAMLSeq = require_YAMLSeq();
@@ -2160,7 +2164,7 @@ var require_seq = /* @__PURE__ */ __commonJSMin(((exports) => {
 		createNode: (schema, obj, ctx) => YAMLSeq.YAMLSeq.from(schema, obj, ctx)
 	};
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/common/string.js
+// node_modules/yaml/dist/schema/common/string.js
 var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var stringifyString = require_stringifyString();
 	exports.string = {
@@ -2174,7 +2178,7 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 	};
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/common/null.js
+// node_modules/yaml/dist/schema/common/null.js
 var require_null = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var nullTag = {
@@ -2188,7 +2192,7 @@ var require_null = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.nullTag = nullTag;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/core/bool.js
+// node_modules/yaml/dist/schema/core/bool.js
 var require_bool$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var boolTag = {
@@ -2206,7 +2210,7 @@ var require_bool$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.boolTag = boolTag;
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringifyNumber.js
+// node_modules/yaml/dist/stringify/stringifyNumber.js
 var require_stringifyNumber = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function stringifyNumber({ format, minFractionDigits, tag, value }) {
 		if (typeof value === "bigint") return String(value);
@@ -2226,7 +2230,7 @@ var require_stringifyNumber = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.stringifyNumber = stringifyNumber;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/core/float.js
+// node_modules/yaml/dist/schema/core/float.js
 var require_float$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var stringifyNumber = require_stringifyNumber();
@@ -2266,7 +2270,7 @@ var require_float$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.floatExp = floatExp;
 	exports.floatNaN = floatNaN;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/core/int.js
+// node_modules/yaml/dist/schema/core/int.js
 var require_int$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var stringifyNumber = require_stringifyNumber();
 	var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
@@ -2306,7 +2310,7 @@ var require_int$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.intHex = intHex;
 	exports.intOct = intOct;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/core/schema.js
+// node_modules/yaml/dist/schema/core/schema.js
 var require_schema$2 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var map = require_map();
 	var _null = require_null();
@@ -2329,7 +2333,7 @@ var require_schema$2 = /* @__PURE__ */ __commonJSMin(((exports) => {
 		float.float
 	];
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/json/schema.js
+// node_modules/yaml/dist/schema/json/schema.js
 var require_schema$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var map = require_map();
@@ -2390,7 +2394,7 @@ var require_schema$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 	});
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/binary.js
+// node_modules/yaml/dist/schema/yaml-1.1/binary.js
 var require_binary = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var node_buffer = __require("buffer");
 	var Scalar = require_Scalar();
@@ -2445,7 +2449,7 @@ var require_binary = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 	};
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/pairs.js
+// node_modules/yaml/dist/schema/yaml-1.1/pairs.js
 var require_pairs = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Pair = require_Pair();
@@ -2505,7 +2509,7 @@ var require_pairs = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.pairs = pairs;
 	exports.resolvePairs = resolvePairs;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/omap.js
+// node_modules/yaml/dist/schema/yaml-1.1/omap.js
 var require_omap = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var toJS = require_toJS();
@@ -2569,7 +2573,7 @@ var require_omap = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.YAMLOMap = YAMLOMap;
 	exports.omap = omap;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/bool.js
+// node_modules/yaml/dist/schema/yaml-1.1/bool.js
 var require_bool = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	function boolStringify({ value, source }, ctx) {
@@ -2595,7 +2599,7 @@ var require_bool = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.falseTag = falseTag;
 	exports.trueTag = trueTag;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/float.js
+// node_modules/yaml/dist/schema/yaml-1.1/float.js
 var require_float = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var stringifyNumber = require_stringifyNumber();
@@ -2638,7 +2642,7 @@ var require_float = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.floatExp = floatExp;
 	exports.floatNaN = floatNaN;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/int.js
+// node_modules/yaml/dist/schema/yaml-1.1/int.js
 var require_int = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var stringifyNumber = require_stringifyNumber();
 	var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
@@ -2710,7 +2714,7 @@ var require_int = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.intHex = intHex;
 	exports.intOct = intOct;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/set.js
+// node_modules/yaml/dist/schema/yaml-1.1/set.js
 var require_set = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Pair = require_Pair();
@@ -2778,7 +2782,7 @@ var require_set = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.YAMLSet = YAMLSet;
 	exports.set = set;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/timestamp.js
+// node_modules/yaml/dist/schema/yaml-1.1/timestamp.js
 var require_timestamp = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var stringifyNumber = require_stringifyNumber();
 	/** Internal types handle bigint as number, because TS can't figure it out. */
@@ -2860,7 +2864,7 @@ var require_timestamp = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.intTime = intTime;
 	exports.timestamp = timestamp;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/yaml-1.1/schema.js
+// node_modules/yaml/dist/schema/yaml-1.1/schema.js
 var require_schema = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var map = require_map();
 	var _null = require_null();
@@ -2899,7 +2903,7 @@ var require_schema = /* @__PURE__ */ __commonJSMin(((exports) => {
 		timestamp.timestamp
 	];
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/tags.js
+// node_modules/yaml/dist/schema/tags.js
 var require_tags = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var map = require_map();
 	var _null = require_null();
@@ -2984,7 +2988,7 @@ var require_tags = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.coreKnownTags = coreKnownTags;
 	exports.getTags = getTags;
 }));
-// ../headcount-v02/node_modules/yaml/dist/schema/Schema.js
+// node_modules/yaml/dist/schema/Schema.js
 var require_Schema = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var map = require_map();
@@ -3011,7 +3015,7 @@ var require_Schema = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 	};
 }));
-// ../headcount-v02/node_modules/yaml/dist/stringify/stringifyDocument.js
+// node_modules/yaml/dist/stringify/stringifyDocument.js
 var require_stringifyDocument = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var stringify = require_stringify();
@@ -3072,7 +3076,7 @@ var require_stringifyDocument = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.stringifyDocument = stringifyDocument;
 }));
-// ../headcount-v02/node_modules/yaml/dist/doc/Document.js
+// node_modules/yaml/dist/doc/Document.js
 var require_Document = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Alias = require_Alias();
 	var Collection = require_Collection();
@@ -3352,7 +3356,7 @@ var require_Document = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.Document = Document;
 }));
-// ../headcount-v02/node_modules/yaml/dist/errors.js
+// node_modules/yaml/dist/errors.js
 var require_errors = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var YAMLError = class extends Error {
 		constructor(name, pos, code, message) {
@@ -3404,7 +3408,7 @@ var require_errors = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.YAMLWarning = YAMLWarning;
 	exports.prettifyError = prettifyError;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-props.js
+// node_modules/yaml/dist/compose/resolve-props.js
 var require_resolve_props = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIndent, startOnNewline }) {
 		let spaceBefore = false;
@@ -3510,7 +3514,7 @@ var require_resolve_props = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.resolveProps = resolveProps;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/util-contains-newline.js
+// node_modules/yaml/dist/compose/util-contains-newline.js
 var require_util_contains_newline = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function containsNewline(key) {
 		if (!key) return null;
@@ -3538,7 +3542,7 @@ var require_util_contains_newline = /* @__PURE__ */ __commonJSMin(((exports) => 
 	}
 	exports.containsNewline = containsNewline;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/util-flow-indent-check.js
+// node_modules/yaml/dist/compose/util-flow-indent-check.js
 var require_util_flow_indent_check = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var utilContainsNewline = require_util_contains_newline();
 	function flowIndentCheck(indent, fc, onError) {
@@ -3549,7 +3553,7 @@ var require_util_flow_indent_check = /* @__PURE__ */ __commonJSMin(((exports) =>
 	}
 	exports.flowIndentCheck = flowIndentCheck;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/util-map-includes.js
+// node_modules/yaml/dist/compose/util-map-includes.js
 var require_util_map_includes = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	function mapIncludes(ctx, items, search) {
@@ -3560,7 +3564,7 @@ var require_util_map_includes = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.mapIncludes = mapIncludes;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-block-map.js
+// node_modules/yaml/dist/compose/resolve-block-map.js
 var require_resolve_block_map = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Pair = require_Pair();
 	var YAMLMap = require_YAMLMap();
@@ -3647,7 +3651,7 @@ var require_resolve_block_map = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.resolveBlockMap = resolveBlockMap;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-block-seq.js
+// node_modules/yaml/dist/compose/resolve-block-seq.js
 var require_resolve_block_seq = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var YAMLSeq = require_YAMLSeq();
 	var resolveProps = require_resolve_props();
@@ -3691,7 +3695,7 @@ var require_resolve_block_seq = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.resolveBlockSeq = resolveBlockSeq;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-end.js
+// node_modules/yaml/dist/compose/resolve-end.js
 var require_resolve_end = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function resolveEnd(end, offset, reqSpace, onError) {
 		let comment = "";
@@ -3728,7 +3732,7 @@ var require_resolve_end = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.resolveEnd = resolveEnd;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-flow-collection.js
+// node_modules/yaml/dist/compose/resolve-flow-collection.js
 var require_resolve_flow_collection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Pair = require_Pair();
@@ -3890,7 +3894,7 @@ var require_resolve_flow_collection = /* @__PURE__ */ __commonJSMin(((exports) =
 	}
 	exports.resolveFlowCollection = resolveFlowCollection;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/compose-collection.js
+// node_modules/yaml/dist/compose/compose-collection.js
 var require_compose_collection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Scalar = require_Scalar();
@@ -3941,7 +3945,7 @@ var require_compose_collection = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.composeCollection = composeCollection;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-block-scalar.js
+// node_modules/yaml/dist/compose/resolve-block-scalar.js
 var require_resolve_block_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	function resolveBlockScalar(ctx, scalar, onError) {
@@ -4117,7 +4121,7 @@ var require_resolve_block_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.resolveBlockScalar = resolveBlockScalar;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/resolve-flow-scalar.js
+// node_modules/yaml/dist/compose/resolve-flow-scalar.js
 var require_resolve_flow_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Scalar = require_Scalar();
 	var resolveEnd = require_resolve_end();
@@ -4321,7 +4325,7 @@ var require_resolve_flow_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.resolveFlowScalar = resolveFlowScalar;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/compose-scalar.js
+// node_modules/yaml/dist/compose/compose-scalar.js
 var require_compose_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var identity = require_identity();
 	var Scalar = require_Scalar();
@@ -4381,7 +4385,7 @@ var require_compose_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.composeScalar = composeScalar;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/util-empty-scalar-position.js
+// node_modules/yaml/dist/compose/util-empty-scalar-position.js
 var require_util_empty_scalar_position = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function emptyScalarPosition(offset, before, pos) {
 		if (before) {
@@ -4407,7 +4411,7 @@ var require_util_empty_scalar_position = /* @__PURE__ */ __commonJSMin(((exports
 	}
 	exports.emptyScalarPosition = emptyScalarPosition;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/compose-node.js
+// node_modules/yaml/dist/compose/compose-node.js
 var require_compose_node = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Alias = require_Alias();
 	var identity = require_identity();
@@ -4497,7 +4501,7 @@ var require_compose_node = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.composeEmptyNode = composeEmptyNode;
 	exports.composeNode = composeNode;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/compose-doc.js
+// node_modules/yaml/dist/compose/compose-doc.js
 var require_compose_doc = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var Document = require_Document();
 	var composeNode = require_compose_node();
@@ -4538,7 +4542,7 @@ var require_compose_doc = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.composeDoc = composeDoc;
 }));
-// ../headcount-v02/node_modules/yaml/dist/compose/composer.js
+// node_modules/yaml/dist/compose/composer.js
 var require_composer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var node_process = __require("process");
 	var directives = require_directives();
@@ -4735,7 +4739,7 @@ var require_composer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.Composer = Composer;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/cst-scalar.js
+// node_modules/yaml/dist/parse/cst-scalar.js
 var require_cst_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var resolveBlockScalar = require_resolve_block_scalar();
 	var resolveFlowScalar = require_resolve_flow_scalar();
@@ -5001,7 +5005,7 @@ var require_cst_scalar = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.resolveAsScalar = resolveAsScalar;
 	exports.setScalarValue = setScalarValue;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/cst-stringify.js
+// node_modules/yaml/dist/parse/cst-stringify.js
 var require_cst_stringify = /* @__PURE__ */ __commonJSMin(((exports) => {
 	/**
 	* Stringify a CST document, token, or collection item
@@ -5051,7 +5055,7 @@ var require_cst_stringify = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.stringify = stringify;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/cst-visit.js
+// node_modules/yaml/dist/parse/cst-visit.js
 var require_cst_visit = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var BREAK = Symbol("break visit");
 	var SKIP = Symbol("skip children");
@@ -5141,7 +5145,7 @@ var require_cst_visit = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.visit = visit;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/cst.js
+// node_modules/yaml/dist/parse/cst.js
 var require_cst = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var cstScalar = require_cst_scalar();
 	var cstStringify = require_cst_stringify();
@@ -5219,7 +5223,7 @@ var require_cst = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.prettyToken = prettyToken;
 	exports.tokenType = tokenType;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/lexer.js
+// node_modules/yaml/dist/parse/lexer.js
 var require_lexer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var cst = require_cst();
 	function isEmpty(ch) {
@@ -5751,7 +5755,7 @@ var require_lexer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.Lexer = Lexer;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/line-counter.js
+// node_modules/yaml/dist/parse/line-counter.js
 var require_line_counter = /* @__PURE__ */ __commonJSMin(((exports) => {
 	/**
 	* Tracks newlines during parsing in order to provide an efficient API for
@@ -5797,7 +5801,7 @@ var require_line_counter = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.LineCounter = LineCounter;
 }));
-// ../headcount-v02/node_modules/yaml/dist/parse/parser.js
+// node_modules/yaml/dist/parse/parser.js
 var require_parser = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var node_process = __require("process");
 	var cst = require_cst();
@@ -6662,7 +6666,7 @@ var require_parser = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	exports.Parser = Parser;
 }));
-// ../headcount-v02/node_modules/yaml/dist/public-api.js
+// node_modules/yaml/dist/public-api.js
 var require_public_api = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var composer = require_composer();
 	var Document = require_Document();
@@ -8216,7 +8220,7 @@ function blockIn(text, [open, close]) {
 		end: end + close.length
 	};
 }
-// ../headcount-v02/node_modules/smol-toml/dist/error.js
+// node_modules/smol-toml/dist/error.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -8286,7 +8290,7 @@ var TomlError = class TomlError extends Error {
 		});
 	}
 };
-// ../headcount-v02/node_modules/smol-toml/dist/primitive.js
+// node_modules/smol-toml/dist/primitive.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -8385,7 +8389,7 @@ function parseString(ctx) {
 	}
 	TomlError.x("unfinished string", ctx, startPtr);
 }
-// ../headcount-v02/node_modules/smol-toml/dist/date.js
+// node_modules/smol-toml/dist/date.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -8511,7 +8515,7 @@ var TomlDate = class TomlDate extends Date {
 		return date;
 	}
 };
-// ../headcount-v02/node_modules/smol-toml/dist/extract.js
+// node_modules/smol-toml/dist/extract.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -8677,7 +8681,7 @@ function readDate(ctx, str, type, unsafeDelim, errPtr, temporalSuffix) {
 		TomlError.x(e instanceof Error ? e.message : "" + e, ctx, errPtr);
 	}
 }
-// ../headcount-v02/node_modules/smol-toml/dist/util.js
+// node_modules/smol-toml/dist/util.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -8726,7 +8730,7 @@ function skipVoid(ctx, banNewLines, banComments) {
 		skipComment(ctx);
 	}
 }
-// ../headcount-v02/node_modules/smol-toml/dist/struct.js
+// node_modules/smol-toml/dist/struct.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -8848,7 +8852,7 @@ function parseArray(ctx) {
 	}
 	TomlError.x("unfinished array", ctx, startPtr);
 }
-// ../headcount-v02/node_modules/smol-toml/dist/parse.js
+// node_modules/smol-toml/dist/parse.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -9023,7 +9027,7 @@ function parse$3(toml, options = {}) {
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 "".isWellFormed;
-// ../headcount-v02/node_modules/smol-toml/dist/index.js
+// node_modules/smol-toml/dist/index.js
 /*!
 * Copyright (c) Squirrel Chat et al., All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
@@ -24595,10 +24599,14 @@ function waitsOnYou(i, now) {
 	const held = /* @__PURE__ */ new Set([...questions.filter((q) => !q.gate).map((q) => q.from), ...approvals.map((a) => a.person)]);
 	return i.working.every((w) => held.has(w.id));
 }
+/** Whether all that waits is a plain session's words at the end of its turn: nothing asks for an OK. */
+function onlyTurnWords(i, now) {
+	return !i.approvals.some((a) => isOpenItem(a, now)) && i.questions.filter((q) => isOpenItem(q, now)).every((q) => q.plainTurn === true);
+}
 /**
 * Where the company stands, in a word. A company that can't run is stuck whatever its phase; then founding is scoping,
 * a proposal or a plan waiting is waiting, stalled work is stuck, a pause (or a stopped company not done) is paused,
-* a finished plan is done, an open inbox with nobody else at work is waiting, an open final review or re-check is
+* a finished plan is done, an open inbox with nobody else at work is waiting (your turn when all it holds is a plain session's last words), an open final review or re-check is
 * checking, and anything else is working. The plan's own final review counts once it is under way: approval queues
 * it with every other plan task, long before its turn.
 */
@@ -24611,7 +24619,7 @@ function stageOf(i, now) {
 	if (i.pause !== null) return "paused";
 	if (i.done !== null) return "done";
 	if (i.phase === "stopped") return "paused";
-	if (waitsOnYou(i, now)) return "waiting";
+	if (waitsOnYou(i, now)) return !onlyTurnWords(i, now) ? "waiting" : (i.helping ?? 0) > 0 ? "working" : "your-turn";
 	const kinds = planKinds(i.plan);
 	return i.tasks.some((t) => {
 		if (!isOpenTask(t)) return false;
@@ -32575,7 +32583,10 @@ function plainVerdict(payload) {
 			tool,
 			summary: `Claude Code asks: ${(() => {
 				if (tool === "ExitPlanMode") return "Approve the plan and start the work";
-				if (tool === "Bash" || tool === "PowerShell") return `Run ${line$1(input.description, 160) || line$1(input.command, 160)}`;
+				if (tool === "Bash" || tool === "PowerShell") {
+					const said = line$1(input.description, 160);
+					return /^[A-Z]/.test(said) ? said : `Run ${said || line$1(input.command, 160)}`;
+				}
 				if ([
 					"Write",
 					"Edit",
@@ -34110,6 +34121,7 @@ var studioBudgetSentence = (budget) => `The studio chat has spent its ${money$1(
 /** The order stages are named in a portfolio's line: what needs the stakeholder first. */
 var STAGE_ORDER = [
 	"waiting",
+	"your-turn",
 	"stuck",
 	"working",
 	"checking",
@@ -34119,6 +34131,7 @@ var STAGE_ORDER = [
 ];
 var STAGE_WORDS = {
 	waiting: "waiting for your OK",
+	"your-turn": "waiting for your reply",
 	stuck: "stuck",
 	working: "working",
 	checking: "checking",
@@ -34230,6 +34243,7 @@ var money = (n) => n >= 10 ? `$${Math.round(n).toLocaleString("en-US")}` : `$${n
 var STAGE = {
 	scoping: "scoping",
 	waiting: "waiting for the stakeholder",
+	"your-turn": "waiting for the stakeholder's reply",
 	working: "working",
 	checking: "checking",
 	done: "done",
@@ -39103,7 +39117,7 @@ var MAKERS = [
 	"startTailnet"
 ];
 async function makers(given = {}) {
-	const real = MAKERS.every((key) => given[key] !== void 0) ? null : (await import("./assets/real-Dfxv93aW.js")).REAL;
+	const real = MAKERS.every((key) => given[key] !== void 0) ? null : (await import("./assets/real-DAenHwPG.js")).REAL;
 	const pick = (key) => {
 		const value = given[key] ?? real?.[key];
 		if (!value) throw new Error(`The hub has no ${key}.`);
@@ -40786,4 +40800,4 @@ main(process.argv.slice(2)).then((code) => {
 	err(error instanceof Error ? error.message : String(error));
 	process.exitCode = 1;
 });
-export { roleFromLibrary as $, detect as $n, SOLO_REVIEWER as $t, movedInOrder as A, managerOf as An, isPending as At, ReshapeError as B, tokenFile as Bn, heldTurn as Bt, pathsOverlap as C, THE_OFFICE as Cn, PLAN_LIMITS as Cr, blankDesk as Ct, planSize as D, chainUp as Dn, isCompanyEvent as Dt, planInbox as E, below as En, __exportAll as Er, foundedState as Et, unmarkedRecheckItems as F, reportsOf as Fn, acksInView as Ft, studioForChange as G, readAgents as Gn, cleanBudget as Gt, inClaude as H, MANIFEST as Hn, steeringView as Ht, verdictOpenLines as I, toolsFor as In, isDeliveredHow as It, lintNewRole as J, redactClip as Jn, spendingViewOf as Jt, writeManifest as K, oneLine$1 as Kn, multipleWords as Kt, acceptLine as L, turnText as Ln, STEERING_ID_PREFIX as Lt, checklistCountsLine as M, mayMessage as Mn, reviveState as Mt, checklistLines as N, peopleOf as Nn, TRACE_LIMITS as Nt, planWaitingFor as O, introduce as On, isOpenItem as Ot, checklistView as P, personById as Pn, ackIdFor as Pt, placeNote as Q, PACKAGE_JSON as Qn, ACCEPTANCE_REL as Qt, parseStep as R, startTailnet as Rn, blankSettings as Rt, pathInside as S, STAKEHOLDER as Sn, PLAN_APPROVALS as Sr, ID_PREFIX as St, planGoverns as T, VIEW_LIMITS as Tn, VERDICTS as Tr, fold as Tt, manifestText$1 as U, agentFileOf as Un, taskOfTurn as Ut, applyReshape as V, killDesk as Vn, reversibleIn as Vt, planChange as W, loadProjectStudio as Wn, budgetLevel as Wt, orgAgentFile as X, writePlan as Xn, countWord as Xt, onlyNotesDiffer as Y, redactSecrets as Yn, clip$2 as Yt, ownsNote as Z, plainPath as Zn, capital as Zt, approvedVersion as _, LIMITS as _n, CHECKLIST_PAGE as _r, checkScoping as _t, classifyPermission as a, MODEL_LEVELS as an, ROLE_MODELS as ar, claudeCode as at, latestVersion as b, QUESTION_WAIT_MS as bn, EFFORTS as br, cutText as bt, scanCommand as c, SEAT_TITLES as cn, titleFromId as cr, workView as ct, isAtWork as d, seatEffort as dn, BASE_DEPARTMENT_INFO as dr, readInstalled as dt, harnessPlan as en, CLAUDE_START as er, roleFromProposal as et, sameTurnHandoverSince as f, SIZE_RULES as fn, isBaseDepartment as fr, TailorError as ft, approvedScope as g, BATCH_WINDOW_MS as gn, CHECKLIST_LIMITS as gr, checkProposal as gt, summaryOf as h, ASK_KINDS as hn, plainStudio as hr, applyOfficeChange as ht, plainVerdict as i, DEFAULT_PRESET as in, ROLE_ID as ir, SCRATCH_PATH_MARK as it, carryChecklist as j, mayAssign as jn, own as jt, waitClosure as k, isManager as kn, isOpenTask as kt, importRulePaths as l, isPresetId as ln, resolveLoads as lr, startedBy as lt, sinceStart as m, isCheckerSeat as mn, cleanLaunch as mr, andList$2 as mt, checkDashboard as n, soloFixLines as nn, withClaudeBlock as nr, tailorPerson as nt, orgToolRules as o, PRESETS as on, inSentence as or, emptyWorkBook as ot, sinceOf as p, companySize as pn, PLAIN_PERSON as pr, OFFICE_ROOMS as pt, backTo as q, safeId as qn, presetInfos as qt, plainAnswer as r, soloPlan as rn, DEPARTMENT_ORDER as rr, HarnessError as rt, stopsByPid as s, PRESET_IDS as sn, slugId as sr, foldWork as st, orgToolsHandler as t, seatOf as tn, LEGACY_CLAUDE_START as tr, staffOf as tt, AT_WORK as u, presetGuidance as un, sameLoads as ur, installedNames as ut, changesSentence as v, MESSAGE_PAGE as vn, DECISION_LIMITS as vr, proposalLoadCosts as vt, planChanges as w, UNDO_MS as wn, STEERING_TOOLS as wr, dict as wt, normalizePlanPath as x, REPORT_FORM as xn, LEASHES as xr, HOUR_MS as xt, checkPlan as y, OrgRefusal as yn, DEFAULT_PLAN_APPROVAL as yr, cutSentence as yt, commandProblem as z, sameToken as zn, effectiveLeash as zt };
+export { roleFromLibrary as $, detect as $n, SOLO_REVIEWER as $t, movedInOrder as A, managerOf as An, isPending as At, ReshapeError as B, tokenFile as Bn, heldTurn as Bt, pathsOverlap as C, THE_OFFICE as Cn, LEASHES as Cr, blankDesk as Ct, planSize as D, chainUp as Dn, VERDICTS as Dr, isCompanyEvent as Dt, planInbox as E, below as En, STEERING_TOOLS as Er, foundedState as Et, unmarkedRecheckItems as F, reportsOf as Fn, acksInView as Ft, studioForChange as G, readAgents as Gn, cleanBudget as Gt, inClaude as H, MANIFEST as Hn, steeringView as Ht, verdictOpenLines as I, toolsFor as In, isDeliveredHow as It, lintNewRole as J, redactClip as Jn, spendingViewOf as Jt, writeManifest as K, oneLine$1 as Kn, multipleWords as Kt, acceptLine as L, turnText as Ln, STEERING_ID_PREFIX as Lt, checklistCountsLine as M, mayMessage as Mn, reviveState as Mt, checklistLines as N, peopleOf as Nn, TRACE_LIMITS as Nt, planWaitingFor as O, introduce as On, __exportAll as Or, isOpenItem as Ot, checklistView as P, personById as Pn, ackIdFor as Pt, placeNote as Q, PACKAGE_JSON as Qn, ACCEPTANCE_REL as Qt, parseStep as R, startTailnet as Rn, blankSettings as Rt, pathInside as S, STAKEHOLDER as Sn, EFFORTS as Sr, ID_PREFIX as St, planGoverns as T, VIEW_LIMITS as Tn, PLAN_LIMITS as Tr, fold as Tt, manifestText$1 as U, agentFileOf as Un, taskOfTurn as Ut, applyReshape as V, killDesk as Vn, reversibleIn as Vt, planChange as W, loadProjectStudio as Wn, budgetLevel as Wt, orgAgentFile as X, writePlan as Xn, countWord as Xt, onlyNotesDiffer as Y, redactSecrets as Yn, clip$2 as Yt, ownsNote as Z, plainPath as Zn, capital as Zt, approvedVersion as _, LIMITS as _n, plainStudio as _r, checkScoping as _t, classifyPermission as a, MODEL_LEVELS as an, ROLE_MODELS as ar, claudeCode as at, latestVersion as b, QUESTION_WAIT_MS as bn, DECISION_LIMITS as br, cutText as bt, scanCommand as c, SEAT_TITLES as cn, titleFromId as cr, workView as ct, isAtWork as d, seatEffort as dn, BASE_DEPARTMENT_INFO as dr, readInstalled as dt, harnessPlan as en, CLAUDE_START as er, roleFromProposal as et, sameTurnHandoverSince as f, SIZE_RULES as fn, isBaseDepartment as fr, TailorError as ft, approvedScope as g, BATCH_WINDOW_MS as gn, cleanLaunch as gr, checkProposal as gt, summaryOf as h, ASK_KINDS as hn, TURN_STOPPED as hr, applyOfficeChange as ht, plainVerdict as i, DEFAULT_PRESET as in, ROLE_ID as ir, SCRATCH_PATH_MARK as it, carryChecklist as j, mayAssign as jn, own as jt, waitClosure as k, isManager as kn, isOpenTask as kt, importRulePaths as l, isPresetId as ln, resolveLoads as lr, startedBy as lt, sinceStart as m, isCheckerSeat as mn, PLAIN_PERSON as mr, andList$2 as mt, checkDashboard as n, soloFixLines as nn, withClaudeBlock as nr, tailorPerson as nt, orgToolRules as o, PRESETS as on, inSentence as or, emptyWorkBook as ot, sinceOf as p, companySize as pn, OWN_TURN_REASON as pr, OFFICE_ROOMS as pt, backTo as q, safeId as qn, presetInfos as qt, plainAnswer as r, soloPlan as rn, DEPARTMENT_ORDER as rr, HarnessError as rt, stopsByPid as s, PRESET_IDS as sn, slugId as sr, foldWork as st, orgToolsHandler as t, seatOf as tn, LEGACY_CLAUDE_START as tr, staffOf as tt, AT_WORK as u, presetGuidance as un, sameLoads as ur, installedNames as ut, changesSentence as v, MESSAGE_PAGE as vn, CHECKLIST_LIMITS as vr, proposalLoadCosts as vt, planChanges as w, UNDO_MS as wn, PLAN_APPROVALS as wr, dict as wt, normalizePlanPath as x, REPORT_FORM as xn, DEFAULT_PLAN_APPROVAL as xr, HOUR_MS as xt, checkPlan as y, OrgRefusal as yn, CHECKLIST_PAGE as yr, cutSentence as yt, commandProblem as z, sameToken as zn, effectiveLeash as zt };

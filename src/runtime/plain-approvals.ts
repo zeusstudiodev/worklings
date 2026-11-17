@@ -38,7 +38,12 @@ export function plainVerdict(payload: unknown): PlainVerdict {
   const file = line(input.file_path ?? input.notebook_path ?? input.path, 200);
   const summary = (() => {
     if (tool === 'ExitPlanMode') return 'Approve the plan and start the work';
-    if (tool === 'Bash' || tool === 'PowerShell') return `Run ${line(input.description, 160) || line(input.command, 160)}`;
+    // Claude Code's description already says what the command does ("Run npm test", "Remove the build output"); one that
+    // starts in lower case is a command itself ("npm test"), so it is run.
+    if (tool === 'Bash' || tool === 'PowerShell') {
+      const said = line(input.description, 160);
+      return /^[A-Z]/.test(said) ? said : `Run ${said || line(input.command, 160)}`;
+    }
     if (['Write', 'Edit', 'MultiEdit', 'NotebookEdit'].includes(tool)) return file ? `Change ${file}` : `Use ${tool}`;
     if (tool === 'WebFetch') return `Fetch ${line(input.url, 200)}`;
     if (tool === 'WebSearch') return `Search the web for ${line(input.query, 160)}`;

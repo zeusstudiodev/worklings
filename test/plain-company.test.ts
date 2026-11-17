@@ -1,8 +1,9 @@
 // v0.7: the plain company (SPEC-v0.7.md). One Claude Code session works on the person's words; its end-of-turn words
 // wait in the inbox, the person's reply reaches it verbatim, and its todo list and subagents show without changing it.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type DeskEvents, UNDO_MS } from '../src/core/company.ts';
+import { type DeskEvents, STAKEHOLDER, UNDO_MS } from '../src/core/company.ts';
 import { emptyWorkBook, foldWork, workSignals } from '../src/core/desk-work.ts';
+import { stageOf, summaryInputOfView } from '../src/core/overview.ts';
 import { cleanLaunch, DEFAULT_LAUNCH, PLAIN_PERSON } from '../src/core/plain.ts';
 import { createCompany, openCompany } from '../src/company/index.ts';
 import { ended, FakeDesks, fakeGit, fakeOrg, KEY, newProject } from './company-kit.ts';
@@ -61,6 +62,45 @@ describe('a plain company', () => {
     await vi.advanceTimersByTimeAsync(UNDO_MS + 10);
     const turns = r.desks().turns;
     expect(turns.at(-1)?.turn.text).toBe('go with your assumptions');
+  });
+
+  // v0.8: the take-1 to take-4 film runs: Claude Code started its subagents in the background, ended its turn ("Both
+  // subagents are running..."), and a background task's notification began its next turn with no reply from the person
+  // (the switchboard's ownTurn, from the shape in test/fixtures/claude-2.1.312/desk/priority-now-human.jsonl).
+  it('takes back the waiting words when the session goes on by itself, so only its latest end of turn is open', () => {
+    const r = plainRig();
+    const first = r.desks().turns[0];
+    if (!first?.turn.messageId) throw new Error('no first turn');
+    r.desks().events.delivered(first.turn.messageId, Date.now());
+    r.desks().events.turn(PLAIN_PERSON, ended("Both subagents are running. I'm waiting for them before I run npm test."));
+    const open = () => r.company.view().questions.filter((q) => q.answer === null && q.withdrawn === null);
+    expect(open()).toHaveLength(1);
+    const stage = () => stageOf(summaryInputOfView(r.company.view()), Date.now());
+    expect(stage()).toBe('your-turn');
+    r.desks().events.ownTurn?.(PLAIN_PERSON);
+    expect(open()).toEqual([]);
+    const gone = r.company.view().questions.find((q) => q.plainTurn === true);
+    expect(gone?.withdrawn?.reason).toBe('Claude Code went on by itself.');
+    expect(stage()).not.toBe('your-turn');
+    // Nothing was sent to the session on the person's behalf.
+    expect(r.desks().turns).toHaveLength(1);
+    r.desks().events.turn(PLAIN_PERSON, ended('npm test passes: 9 tests, 0 failures.'));
+    expect(open().map((q) => q.text)).toEqual(['npm test passes: 9 tests, 0 failures.']);
+  });
+
+  it('sends a reply written to words the session went on from as a message, rather than losing it', () => {
+    const r = plainRig();
+    const first = r.desks().turns[0];
+    if (!first?.turn.messageId) throw new Error('no first turn');
+    r.desks().events.delivered(first.turn.messageId, Date.now());
+    r.desks().events.turn(PLAIN_PERSON, ended("Both subagents are running. I'm waiting for them."));
+    const words = r.company.view().questions.find((q) => q.plainTurn === true);
+    r.desks().events.ownTurn?.(PLAIN_PERSON);
+    r.company.answer(words?.id ?? '', { option: null, text: 'Also add tags to the search.' });
+    expect(r.desks().turns.at(-1)?.turn.text).toBe('Also add tags to the search.');
+    expect(r.company.view().messages.at(-1)).toMatchObject({ from: STAKEHOLDER, to: PLAIN_PERSON, answers: words?.id });
+    // With no words there is nothing to send: the item stays withdrawn and says so.
+    expect(() => r.company.answer(words?.id ?? '', { option: null, text: '' })).toThrow(/withdrawn/);
   });
 
   it('takes back the waiting words when the person writes to the session instead', () => {

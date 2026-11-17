@@ -190,11 +190,11 @@ export function StudioChat({ studio, actions, online, now, announce, onBack }: S
               {e.kind === 'reply' && e.companies?.[0] && (
                 <a
                   className="link studio-line__open"
-                  href={companyPath(e.companies[0].id, 'progress')}
+                  href={companyPath(e.companies[0].id, '')}
                   onClick={(event) => {
                     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
                     event.preventDefault();
-                    navigate(companyPath(e.companies?.[0]?.id ?? '', 'progress'));
+                    navigate(companyPath(e.companies?.[0]?.id ?? '', ''));
                   }}
                 >
                   Open {e.companies[0].name}

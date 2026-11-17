@@ -143,12 +143,14 @@ module map; `docs/design.md` the office's visual system.
 - The fake desk's `byText` rule (`test/fake-desk.mjs`) picks a scenario from what a turn says, for turns nobody can mark
   with `[fake:<name>]`, such as the office-written start turn that makes the CEO propose the plan (`test/e2e/v3-world.ts`).
 - The company's browser app is the stage and dock: no tabs, the office fills the window, and `?panel=` names the side
-  panel's view (`web/src/company/address.ts`; map in `docs/architecture.md`). A phone opens on the office with the
-  inbox sheet only peeking. The e2e kit (`test/e2e/v3-kit.ts`) reflects that: `openPanel(page, id, panel)` opens an
-  address with a side panel view and `openBoard(page, id, board)` one on a board; `sheetUp` raises a phone's peeking
-  sheet as a person does; `talk(page, to, words)` types into the talk bar (leading `@` mentions pick who hears it);
-  `cardDrag` drags a task card on desktop sizes (phones have Move). Specs that use none of these still work through
-  `openCompany`.
+  panel's view (`web/src/company/address.ts`; map in `docs/architecture.md`). Since v0.8 (`SPEC-v0.8.md`) the side panel
+  is closed until asked for, on every size, and the next thing that needs you sits on one card over the talk bar
+  (`web/src/company/inbox/InboxCard.tsx`); the views, Inbox and the camera keys are in More. The e2e kit
+  (`test/e2e/v3-kit.ts`) reflects that: `openPanel(page, id, panel)` opens an address with a side panel view and
+  `openBoard(page, id, board)` one on a board; `openInbox` opens More's Inbox and `sheetUp` makes sure the inbox (or a
+  proposal) shows; `inboxCard` is the card; `talk(page, to, words)` types into the talk bar (leading `@` mentions pick
+  who hears it); `cardDrag` drags a task card on desktop sizes (phones have Move). Specs that use none of these still work
+  through `openCompany`.
 - Node's typecheck (`tsconfig.json`) has no DOM types, so specs pass browser code to `page.evaluate` as a string.
 - The maintainer gave the go to publish 0.1.0 on 13 Nov 2026, so `package.json` is no longer `"private"`. The public history is
   one squashed commit made outside his office hours by `npm run release:squash` (he or the coordinating session runs
@@ -228,6 +230,12 @@ module map; `docs/design.md` the office's visual system.
   offer the solo shape as "A team (experimental)", kept in each company's records; `WORKLINGS_SHAPE` (plain, solo, harness,
   classic) is a developer's override that wins over that choice for new companies; a request naming no choice founds a
   classic company (the tests' and the e2e world's API calls).
+- Office first (the maintainer, 16 Nov 2026; `SPEC-v0.8.md`): by default a company's screen shows the slim bar, one inbox card
+  and the talk bar; Progress, Tasks and the full inbox open on demand, one panel at a time; the live strip is off by default
+  and labels show only where something happens now. Nothing was removed: each piece is one click away (More, the panels,
+  the palette). The static demo's "Try it: start a project" replays one real plain job recorded once
+  (`scripts/record-demo-run.mjs`, which costs money, then `scripts/make-demo-replay.mjs`) from
+  `web/src/company/replay/recording.json`; a new recording goes through the same sanitizer and the privacy scan.
 - Costs are API-equivalent estimates unless OpenTelemetry reports them.
 - Nothing is published (npm, GitHub, marketplace, Pages) without the maintainer's OK. Where it will live (the maintainer, 5 Nov 2026): the
   repo `zeusstudiodev/worklings`, the npm package `worklings`, the demo at https://zeusstudiodev.github.io/worklings/.

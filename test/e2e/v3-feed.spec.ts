@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
-import { feed, feedKey, layoutOf, nameFor, openCompany, person, onElements, running, shot, sidePanel, strip, talkBox, theTo, tell, until, watchErrors } from './v3-kit.ts';
+import { feed, feedKey, layoutOf, nameFor, openCompany, person, onElements, running, shot, sidePanel, talkBox, theTo, tell, until, watchErrors } from './v3-kit.ts';
 import { view } from './v3-world.ts';
 
 // H58 (AC34), the feed (docs/design-v3.md, "The feed"): one conversation with everything said, in order, as people would
@@ -16,8 +16,8 @@ test.beforeAll(async ({ playwright }, info) => {
   await request.dispose();
 });
 
-/** What opens the feed: the Feed key, or on a phone the strip. */
-const opener = (page: Page): Locator => (layoutOf(page).phone ? strip(page) : feedKey(page));
+/** What opens the feed: Feed, in the talk bar at every size since v0.8. */
+const opener = (page: Page): Locator => feedKey(page);
 
 async function openFeed(page: Page): Promise<Locator> {
   await openCompany(page, id);

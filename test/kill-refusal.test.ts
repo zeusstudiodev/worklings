@@ -78,7 +78,12 @@ describe('the machine-wide kill refusal', () => {
 describe("a plain desk's prompts", () => {
   it('asks every prompt in the inbox with what Claude Code wants to do', () => {
     const v = plainVerdict({ tool_name: 'Bash', tool_input: { command: 'rm -rf dist', description: 'Remove the build output' } });
-    expect(v).toMatchObject({ verdict: 'ask', ask: { tool: 'Bash', summary: 'Claude Code asks: Run Remove the build output', detail: 'rm -rf dist' }, plan: false });
+    expect(v).toMatchObject({ verdict: 'ask', ask: { tool: 'Bash', summary: 'Claude Code asks: Remove the build output', detail: 'rm -rf dist' }, plan: false });
+    // The description is already an action: no second Run. Without one, the command itself.
+    expect(plainVerdict({ tool_name: 'Bash', tool_input: { command: 'npm test', description: 'Run npm test' } })).toMatchObject({ ask: { summary: 'Claude Code asks: Run npm test' } });
+    expect(plainVerdict({ tool_name: 'PowerShell', tool_input: { command: 'npm test' } })).toMatchObject({ ask: { summary: 'Claude Code asks: Run npm test' } });
+    // A description in lower case is the command itself.
+    expect(plainVerdict({ tool_name: 'Bash', tool_input: { command: 'npm test', description: 'npm test' } })).toMatchObject({ ask: { summary: 'Claude Code asks: Run npm test' } });
     const w = plainVerdict({ tool_name: 'Write', tool_input: { file_path: 'src/a.ts', content: 'x' } });
     expect(w).toMatchObject({ verdict: 'ask', ask: { summary: 'Claude Code asks: Change src/a.ts' } });
   });

@@ -56,8 +56,8 @@ export function Lobby(props: LobbyProps) {
 // The worlds load with the 3D engine's lobby scene, after the panel; a failure there leaves the panel working.
 const LobbyWorlds = lazy(async () => ({ default: (await import('../../scene/lobby/LobbyWorlds.tsx')).LobbyWorlds }));
 
-/** Called once a world's way in has played: it lands on the company's progress, as a card does. A module function, so the memoised worlds keep their props. */
-const enterCompany = (id: string) => navigate(companyPath(id, 'progress'));
+/** Called once a world's way in has played: it lands on the company's office (v0.8, office first), as a card does. A module function, so the memoised worlds keep their props. */
+const enterCompany = (id: string) => navigate(companyPath(id, ''));
 
 /** The mat with each company as a small world (desktops); the panel is its accessible twin, so the mat is the stage. */
 function LobbyStage({ lobby, returning }: { lobby: LobbyView; returning: string | null }) {
@@ -191,8 +191,8 @@ function LobbyPanel({ lobby, stream, hub, demo, location, starting, onLeaveDemo 
     const unique = names.get(row.id) ?? row.name;
     return (
       <li key={row.id} className="lobby-row">
-        {/* Named by its words, which the name and what needs you lead; it lands on the company's progress. */}
-        <LobbyCard entry={entry} row={row} unique={unique} phone={phone} now={lobby.serverTime} roots={roots} onOpen={() => navigate(companyPath(row.id, 'progress'))} />
+        {/* Named by its words, which the name and what needs you lead; it lands on the company's office. */}
+        <LobbyCard entry={entry} row={row} unique={unique} phone={phone} now={lobby.serverTime} roots={roots} onOpen={() => navigate(companyPath(row.id, ''))} />
         {entry.summary?.preview && /^https?:\/\//.test(entry.summary.preview) && (
           <a className="link lobby-row__inbox" href={entry.summary.preview} target="_blank" rel="noopener noreferrer">
             Open the preview<span className="visually-hidden"> of {unique} (opens a new tab)</span>
@@ -383,7 +383,7 @@ function LobbyPanel({ lobby, stream, hub, demo, location, starting, onLeaveDemo 
               <button type="button" className="panel-back" onClick={() => goBack('/')}>
                 Back to the lobby
               </button>
-              <StartCompany hub={hub} lobby={lobby} blocked={startBlock} online={online} />
+              <StartCompany hub={hub} lobby={lobby} blocked={startBlock} online={online} demo={demo} tryIt={demo && new URLSearchParams(location.search).has('try')} />
             </>
           ) : placeView ? (
             placeView
@@ -393,7 +393,7 @@ function LobbyPanel({ lobby, stream, hub, demo, location, starting, onLeaveDemo 
                 Start your first company
               </h2>
               <p className="lobby-welcome__text">Worklings runs a company of Claude Code sessions that builds what you describe. Pick a folder and say what to build.</p>
-              <StartCompany hub={hub} lobby={lobby} blocked={startBlock} online={online} embedded />
+              <StartCompany hub={hub} lobby={lobby} blocked={startBlock} online={online} demo={demo} embedded />
             </section>
           ) : (
             <>
@@ -419,6 +419,7 @@ function LobbyPanel({ lobby, stream, hub, demo, location, starting, onLeaveDemo 
                 </button>
               </div>
               {hubOpen && <HubDesks hub={hub} lobby={lobby} online={online} />}
+              {demo && <TryIt />}
               {!demo && <StudioCard studio={studio} onOpen={() => go(STUDIO_PATH)} />}
               <NeedsStrip companies={lobby.companies} names={names} now={lobby.serverTime} />
               {portfolioUndo && (
@@ -571,5 +572,31 @@ function HubDesks({ hub, lobby, online }: { hub: HubActions; lobby: LobbyView; o
       {done && <UndoLine ref={undoRef} text="Changed." until={done.until} onUndo={() => save(done.before, false)} unavailable={!online || saving} />}
       {problem && <p className="settings__problem">{problem}</p>}
     </form>
+  );
+}
+
+/**
+ * The demo's way to see a project start from nothing (SPEC-v0.8.md, decision 3): the real start form, filled with the words
+ * of a run recorded once, which Start replays sped up.
+ */
+function TryIt() {
+  return (
+    <section className="lobby-try" aria-labelledby="lobby-try-title">
+      <h3 id="lobby-try-title" className="lobby-try__title">
+        See a project start from nothing
+      </h3>
+      <p className="lobby-try__text">One real Claude Code session, recorded once from an empty folder and played back here, sped up: the todo list, a helper, its permission prompts for you to answer, then the result.</p>
+      <a
+        className="button button--primary lobby-try__key"
+        href={`${import.meta.env.BASE_URL}new?try`}
+        onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+          event.preventDefault();
+          navigate('/new?try');
+        }}
+      >
+        Try it: start a project
+      </a>
+    </section>
   );
 }

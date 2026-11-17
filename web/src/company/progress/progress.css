@@ -50,6 +50,17 @@
   align-items: center;
 }
 
+/* v0.8: Progress is a panel of its own; this closes it back to the office, as a board's key does. */
+.progress__gap {
+  flex: 1;
+}
+
+.progress__close {
+  font-size: var(--text-14);
+  color: var(--ink);
+  text-decoration: none;
+}
+
 .progress__title {
   margin: 0;
   font-family: var(--font-narrow);

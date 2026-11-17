@@ -116,9 +116,10 @@ export interface StudioLobbyView extends LobbyView {
 }
 
 /** The order stages are named in a portfolio's line: what needs the stakeholder first. */
-const STAGE_ORDER: readonly CompanyStage[] = ['waiting', 'stuck', 'working', 'checking', 'scoping', 'paused', 'done'];
+const STAGE_ORDER: readonly CompanyStage[] = ['waiting', 'your-turn', 'stuck', 'working', 'checking', 'scoping', 'paused', 'done'];
 const STAGE_WORDS: Record<CompanyStage, string> = {
   waiting: 'waiting for your OK',
+  'your-turn': 'waiting for your reply',
   stuck: 'stuck',
   working: 'working',
   checking: 'checking',

@@ -7,6 +7,21 @@ import { EFFORTS, type Effort } from './steering.ts';
 /** The one person of a plain company: the Claude Code session at the desk. */
 export const PLAIN_PERSON = 'builder';
 export const PLAIN_TITLE = 'Claude Code';
+
+/** v0.8: why a plain session's end-of-turn words leave the inbox when it goes on without a reply from the person. */
+export const OWN_TURN_REASON = 'Claude Code went on by itself.';
+
+/** How the office begins the words it puts in the inbox for a plain turn that stopped (not Claude Code's own words). */
+export const TURN_STOPPED = 'The turn stopped';
+
+/** Whether a plain turn's words are the office's note that the turn stopped. */
+export const isTurnStopped = (text: string): boolean => text.startsWith(TURN_STOPPED);
+
+/**
+ * v0.8: whether a session's last words end in a question, so the inbox says "asks you" only then. The full-width and
+ * Arabic question marks count; closing marks after one (a quote, a bracket, markdown's * and _, an emoji) don't.
+ */
+export const endsInQuestion = (text: string): boolean => /[?？؟][\s"'”’»)\]*_`\p{Extended_Pictographic}\u{FE0F}\u{200D}]*$/u.test(text.trimEnd());
 const PLAIN_ROOM = 'desk';
 
 /**

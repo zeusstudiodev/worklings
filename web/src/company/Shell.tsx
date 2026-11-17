@@ -4,7 +4,7 @@
 // the main view's foot. The path names the main view and `?panel=` the side panel's (address.ts). The shell routes,
 // counts, keeps focus, measures the pieces the camera keeps clear of, and binds v2's Catch me up and Ask aside to the
 // company's routes. The views come from their streams (mounts.tsx); today's panels stand in where a board isn't built yet.
-import { type CSSProperties, type ReactNode, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, Suspense, useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import type { CompanyView, LobbyView } from '../../../src/core/company.ts';
 import type { ReshapeAction, Snapshot, StudioCatalog } from '../../../src/core/snapshot.ts';
@@ -19,7 +19,7 @@ import { PersonCard } from '../hud/PersonCard.tsx';
 import { RoomCard } from '../hud/RoomCard.tsx';
 import { Loading, Locked, NoWebGL } from '../hud/States.tsx';
 import { companyApiBase, getCatalog, pointApiAt } from '../lib/api.ts';
-import { canFullscreen, fullscreenProblem, toggleFullscreen, useFullscreenElement } from '../lib/fullscreen.ts';
+import { fullscreenProblem, toggleFullscreen, useFullscreenElement } from '../lib/fullscreen.ts';
 import { hasWebGL, useOfficeClock, useReducedMotion } from '../lib/hooks.ts';
 import type { Selection } from '../scene/Building.tsx';
 import { OfficeLabelsContext } from '../scene/labels.tsx';
@@ -34,6 +34,7 @@ import { noTasksLine } from './plan/planModel.ts';
 import { companyNews, companyState, companyTitle, lobbyNews, otherNeeds, reconnectingLine, showsStateCallout, stateOfCompany } from './model.ts';
 import { Boundary, Decisions, DiffBoard, Dock, Inbox, Mounted, People, PersonPanel, Plan, PreviewBoard, Progress, Tasks, TaskBoard, OrgBoard, DashboardsBoard, TraceView } from './mounts.tsx';
 import { noteCompanyShown, peekLobbyNotice, setLobbyNotice } from './notice.ts';
+import { onInboxRequest } from './showInbox.ts';
 import { headline, spendLine } from './now/nowModel.ts';
 import { Palette, usePalette } from './palette/Palette.tsx';
 import { SkewContext } from './people/clock.ts';
@@ -45,7 +46,6 @@ import { Settings } from './settings/Settings.tsx';
 import { type BoardHost, BoardHostContext, type BoardResult } from './shell/boardHost.ts';
 import { BoardFrame } from './shell/BoardFrame.tsx';
 import { MiniMap } from './shell/MiniMap.tsx';
-import { Caption, MapKeys } from './shell/OfficeView.tsx';
 import { SidePanel, type SidePanelHead } from './shell/SidePanel.tsx';
 import { fitPanelWidth, layoutOf, PANEL_MIN, panelBounds } from './shell/sidePanelModel.ts';
 import { usePanelMemory, useWindowSize } from './shell/useShell.ts';
@@ -85,6 +85,8 @@ interface ShellProps {
   token: string | null;
   /** Steering (the plan, the board, messages, leashes, the decision log), handed to every view; absent until bound. */
   steer?: SteeringActions;
+  /** The demo's banner over a recorded run (v0.8), under the bar and over the office. */
+  banner?: ReactNode;
 }
 
 /** What takes the side panel's place without an address of its own: v2's room card, a visitor's badge, Ask aside. */
@@ -154,7 +156,7 @@ function restoreSoon(key: FocusKey, otherwise: () => void, frames = 12) {
   tryNow(frames);
 }
 
-function CompanyOffice({ companyId, route, old, intent, location, snapshot, stream, lobby, actions, hub, demo, token, steer }: ShellProps & { snapshot: Snapshot & { company: CompanyView } }) {
+function CompanyOffice({ companyId, route, old, intent, location, snapshot, stream, lobby, actions, hub, demo, token, steer, banner }: ShellProps & { snapshot: Snapshot & { company: CompanyView } }) {
   const company = snapshot.company;
   const online = stream.connection === 'live';
   const win = useWindowSize();
@@ -162,7 +164,6 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
   const phone = layout === 'phone' || layout === 'short';
   const reducedMotion = useReducedMotion();
   const [webgl] = useState(() => hasWebGL());
-  const [fullscreenable] = useState(() => canFullscreen(document, document.documentElement));
   const now = useOfficeClock(snapshot, stream.receivedAt, online);
   const { announce, news, items } = useAnnouncer();
   // The talk bar's control, one per company: every view sets the To through it (TabProps.talk).
@@ -178,9 +179,6 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
   const skip = useRef<(() => void) | null>(null);
   const founding = company.phase === 'founding' || company.phase === 'proposed';
   const { main, panel } = route;
-  // Progress opens with the side panel closed on desktops; this is the inbox you opened beside it, until you leave.
-  const [inboxBeside, setInboxBeside] = useState(false);
-  if (inboxBeside && main.kind !== 'progress') setInboxBeside(false);
   const href = useCallback((next: CompanyRoute) => companyHref(companyId, next), [companyId]);
 
   // Phones: a field in a sheet has the keyboard up, so the sheet takes what the keyboard leaves and the talk bar hides.
@@ -219,16 +217,12 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
     [route, phone, talk, href, location.mark],
   );
   const openPanel = useCallback((next: PanelView | null) => navigate(href({ main, panel: next })), [href, main]);
-  // v0.3: a pause a portfolio's spent budget holds is raised on the portfolio, in the lobby; the company's own in Settings.
-  const portfolio = (snapshot as { portfolio?: { id: string; held: boolean } | null }).portfolio ?? null;
-  const raiseBudget = () => (portfolio?.held ? navigate(`/p/${encodeURIComponent(portfolio.id)}`) : openPanel({ kind: 'settings' }));
   /** "Back to the inbox": the side panel's home over the main view shown; on a phone, the sheet goes down. */
   const showHome = useCallback(() => {
-    // "Back to the inbox" beside progress keeps the panel open on the inbox.
-    if (!phone && main.kind === 'progress') setInboxBeside(true);
     goBack(href({ main, panel: null }));
-  }, [href, main, phone]);
-  const openMain = useCallback((next: MainView) => navigate(href({ main: next, panel: phone ? null : panel })), [href, phone, panel]);
+  }, [href, main]);
+  // One panel at a time: a main view of its own (Progress, a board) opens with the side panel closed.
+  const openMain = useCallback((next: MainView) => navigate(href({ main: next, panel: null })), [href]);
   /** Back to the office, or from a diff back to its task: the main view shown before, kept beside the side panel's. */
   const closeMain = useCallback(() => {
     if (main.kind === 'diff') goBack(href({ main: { kind: 'tasks' }, panel: { kind: 'task', task: main.task } }));
@@ -256,7 +250,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
     const was = phaseWas.current;
     phaseWas.current = company.phase;
     const started = (was === 'proposed' || was === 'founding') && company.phase === 'running';
-    if (started && (main.kind === 'office' || panel?.kind === 'proposal')) navigate(href({ main: { kind: 'progress' }, panel: null }), { replace: true, at: location.key });
+    if (started && panel?.kind === 'proposal') navigate(href({ main: { kind: 'office' }, panel: null }), { replace: true, at: location.key });
     else if (!founding && panel?.kind === 'proposal') navigate(href({ main, panel: null }), { replace: true, at: location.key });
   }, [company.phase, founding, panel, main, href, location.key]);
 
@@ -334,11 +328,18 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
   // Focus and the page's title
 
   // Where focus goes (design-v3, "Where focus goes"), once for each place the address reaches.
+  const hiddenToTalk = useRef(false);
   const placed = useRef<{ key: number; route: CompanyRoute } | null>(null);
   useEffect(() => {
     const was = placed.current;
     if (was !== null && was.key === location.key) return;
     placed.current = { key: location.key, route };
+    // Hide closed the inbox's entry with Back: focus goes to the talk bar, as Hide says, not where the entry was left.
+    if (hiddenToTalk.current) {
+      hiddenToTalk.current = false;
+      talk.focus();
+      return;
+    }
     const officeHeading = () => focusSoon(['#company-office-heading']);
     const boardTitle = () => (main.kind === 'progress' ? focusSoon(['#progress-heading', '[data-progress]']) : focusSoon(['[data-board-title]']));
     const panelTitle = () => focusSoon(['#company-panel [data-panel-heading]']);
@@ -368,7 +369,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
     // Back puts focus where it was.
     if (location.returned && location.restore) restoreSoon(location.restore, titleOfChange);
     else titleOfChange();
-  }, [location.key, location.returned, location.restore, route, main, panel, phone]);
+  }, [location.key, location.returned, location.restore, route, main, panel, phone, talk]);
 
   useEffect(() => {
     document.title = companyTitle(company.name, company.inbox, mainViewTitle(main));
@@ -424,7 +425,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
     setTyping(false);
     if (opener?.isConnected) opener.focus({ preventScroll: true });
     else document.querySelector<HTMLElement>('#company-panel [data-panel-heading]')?.focus({ preventScroll: true });
-  }, [overlay]);
+  }, [overlay, setTyping]);
   const openRoom = useCallback((room: string) => push({ kind: 'room', id: room }), [push]);
   const openVisitor = useCallback((key: string) => push({ kind: 'visitor', key }), [push]);
 
@@ -520,21 +521,30 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
   const bounds = panelBounds(win.width);
   const width = layout === 'floating' ? PANEL_MIN : fitPanelWidth(memory.width, bounds);
   const homeSheet = location.mark === HOME_SHEET;
-  const onProgressDesk = !phone && main.kind === 'progress';
-  const shown = sideShownAt({ phone, main, panel, overlay: overlay !== null, homeSheet, hidden: memory.hidden, inboxBeside });
-  // A phone opens on the office with the side panel's sheet only peeking; the person opens it.
-  const peek = peeksAt({ phone, main, panel, sheetUp: shown, overlay: overlay !== null, feedOpen, typing });
+  // v0.8 (SPEC-v0.8.md, decision 1): office first. On desktops too the side panel stays closed until you ask for something,
+  // and the inbox you open (See all, More's Inbox) is an entry of its own over the office, as a phone's sheet is: Back
+  // closes it and Forward brings it back, and opening Progress or a board leaves it, one panel at a time.
+  const inboxOpen = homeSheet && main.kind === 'office';
+  const shown = sideShownAt({ phone, main, panel, overlay: overlay !== null, homeSheet, hidden: memory.hidden, inboxOpen, founding });
+  // Before the start a phone shows the proposal's sheet peeking over the office; after it, the inbox card is the way in.
+  const peek = founding && peeksAt({ phone, main, panel, sheetUp: shown, overlay: overlay !== null, feedOpen, typing });
   const setHidden = useCallback(
     (hidden: boolean, refocus = true) => {
-      // Beside progress, hiding closes what the panel shows and leaves your choice for the other views alone.
-      if (onProgressDesk) {
-        setInboxBeside(!hidden);
-        if (!hidden && memory.hidden) keepMemory({ hidden: false });
-        if (hidden && panel !== null) navigate(href({ main, panel: null }));
-      } else keepMemory({ hidden });
-      if (hidden && refocus) window.requestAnimationFrame(() => document.querySelector<HTMLElement>(layout === 'docked' ? '.side-panel__separator' : '[aria-controls="company-panel"][aria-expanded]')?.focus({ preventScroll: true }));
+      // Before the start the proposal is the panel's home and remembers being hidden; after it, hiding closes what shows.
+      if (founding) keepMemory({ hidden });
+      else if (!hidden) return; // After the start a closed panel leaves no pull to show it by; More's Inbox and the card open it.
+      else {
+        if (homeSheet) {
+          // The entry closes by Back; once it has, focus goes to the talk bar (the placing effect below).
+          hiddenToTalk.current = refocus;
+          unmark(HOME_SHEET);
+        }
+        if (panel !== null) navigate(href({ main, panel: null }));
+        setOverlays((o) => (o.stack.length > 0 ? { on: 0, stack: [] } : o));
+      }
+      if (hidden && refocus && !(homeSheet && !founding)) window.requestAnimationFrame(() => (founding ? document.querySelector<HTMLElement>('.side-panel__separator')?.focus({ preventScroll: true }) : talk.focus()));
     },
-    [keepMemory, layout, onProgressDesk, memory.hidden, panel, href, main],
+    [keepMemory, founding, panel, href, main, talk, homeSheet],
   );
   const setWidth = useCallback((next: number) => keepMemory({ width: next }), [keepMemory]);
   // A drag writes the live width on the root, so the side panel and the pieces over the main view follow by CSS alone.
@@ -552,21 +562,18 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
 
   const showInbox = () => {
     if (phone) {
-      if (panel !== null) navigate(href({ main, panel: null }), { mark: HOME_SHEET });
-      else if (!homeSheet) navigate(href(route), { mark: HOME_SHEET });
+      // One panel at a time on phones too: the inbox's sheet comes up over the office, as an entry of its own.
+      if (!homeSheet) navigate(href({ main: { kind: 'office' }, panel: null }), { mark: HOME_SHEET, elsewhere: true });
     } else {
       if (memory.hidden) keepMemory({ hidden: false });
-      if (onProgressDesk) setInboxBeside(true);
-      if (panel !== null) navigate(href({ main, panel: null }));
+      // One panel at a time: the inbox closes Progress or a board and opens over the office, as an entry of its own.
+      navigate(href({ main: { kind: 'office' }, panel: null }), { mark: HOME_SHEET, elsewhere: true });
     }
     focusSoon(['#company-panel [data-panel-heading]']);
   };
-  /** The bar's Inbox on desktops: the inbox in the side panel, or the panel hidden when it already shows the inbox. */
-  const inboxKey = () => {
-    // Focus stays on Inbox, which was pressed.
-    if (shown && panel === null && !overlay) setHidden(true, false);
-    else showInbox();
-  };
+  // A view's own "Show the inbox" (a person or a task that has gone) opens it as More's Inbox does.
+  const inboxAsked = useEffectEvent(() => showInbox());
+  useEffect(() => onInboxRequest(() => inboxAsked()), []);
   const closeSheet = () => {
     if (overlay) pop();
     else if (panel !== null) {
@@ -601,7 +608,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
   const caption = useRef<HTMLDivElement>(null);
   const keys = useRef<HTMLDivElement>(null);
   const progressCol = useRef<HTMLElement>(null);
-  const [measured, setMeasured] = useState<{ caption: number | null; keys: number | null; talk: number; sheet: number | null; sheetBottom: number | null; feed: Cover | null; progress: number | null }>({ caption: null, keys: null, talk: 56, sheet: null, sheetBottom: null, feed: null, progress: null });
+  const [measured, setMeasured] = useState<{ caption: number | null; keys: number | null; talk: number; sheet: number | null; sheetBottom: number | null; feed: Cover | null; progress: number | null; card: number | null }>({ caption: null, keys: null, talk: 56, sheet: null, sheetBottom: null, feed: null, progress: null, card: null });
   useLayoutEffect(() => {
     const read = () => {
       const bottom = (el: HTMLElement | null) => (el && el.offsetParent !== null ? Math.round(el.getBoundingClientRect().bottom) : null);
@@ -616,7 +623,11 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
       const feed = row && piece ? { left: Math.round(piece.getBoundingClientRect().left), right: Math.round(piece.getBoundingClientRect().right), top: Math.round(row.getBoundingClientRect().top), bottom: Math.round(row.getBoundingClientRect().bottom) } : null;
       // The progress column's right edge: the office stands in what it leaves.
       const column = !phone && progressCol.current ? Math.round(progressCol.current.getBoundingClientRect().right) : null;
-      const next = { caption: bottom(caption.current), keys: bottom(keys.current), talk: Number.isFinite(talkNow) && talkNow > 0 ? talkNow : 56, sheet, sheetBottom, feed, progress: column };
+      // The inbox card over the talk bar (v0.8), which writes its height on the root (`--card-now`) while it shows: the labels
+      // keep clear of it, and the camera of a fixed share of it.
+      const cardNow = Number.parseFloat(root.current?.style.getPropertyValue('--card-now') ?? '');
+      const card = Number.isFinite(cardNow) && cardNow > 0 ? cardNow : null;
+      const next = { caption: bottom(caption.current), keys: bottom(keys.current), talk: Number.isFinite(talkNow) && talkNow > 0 ? talkNow : 56, sheet, sheetBottom, feed, progress: column, card };
       setMeasured((was) => (same(was, next) ? was : next));
     };
     read();
@@ -636,7 +647,10 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
       style.disconnect();
     };
   }, [main.kind, layout, phone, shown, peek, half, typing, feedOpen]);
-  const insets = stageInsets({ layout, side: !phone && shown ? width : null, talk: measured.talk, caption: measured.caption, keys: measured.keys, sheet: phone && (shown || peek) && !typing ? measured.sheet : null, sheetBottom: layout === 'short' && peek ? measured.sheetBottom : null, safeBottom: 0, height: win.height, feed: !phone && feedOpen ? measured.feed : null, progress: !phone && main.kind === 'progress' ? measured.progress : null });
+  // The inbox card (SPEC-v0.8.md, decision 2): over the office and beside Progress, never while the whole list shows.
+  // A phone's progress fills the screen, and says how many need you with See all, so the card waits for the office.
+  const showsCard = !founding && (main.kind === 'office' || (main.kind === 'progress' && !phone)) && !(shown && panel === null && !overlay) && !(phone && shown);
+  const insets = stageInsets({ layout, side: !phone && shown ? width : null, talk: measured.talk, caption: measured.caption, keys: measured.keys, sheet: phone && (shown || peek) && !typing ? measured.sheet : null, sheetBottom: layout === 'short' && peek ? measured.sheetBottom : null, safeBottom: 0, height: win.height, feed: !phone && feedOpen ? measured.feed : null, progress: !phone && main.kind === 'progress' ? measured.progress : null, card: measured.card });
 
   // ------------------------------------------------------------------------------------------------------------
   // The keys: Escape by where focus is, Enter on nothing to talk
@@ -673,7 +687,8 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
   const sideHead: SidePanelHead = {
     onBack: headBackAt({ prev: location.prev, company: companyId, route, feedOpen }) && !overlay ? () => window.history.back() : null,
     onHome: overlay ? pop : panel !== null ? showHome : phone && homeSheet ? closeSheet : null,
-    homeLabel: overlay ? 'Back' : phone && panel === null ? 'Close' : founding ? 'Back to the proposal' : 'Back to the inbox',
+    // v0.8: the × leads back to the inbox only when you had opened it; otherwise it closes the side panel.
+    homeLabel: overlay ? 'Back' : phone && panel === null ? 'Close' : founding ? 'Back to the proposal' : phone || !inboxOpen ? 'Close' : 'Back to the inbox',
     // Before the start the proposal's own heading is in the sheet; only its peek (an empty card otherwise) takes a title.
     title: panel === null && !overlay && founding && peek ? { text: "The CEO's proposal", sentence: company.phase === 'proposed' ? 'Read it, then start it, answer the CEO or change it.' : scopingWaits(scopingOf(company)) ? 'The CEO has a few questions first. Answer them, or use its picks.' : 'The CEO is drafting it. Your words reach the CEO meanwhile.', label: "The CEO's proposal", opens: "the CEO's proposal" } : panel === null && !overlay && !founding ? { text: 'Inbox', sentence: phone ? phoneHeadline(company, now, showsStateCallout(company) ? '' : state.sentence) : inboxLine(company), label: company.inbox > 0 ? `Inbox, ${company.inbox} need${company.inbox === 1 ? 's' : ''} you` : 'Inbox' } : null,
     person: person && !overlay ? personHead(company, snapshot, person) : null,
@@ -710,7 +725,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
       data-layout={layout}
       data-typing={typing || undefined}
       data-sheet={sheetUp ? 'panel' : undefined}
-      style={{ '--side-w': `${width}px`, '--main-right': `${mainRight}px`, '--float-clear': layout === 'floating' && shown ? `${width + 24}px` : '0px', '--sheet-share': half ? 0.5 : 0.78 } as CSSProperties}
+      style={{ '--side-w': `${width}px`, '--main-right': `${mainRight}px`, '--float-clear': layout === 'floating' && shown ? `${width + 24}px` : '0px', '--sheet-share': half ? 0.5 : 0.78, '--progress-right': !phone && onProgress && measured.progress ? `${measured.progress}px` : '0px' } as CSSProperties}
     >
       {/* The heading takes focus on entering; it comes first in the page, so the skip links are the first stops after it. */}
       <h1 id="company-office-heading" tabIndex={-1} className="visually-hidden company__h1">
@@ -746,12 +761,11 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
           demo={demo}
           online={online}
           main={main}
-          viewHref={(next) => href({ main: next, panel: phone ? null : panel })}
+          viewHref={(next) => href({ main: next, panel: null })}
           onView={openMain}
           inboxCurrent={shown && panel === null && !overlay && !founding}
-          panelShown={shown}
           onLobby={() => navigate('/')}
-          onInbox={phone ? showInbox : inboxKey}
+          onInbox={showInbox}
           onPreview={() => openMain({ kind: 'preview' })}
           onCustomize={() => openPanel({ kind: 'customize' })}
           onSettings={() => openPanel({ kind: 'settings' })}
@@ -765,26 +779,13 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
           onZoom={(direction) => void camera.zoom(direction)}
           onFullScreen={fullScreen}
         />
+        {banner}
         {reconnecting && (
           <p ref={rowRef} className="shell-reconnecting" role="status">
             {reconnecting}
           </p>
         )}
         <main className="shell-stage" aria-labelledby="company-office-heading">
-          {/* The office's own: the caption and the map keys (beside progress the stage fits itself; Full screen is in More too). */}
-          {main.kind === 'office' && !phone && (
-            <div className="shell-main shell-main--top" data-main>
-              {/* One row, so the caption and the map keys never lie over each other; short of room the keys go under it. */}
-              <div className="shell-top">
-                <div ref={caption} className="shell-caption-wrap">
-                  <Caption company={company} now={now} state={state.sentence} inboxHref={href({ main, panel: null })} onInbox={showInbox} onRaise={() => raiseBudget()} />
-                </div>
-                <div ref={keys} className="shell-mapkeys-wrap">
-                  <MapKeys fullscreenable={fullscreenable} onFit={() => camera.fit()} onZoom={(direction) => void camera.zoom(direction)} onFullScreen={fullScreen} />
-                </div>
-              </div>
-            </div>
-          )}
           {/* A short window's raised sheet covers the room: nothing under it may take focus (the desk sign, the screen's key). */}
           <div className="stage" data-mode={mode} aria-hidden={mode === 'covered' || undefined} inert={(layout === 'short' && sheetUp && !peek) || undefined}>
             {webgl ? (
@@ -837,7 +838,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
             {Dock && (
               <Boundary fallback={null}>
                 <Suspense fallback={null}>
-                  <Dock {...tabProps} link={link} board={boardView || onProgress} office={main.kind === 'office'} phone={phone} founding={founding} onFeed={onFeed} onChip={palette.run} inboxBeside={!phone && shown && panel === null && !overlay && !founding} />
+                  <Dock {...tabProps} link={link} board={boardView || onProgress} office={main.kind === 'office'} phone={phone} founding={founding} onFeed={onFeed} onChip={palette.run} inboxBeside={!phone && shown && panel === null && !overlay && !founding} card={showsCard} onSeeAll={showInbox} />
                 </Suspense>
               </Boundary>
             )}
@@ -854,6 +855,7 @@ function CompanyOffice({ companyId, route, old, intent, location, snapshot, stre
         width={width}
         bounds={bounds}
         inbox={company.inbox}
+        pull={founding}
         peek={peek}
         onPeek={showInbox}
         head={sideHead}

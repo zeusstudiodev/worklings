@@ -187,8 +187,9 @@ function PaletteToast({ result, company, actions, steer, online, announce, onDon
       // The button goes with the toast: focus moves to the view's heading first, so it doesn't fall to the page.
       const fell = !document.activeElement || document.activeElement === document.body;
       if (toast.current?.contains(document.activeElement) || (heldFocus && fell)) {
-        // A phone's sheet that only peeks has no heading to take it: its peek key does.
-        for (const target of ['#company-panel [data-panel-heading]', '#company-panel .side-panel__peek-key', '#company-panel']) {
+        // A phone's sheet that only peeks has no heading to take it: its peek key does. With the side panel closed (v0.8, its
+        // default), the office's own heading does.
+        for (const target of ['#company-panel [data-panel-heading]', '#company-panel .side-panel__peek-key', '#company-panel', '#company-office-heading']) {
           const el = document.querySelector<HTMLElement>(target);
           el?.focus({ preventScroll: true });
           if (el && document.activeElement === el) break;

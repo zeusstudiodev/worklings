@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyAsideView } from '../src/core/aside.ts';
 import { hourMinute } from '../web/src/lib/format.ts';
 import { type CompanyView, type LobbyCompany, type LobbyView, type Question, STAKEHOLDER, THE_OFFICE } from '../src/core/company.ts';
-import { demoCompanyView, demoLobby, demoProposalView } from '../src/core/demo-company.ts';
+import { demoCompanyView, demoLobby, demoPlainView, demoProposalView } from '../src/core/demo-company.ts';
 import {
   companyNews,
   companySpend,
@@ -102,6 +102,14 @@ describe("the company's state", () => {
     expect(companyState(stateOfCompany(four, NOW), NOW, clock).sentence).toBe('Three at work. One waits for you.');
     // An approval that ran out is no longer something you could answer.
     expect(heldCount({ ...four, approvals: [{ ...must(four.approvals, 0), expiresAt: NOW - MIN }] }, NOW)).toBe(0);
+  });
+
+  // v0.8: More's "At work" said 0 while a plain session's subagents worked after its turn ended.
+  it("counts a plain session's running helpers as at work, and not the finished ones", () => {
+    const plain = demoPlainView(NOW);
+    const idle = { ...plain, desks: { ...plain.desks, working: 0 }, questions: [], approvals: [] };
+    expect(workingNow(idle, NOW)).toBe(1);
+    expect(workingNow({ ...idle, helpers: (idle.helpers ?? []).map((h) => ({ ...h, state: 'done' as const })) }, NOW)).toBe(0);
   });
 
   it("doesn't count the office's start? before someone's next task as holding them: they work on meanwhile", () => {
@@ -204,7 +212,7 @@ describe('the lobby', () => {
 
   it('counts desks across companies in words', () => {
     expect(desksLine({ maxDesks: 8, working: 6 })).toBe('Six of eight desks in use across companies.');
-    expect(desksLine(lobby.hub)).toBe('Nine of twelve desks in use across companies.');
+    expect(desksLine(lobby.hub)).toBe('Ten of twelve desks in use across companies.');
   });
 
   it('writes a row per company: state, latest status line, what needs you, what it spent', () => {
@@ -235,8 +243,9 @@ describe('the lobby', () => {
   });
 
   it('adds up what needs you, here and elsewhere, for the titles and the Lobby link', () => {
-    expect(totalNeeds(lobby)).toBe(14);
-    expect(otherNeeds(lobby, 'demo')).toBe(8);
+    // v0.8 added the plain job's one permission prompt.
+    expect(totalNeeds(lobby)).toBe(15);
+    expect(otherNeeds(lobby, 'demo')).toBe(9);
     expect(lobbyTitle(5)).toBe('(5) Worklings lobby');
     expect(lobbyTitle(0)).toBe('Worklings lobby');
     expect(companyTitle('Plant Pal', 3)).toBe('(3) Plant Pal in Worklings');

@@ -86,5 +86,5 @@ export function useDemoCompany(id: string): Stream<Snapshot & { company: Company
   const hub = demoHub();
   const snapshot = useSyncExternalStore(hub.subscribe, () => hub.snapshot(id));
   if (!snapshot) return { data: null, connection: 'gone', receivedAt: 0, refusal: "That company isn't in the lobby any more.", skew: 0 };
-  return { data: snapshot, connection: 'live', receivedAt: hub.changedAt(), refusal: null, skew: 0 };
+  return { data: snapshot, connection: 'live', receivedAt: hub.changedAt(), refusal: null, skew: hub.skewOf(id) };
 }

@@ -23,8 +23,16 @@ describe('the camera fit on desktops', () => {
     expect(fit).toEqual({ top: 68, right: 384, bottom: 106, left: 0 });
   });
 
-  it('leaves the pull and its gutter when the docked side panel is hidden', () => {
-    expect(stageInsets(frame({ side: null })).fit.right).toBe(36);
+  // v0.8: a closed side panel leaves no pull after the start (the inbox card is the way back), so the office takes the width.
+  it('takes the whole width when the docked side panel is closed', () => {
+    expect(stageInsets(frame({ side: null })).fit.right).toBe(0);
+  });
+
+  it('keeps a fixed share for the inbox card, however tall it is, so answering never moves the office', () => {
+    const short = stageInsets(frame({ side: null, card: 120 })).fit;
+    const tall = stageInsets(frame({ side: null, card: 380 })).fit;
+    expect(short).toEqual(tall);
+    expect(short.bottom).toBe(12 + 56 + 8 + 220);
   });
 
   it('takes the 320 px side panel at 1024 x 768', () => {
@@ -80,18 +88,34 @@ describe("the labels' area on desktops", () => {
     expect(stageInsets(frame({ layout: 'floating', side: null, height: 1024 })).labels.right).toBe(12);
   });
 
-  it('keeps clear of the pull while the docked side panel is hidden', () => {
-    expect(stageInsets(frame({ side: null })).labels.right).toBe(36);
+  it('keeps a gutter from the edge while the docked side panel is closed', () => {
+    expect(stageInsets(frame({ side: null })).labels.right).toBe(12);
+  });
+
+  it('ends above the inbox card as it measures', () => {
+    expect(stageInsets(frame({ side: null, card: 300 })).labels.bottom).toBe(12 + 56 + 8 + 300 + 8);
   });
 });
 
 describe('phones', () => {
-  it('keeps the bar and the views row at the top and the talk bar with its strip line at the foot, at 375 x 812', () => {
+  // v0.8: the views row moved into More, so the bar alone is at the top.
+  it('keeps the bar at the top and the talk bar with its strip line at the foot, at 375 x 812', () => {
     const { fit, labels } = stageInsets(frame({ layout: 'phone', height: 812 }));
-    // 8 + 44 + 8 + 56 + 8 at the top; 8 + 56 + 8 + 36 + 8 at the foot for the camera.
-    expect(fit).toEqual({ top: 124, right: 0, bottom: 116, left: 0 });
+    // 8 + 44 + 8 at the top; 8 + 56 + 8 + 36 + 8 at the foot for the camera.
+    expect(fit).toEqual({ top: 60, right: 0, bottom: 116, left: 0 });
     // The labels end at the strip line's top edge and keep a gutter from the sides.
-    expect(labels).toEqual({ top: 124, right: 8, bottom: 108, left: 8 });
+    expect(labels).toEqual({ top: 60, right: 8, bottom: 108, left: 8 });
+  });
+
+  it('keeps the inbox card clear in a short window too, where there is no strip', () => {
+    const { labels } = stageInsets(frame({ layout: 'short', height: 375, card: 150 }));
+    expect(labels.bottom).toBe(8 + 56 + 8 + 150 + 8);
+  });
+
+  it('keeps the inbox card clear at the foot: a fixed share for the camera, its measure for the labels', () => {
+    const { fit, labels } = stageInsets(frame({ layout: 'phone', height: 812, card: 200 }));
+    expect(fit.bottom).toBe(8 + 56 + 8 + 96 + 8);
+    expect(labels.bottom).toBe(8 + 56 + 8 + 200 + 8 - 8);
   });
 
   it('adds the safe area at the foot', () => {

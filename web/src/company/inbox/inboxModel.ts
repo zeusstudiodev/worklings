@@ -3,6 +3,7 @@
 // tested; the component keeps only this tab's own presses.
 import { type Approval, type CompanyView, type Message, type PersonView, type Question, STAKEHOLDER, THE_OFFICE, UNDO_MS } from '../../../../src/core/company.ts';
 import { clip, coarseAge, coarseDuration, countWord, plainText } from '../../../../src/core/now.ts';
+import { endsInQuestion, isTurnStopped, OWN_TURN_REASON } from '../../../../src/core/plain.ts';
 import { capital } from '../../../../src/core/words.ts';
 import { hourMinute, whenAt } from '../../lib/format.ts';
 import { waitsForWords } from '../pauseWords.ts';
@@ -76,10 +77,12 @@ export function needsYouLine(n: number): string {
 const FILE_TOOLS = new Set(['Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
 
 export interface QuestionLines {
-  /** "Mina, UI designer, asks you. Ines has a copy." */
+  /** "Mina, UI designer, asks you. Ines has a copy.", or for a plain session's last words "Claude Code finished its turn." */
   who: string;
-  /** "Asked 2 min ago." */
+  /** "Asked 2 min ago.", or "2 min ago." for words that ask nothing. */
   asked: string;
+  /** Whether it is a question to answer; a plain session's words that ask nothing take a reply instead. */
+  asks: boolean;
   text: string;
   /** "For: Pickup slot picker", a link to the task. */
   task: { id: string; title: string } | null;
@@ -100,11 +103,22 @@ function askedBy(company: CompanyView, q: Question): string {
   return `${capital(asker.subject)} asks you.${copy}`;
 }
 
+/**
+ * v0.8: a plain session's words at the end of its turn: it asks you only when they end in a question; otherwise it
+ * finished its turn (or the turn stopped, in the office's words), and the person may reply.
+ */
+function turnLines(company: CompanyView, q: Question, now: number): Pick<QuestionLines, 'who' | 'asked' | 'asks'> {
+  const who = capital(nameOf(company, q.from).subject);
+  const age = coarseAge(now - q.askedAt);
+  if (endsInQuestion(q.text)) return { who: `${who} asks you.`, asked: `Asked ${age}.`, asks: true };
+  const stopped = isTurnStopped(q.text);
+  return { who: stopped ? `${possessive(who)} turn stopped.` : `${who} finished its turn.`, asked: `${capital(age)}.`, asks: false };
+}
+
 export function questionLines(company: CompanyView, q: Question, now: number): QuestionLines {
   const task = taskOf(company, q.taskId);
   return {
-    who: askedBy(company, q),
-    asked: `Asked ${coarseAge(now - q.askedAt)}.`,
+    ...(q.plainTurn === true ? turnLines(company, q, now) : { who: askedBy(company, q), asked: `Asked ${coarseAge(now - q.askedAt)}.`, asks: true }),
     text: plainText(q.text),
     task: task ? { id: task.id, title: clip(plainText(task.title), 120) } : null,
     options: q.options.map((label, i) => ({ label: clip(plainText(label), 120), pick: q.recommended === i })),
@@ -189,11 +203,17 @@ function answerWords(item: Item, answer: { option: number | null; text: string }
   return clip(plainText(option ?? answer.text), 80);
 }
 
+/** v0.8: a plain session's words that ask nothing take a reply, not an answer. */
+export const takesReply = (item: Item): boolean => item.kind === 'question' && item.question.plainTurn === true && !endsInQuestion(item.question.text);
+
+/** v0.8: a plain session's end of turn the session went on from by itself: a reply to it goes as a message. */
+const wentOn = (item: Item): boolean => item.kind === 'question' && item.question.plainTurn === true && item.question.withdrawn?.reason === OWN_TURN_REASON;
+
 /** What a press leaves in place of the item, naming who it was for: "Denying Sam.", "Answering the CEO: TWINT." */
 function pendingText(company: CompanyView, item: Item, answer: Answer): string {
   const who = askerCalled(company, item);
   if (answer.kind === 'approval') return answer.decision === 'deny' ? `Denying ${who}.` : answer.always ? `Allowing ${who} always.` : `Allowing ${who} once.`;
-  return `Answering ${who}: ${endSentence(answerWords(item, answer))}`;
+  return `${takesReply(item) ? 'Replying to' : 'Answering'} ${who}: ${endSentence(answerWords(item, answer))}`;
 }
 
 /** What the live region says at the press, so the window to change your mind is heard too, not only the result. */
@@ -207,7 +227,7 @@ function doneText(company: CompanyView, item: Item, at: number, answer: { option
     if (answer.decision === 'deny') return `Denied ${when}. ${who} was told ${answer.note ? 'why' : 'no'}.`;
     return `${answer.always ? 'Always allowed' : 'Allowed once'} ${when}. ${who} carries on.`;
   }
-  return `Answered ${when}: ${endSentence(answerWords(item, answer))} ${carriesOn(company, item, answer.option)}`;
+  return `${takesReply(item) ? 'Replied' : 'Answered'} ${when}: ${endSentence(answerWords(item, answer))} ${carriesOn(company, item, answer.option)}`;
 }
 
 /** Why something was taken away before you answered, as a sentence: the office's own reason, or a timed-out ask. */
@@ -217,6 +237,7 @@ function goneText(company: CompanyView, item: Item, now: number): string {
   if (item.kind === 'approval' && (withdrawn === null ? now >= item.approval.expiresAt : withdrawn.at >= item.approval.expiresAt)) {
     return `Timed out ${whenAt(item.approval.expiresAt)}, so ${who} was told no.`;
   }
+  if (wentOn(item)) return `${capital(who)} went on by itself, so what you write goes to it as a message.`;
   const reason = withdrawn ? plainText(withdrawn.reason).trim() : '';
   return `Withdrawn: ${reason ? endSentence(capital(clip(reason, 200))) : `${capital(who)} doesn't need it any more.`}`;
 }
@@ -241,6 +262,8 @@ export interface InboxContext {
   now: number;
   openedAt: number;
   skew: number;
+  /** v0.8: items whose own-words box is open with words in it; one the session went on from stays open while you write. */
+  drafting?: ReadonlySet<string>;
 }
 
 /**
@@ -256,6 +279,8 @@ export function itemView(company: CompanyView, item: Item, press: Press | undefi
 
   // The hub took the Undo, and the snapshot may not say so yet.
   if (press?.state === 'undone' && answer !== null && answer.at === press.undid && withdrawn === null && !expired) return { kind: 'open', refusal: null };
+  // A reply being written when the session went on by itself: the item stays, and the reply goes to it as a message.
+  if (wentOn(item) && press === undefined && ctx.drafting?.has(waitId(item))) return { kind: 'open', refusal: null };
   if (open) {
     if (press?.state === 'refused') return { kind: 'open', refusal: press.error };
     // Pressed, and the snapshot doesn't have the answer yet: the window runs from the press.
@@ -270,6 +295,8 @@ export function itemView(company: CompanyView, item: Item, press: Press | undefi
     if (answer.at >= ctx.openedAt) return { kind: 'elsewhere', text: `Answered in another window: ${answerWords(item, answer)} ${whenAt(answer.at)}.` };
     return { kind: 'answered' };
   }
+  // The reply written as the session went on by itself went to it as a message (the hub's answer() delivers it so).
+  if (wentOn(item) && (press?.state === 'sending' || press?.state === 'sent')) return { kind: 'gone', text: `Sent to ${askerCalled(company, item)} as a message.` };
   // Withdrawn, or an approval whose hook gave up.
   const goneAt = withdrawn?.at ?? (item.kind === 'approval' ? item.approval.expiresAt : ctx.now);
   if (goneAt >= ctx.openedAt || press !== undefined) return { kind: 'gone', text: goneText(company, item, ctx.now) };

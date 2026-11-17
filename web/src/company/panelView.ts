@@ -29,15 +29,15 @@ export const peeksAt = (o: { phone: boolean; main: MainView; panel: PanelView | 
   o.phone && o.main.kind === 'office' && o.panel === null && !o.sheetUp && !o.overlay && !o.feedOpen && !o.typing;
 
 /**
- * Whether the side panel shows. Phones: a sheet up for a view, the inbox or an overlay. Desktops: unless you hid it, except
- * on progress, which opens with it closed (the column already says what needs you, and the office gets the room) and
- * shows it only for a view opened into it (a `?panel=` address, an inbox item from a needs-you link), an overlay, or the
- * inbox you asked for there (`inboxBeside`: the Inbox key, a link to the inbox).
+ * Whether the side panel shows (v0.8, SPEC-v0.8.md, "office first"). Phones: a sheet up for a view, the inbox or an
+ * overlay. Desktops: only for what you asked for, a view opened into it (a `?panel=` address, a person, a task), an
+ * overlay, or the inbox you opened (See all, More's Inbox). Before the start the proposal is its home and shows unless
+ * you hid it.
  */
-export const sideShownAt = (o: { phone: boolean; main: MainView; panel: PanelView | null; overlay: boolean; homeSheet: boolean; hidden: boolean; inboxBeside: boolean }): boolean => {
+export const sideShownAt = (o: { phone: boolean; main: MainView; panel: PanelView | null; overlay: boolean; homeSheet: boolean; hidden: boolean; inboxOpen: boolean; founding: boolean }): boolean => {
   if (o.phone) return o.panel !== null || o.homeSheet || o.overlay;
-  if (o.main.kind !== 'progress') return !o.hidden;
-  return o.panel !== null || o.overlay || (o.inboxBeside && !o.hidden);
+  if (o.panel !== null || o.overlay) return true;
+  return o.founding ? o.main.kind !== 'progress' && !o.hidden : o.inboxOpen;
 };
 
 const same = (a: MainView | PanelView | null, b: MainView | PanelView | null): boolean => JSON.stringify(a) === JSON.stringify(b);

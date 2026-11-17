@@ -343,6 +343,17 @@ describe("a phone's sheets as marked entries", () => {
     expect(o.urls()).toEqual(['/c/cafe', '/c/cafe']);
   });
 
+  // v0.8: a desktop's inbox opened over a board is one entry, the office marked, so Back returns to the board.
+  it('pushes a marked entry at another address when asked to, in one step', () => {
+    const o = office('/c/cafe/tasks');
+    o.router.navigate('/c/cafe', { mark: 'inbox', elsewhere: true });
+    expect(o.urls()).toEqual(['/c/cafe/tasks', '/c/cafe']);
+    expect(o.location()).toMatchObject({ path: '/c/cafe', mark: 'inbox' });
+    o.back();
+    o.settle();
+    expect(o.location()).toMatchObject({ path: '/c/cafe/tasks', mark: null });
+  });
+
   it('closes a sheet by Back only from its own marked entry', () => {
     const o = office('/c/cafe');
     o.router.unmark('feed');

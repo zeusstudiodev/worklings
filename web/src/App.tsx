@@ -20,6 +20,7 @@ import { TopBar } from './hud/TopBar.tsx';
 import { getCatalog, reshape, takeToken, useOffice } from './lib/api.ts';
 import { liveActions, liveHub, probeServer } from './company/api.ts';
 import { demoHub, demoSteering, enterDemo, inDemo, leaveDemo } from './company/demo.ts';
+import { ReplayBanner } from './company/replay/ReplayBanner.tsx';
 import { liveSteering } from './company/steeringApi.ts';
 import { Lobby } from './company/lobby/Lobby.tsx';
 import { type Address, type Location, navigate, parseAddress, useLocation } from './company/router.ts';
@@ -130,7 +131,7 @@ function DemoCompanyApp({ address, location }: { address: CompanyAddress; locati
   const actions = useMemo(() => demoHub().actions(address.company), [address.company]);
   const hub = useMemo(() => demoHub().hub(), []);
   const steer = useMemo(() => demoSteering(address.company), [address.company]);
-  return <Shell companyId={address.company} route={address.route} old={address.old} intent={address.talk} location={location} stream={stream} lobby={lobby.data} actions={actions} hub={hub} demo token={null} steer={steer} />;
+  return <Shell companyId={address.company} route={address.route} old={address.old} intent={address.talk} location={location} stream={stream} lobby={lobby.data} actions={actions} hub={hub} demo token={null} steer={steer} banner={<ReplayBanner companyId={address.company} />} />;
 }
 
 function LiveLobbyApp({ location, token, starting }: { location: Location; token: string | null; starting: boolean }) {

@@ -10,6 +10,7 @@ import { cutMiddle } from '../model.ts';
 import { companyPath, navigate } from '../router.ts';
 import { ActionError } from '../types.ts';
 import { aboutFolder, type FolderReading, newFolderLine, readFolder } from './startModel.ts';
+import { RECORDED_FOLDER, RECORDED_PROMPT, replayNote } from '../replay/recorded.ts';
 
 /** What the hub's create route takes (LIMITS.prompt). */
 const PROMPT_MAX = LIMITS.prompt;
@@ -62,12 +63,16 @@ interface StartProps {
   online: boolean;
   /** In the lobby's first run, the form sits under the welcome. */
   embedded?: boolean;
+  /** The demo (v0.8): one session replays the recorded run, and the form says so. */
+  demo?: boolean;
+  /** The demo's "Try it: start a project": the form opens filled with the recorded run's folder and words. */
+  tryIt?: boolean;
 }
 
-export function StartCompany({ hub, lobby, blocked, online, embedded = false }: StartProps) {
+export function StartCompany({ hub, lobby, blocked, online, embedded = false, demo = false, tryIt = false }: StartProps) {
   const id = useId();
-  const [folder, setFolder] = useState('');
-  const [prompt, setPrompt] = useState('');
+  const [folder, setFolder] = useState(tryIt ? RECORDED_FOLDER : '');
+  const [prompt, setPrompt] = useState(tryIt ? RECORDED_PROMPT : '');
   const [work, setWork] = useState<WorkChoice>('plain');
   const [info, setInfo] = useState<{ path: string; reading: FolderReading } | null>(null);
   const [reading, setReading] = useState<string | null>(null);
@@ -175,7 +180,7 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false }: 
     >
       {!embedded && (
         <h2 id={`${id}-title`} className="panel-title" tabIndex={-1} data-panel-heading>
-          Start a company
+          {tryIt ? 'Try it: start a project' : 'Start a company'}
         </h2>
       )}
 
@@ -246,7 +251,7 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false }: 
           onChange={(e) => changePrompt(e.target.value)}
         />
         <p id={`${id}-prompt-hint`} className="start__hint">
-          {promptProblem ?? (work === 'team' ? 'One sentence is enough. The CEO asks about the rest.' : 'Write it as you would to Claude Code. It asks if it needs to.')}
+          {promptProblem ?? (work === 'team' ? 'One sentence is enough. The CEO asks about the rest.' : demo ? replayNote(prompt) : 'Write it as you would to Claude Code. It asks if it needs to.')}
           {prompt.length > PROMPT_MAX * 0.8 && (
             <span className="start__count">
               {' '}
@@ -291,7 +296,12 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false }: 
           {starting ? 'Starting…' : 'Start the company'}
         </button>
         <p id={`${id}-cost`} className="start-block__note">
-          {unavailable ?? (work === 'team' ? 'The CEO drafts your org on your Claude Code model: about 15¢ on Opus, less on Sonnet.' : 'It runs on your own Claude Code and starts at once. You see what it costs as it works.')}
+          {unavailable ??
+            (work === 'team'
+              ? 'The CEO drafts your org on your Claude Code model: about 15¢ on Opus, less on Sonnet.'
+              : demo
+                ? 'In the demo it costs nothing: the run was recorded once on Sonnet and plays back sped up. Installed, it runs on your own Claude Code.'
+                : 'It runs on your own Claude Code and starts at once. You see what it costs as it works.')}
         </p>
         {startProblem?.where === 'form' && (
           <p className="start-block__problem" role="alert">

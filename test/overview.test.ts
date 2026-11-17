@@ -191,6 +191,18 @@ describe('stageOf', () => {
     expect(stageOf(input({ tasks, working: [lea], questions: [question('q-1', { from: 'lea', answer: { option: 0, text: 'Yes', at: 1, appliesAt: 2 } })] }), NOW)).toBe('working');
   });
 
+  // v0.8: a plain session that ended its turn with words isn't asking for an OK; a prompt or a plan still is.
+  it("reads your turn when all that waits is a plain session's last words, and waiting when a prompt waits too", () => {
+    const words = question('q-1', { from: 'builder', plainTurn: true });
+    expect(stageOf(input({ questions: [words] }), NOW)).toBe('your-turn');
+    expect(stageOf(input({ questions: [words], approvals: [approval('a-1', { person: 'builder' })] }), NOW)).toBe('waiting');
+    expect(stageOf(input({ questions: [words, question('q-2')] }), NOW)).toBe('waiting');
+    expect(stageOf(input({ phase: 'proposed', plan: null, questions: [words] }), NOW)).toBe('waiting');
+    expect(stageOf(input({ questions: [{ ...words, withdrawn: { reason: 'Claude Code went on by itself.', at: NOW } }] }), NOW)).toBe('working');
+    // Its helpers still running after the turn ended: the job is at work, not waiting for a reply.
+    expect(stageOf(input({ questions: [words], helping: 2 }), NOW)).toBe('working');
+  });
+
   it("doesn't wait on a plan when plan approval is off", () => {
     expect(stageOf(input({ plan: { versions: [v1], approved: null, waiting: null }, planApproval: 'off' }), NOW)).toBe('working');
   });

@@ -872,7 +872,8 @@ export interface LobbyCompany {
 // ---------------------------------------------------------------------------------------------------------------
 // v0.2: the overview of a company, and what happened since the stakeholder last looked (src/core/overview.ts)
 
-export const STAGES = ['scoping', 'waiting', 'working', 'checking', 'done', 'paused', 'stuck'] as const;
+// v0.8: 'your-turn' is a plain session that ended its turn with words and waits for nothing else: no prompt, no plan.
+export const STAGES = ['scoping', 'waiting', 'your-turn', 'working', 'checking', 'done', 'paused', 'stuck'] as const;
 export type CompanyStage = (typeof STAGES)[number];
 
 /** Where a needs-you item opens; the web turns it into an address with companyHref. */
@@ -1306,6 +1307,11 @@ export interface DeskEvents {
    */
   session(person: string, sessionId: string, account?: { apiKeySource: string | null }): void;
   turn(person: string, result: TurnResult): void;
+  /**
+   * v0.8: a desk's session began a turn with none of the office's messages to open it: Claude Code went on by itself, as
+   * when a background task it started reports back.
+   */
+  ownTurn?(person: string): void;
   /** Claude Code reported a usage limit or an overload; `until` is the reset time it gave. */
   limited(until: number | null, message: string, reason: 'usage-limit' | 'overloaded'): void;
   /** How a desk was started when it matters to the stakeholder (it came up the standard way, and why): one plain sentence. */

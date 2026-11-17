@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { boardFrame, inboxKey, layoutOf, open, person, running, shot, stopWork, watchErrors } from './v3-kit.ts';
+import { boardFrame, open, person, running, shot, stopWork, watchErrors, inboxCard } from './v3-kit.ts';
 import { api, say, view } from './v3-world.ts';
 
 // H24: the 3D moments. They are WebGL, so the specs assert on what the label layer and the page show (a person's label
@@ -51,22 +51,20 @@ test.describe('moments in the office', () => {
     expect(errors).toEqual([]);
   });
 
-  test('someone who needs the stakeholder stands at the front desk with a paper, and the screen says so', async ({ page, request }, info) => {
+  // v0.8: the front desk's sign gave way to the inbox card over the talk bar, which says who waits and takes the answer.
+  test('someone who needs the stakeholder walks to the front desk, and the card over the talk bar says what they ask', async ({ page, request }, info) => {
     test.setTimeout(120_000);
     const errors = watchErrors(page);
     await open(page, `/c/${id}`);
     await say(request, id, 'backend-engineer', '[fake:push] Push the work branch');
-    const desk = page.getByRole('button', { name: /^Front desk, 1 needs you/ });
-    await expect(desk).toBeVisible({ timeout: 30_000 });
-    // The crowd at the desk is said once by its sign; focus on the sign opens the fold and shows who waits.
-    await desk.focus();
-    await expect(page.getByRole('main').getByRole('button', { name: /Ivo.*wants your OK|Ivo.*needs your OK|^Ivo/ }).first()).toBeVisible();
+    const card = inboxCard(page);
+    await expect(card.getByRole('button', { name: 'Allow once' })).toBeVisible({ timeout: 30_000 });
+    await expect(card).toContainText(/Ivo/);
+    await expect(page.getByRole('main').getByRole('button', { name: /^Front desk/ })).toHaveCount(0);
     await shot(page, 'h24-front-desk', info);
-    // Answering sends them back to work: the desk empties.
-    // The inbox is the side panel's home; a phone brings its sheet up first.
-    if (layoutOf(page).phone) await inboxKey(page).click();
-    await page.getByRole('region', { name: 'Needs you' }).getByRole('button', { name: 'Allow once' }).click();
-    await expect(page.getByRole('main').getByRole('button', { name: /^Front desk/ })).toHaveCount(0, { timeout: 30_000 });
+    // Answering on the card sends them back to work, and the card goes once nothing else waits.
+    await card.getByRole('button', { name: 'Allow once' }).click();
+    await expect(card.getByRole('button', { name: 'Allow once' })).toHaveCount(0, { timeout: 30_000 });
     expect(errors).toEqual([]);
   });
 

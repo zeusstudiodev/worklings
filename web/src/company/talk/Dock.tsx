@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMediaQuery, useReducedMotion } from '../../lib/hooks.ts';
 import { Feed } from '../feed/Feed.tsx';
+import { InboxCard } from '../inbox/InboxCard.tsx';
 import { feedLines } from '../feed/feedModel.ts';
 import { useEarlier } from '../feed/useEarlier.ts';
 import { useCompanyClock } from '../people/clock.ts';
@@ -14,7 +15,6 @@ import { draftScope } from '../ui/draftScope.ts';
 import type { DockProps } from '../mounts.tsx';
 import type { FeedOpening } from './link.ts';
 import { TalkBar, type TalkBarApi } from './TalkBar.tsx';
-import { Glyph } from './bits.tsx';
 import { showsSuggestions } from '../proposal/model.ts';
 import { SUGGESTIONS } from './suggestions.ts';
 import './talk.css';
@@ -44,7 +44,7 @@ function writeSeen(scope: string, at: number): void {
 }
 
 export function Dock(props: DockProps) {
-  const { snapshot, company, online, link, board, office, phone, founding, onFeed, talk, inboxBeside = false } = props;
+  const { snapshot, company, online, link, board, office, phone, founding, onFeed, talk, inboxBeside = false, card = false, onSeeAll } = props;
   const still = useReducedMotion();
   const [stripHidden] = useLiveStripHidden();
   const short = useMediaQuery('(max-height: 559px)') && phone;
@@ -219,21 +219,10 @@ export function Dock(props: DockProps) {
           </div>
         </div>
       )}
-      {showStrip && (
-        <div className="dock__above">
-          <Strip snapshot={snapshot} company={company} lines={stripFeed} count={board || phone ? STRIP_SHOWN.board : STRIP_SHOWN.office} phone={phone} now={now} replies={replies} feedId={FEED_ID} onOpen={(at) => openFeed({ at })} />
-        </div>
-      )}
-      {!feed.open && phone && !short && !showStrip && !founding && (
-        <div className="dock__above dock__above--end">
-          <button type="button" className="dock__feed-key" aria-expanded={false} aria-controls={FEED_ID} aria-label={feedKey.name} title={feedKey.name} onClick={() => openFeed()}>
-            <Glyph name="feed" />
-            {replies > 0 && (
-              <span className="talkbar__count" aria-hidden="true">
-                {replies}
-              </span>
-            )}
-          </button>
+      {!feed.open && !founding && (showStrip || card) && (
+        <div className="dock__above dock__above--stack">
+          {showStrip && <Strip snapshot={snapshot} company={company} lines={stripFeed} count={board || phone ? STRIP_SHOWN.board : STRIP_SHOWN.office} phone={phone} now={now} replies={replies} feedId={FEED_ID} onOpen={(at) => openFeed({ at })} />}
+          {card && onSeeAll && <InboxCard {...props} phone={phone} onSeeAll={onSeeAll} onEmpty={() => bar.current?.focus()} />}
         </div>
       )}
       <div ref={row} className="dock__bar">

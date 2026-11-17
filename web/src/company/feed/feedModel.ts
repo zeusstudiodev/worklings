@@ -3,6 +3,7 @@
 // people, decisions and the company's own log, each as the strip says it and as the feed says it. Never status lines,
 // tool calls or steps. Worked out from the view alone; pure, so it can be tested. The strip and the feed only draw it.
 import { type CompanyView, type Message, type PersonView, STAKEHOLDER, THE_OFFICE } from '../../../../src/core/company.ts';
+import { endsInQuestion, isTurnStopped } from '../../../../src/core/plain.ts';
 import { clip, countWord, plainText } from '../../../../src/core/now.ts';
 import type { Snapshot } from '../../../../src/core/snapshot.ts';
 import type { Decision } from '../../../../src/core/steering.ts';
@@ -329,19 +330,21 @@ function needsLines(company: Company, now: number, add: Add): void {
   for (const q of company.questions) {
     const open = q.answer === null && q.withdrawn === null;
     const gate = q.gate ? company.tasks.find((t) => t.id === q.gate?.task) : undefined;
+    // v0.8: a plain session's last words ask you only when they end in a question.
+    const verb = q.plainTurn !== true || endsInQuestion(q.text) ? 'asks you' : isTurnStopped(q.text) ? 'stopped its turn' : 'finished its turn';
     add({
       id: `q:${q.id}`,
       kind: 'asks',
       at: q.askedAt,
       from: gate ? THE_OFFICE : q.from,
-      lead: gate ? `The office asks before ${short(company, q.from)} starts:` : `${Short(company, q.from)} asks you:`,
+      lead: gate ? `The office asks before ${short(company, q.from)} starts:` : `${Short(company, q.from)} ${verb}:`,
       words: gate ? `“${clip(plainText(gate.title), 80)}”` : words(q.text),
       sentence: gate
         ? ['The office asks before ', named(company, q.from, short(company, q.from)), ` starts “${clip(plainText(gate.title), 80)}”`]
-        : [named(company, q.from, whole(company, q.from), true), `${closing(whole(company, q.from))} asks you`],
+        : [named(company, q.from, whole(company, q.from), true), `${closing(whole(company, q.from))} ${verb}`],
       body: words(q.text),
       tone: open ? 'needs' : 'plain',
-      link: open ? { path: inboxItemPath(q.id), label: 'Answer' } : null,
+      link: open ? { path: inboxItemPath(q.id), label: verb === 'asks you' ? 'Answer' : 'Reply' } : null,
       item: q.id,
     });
   }

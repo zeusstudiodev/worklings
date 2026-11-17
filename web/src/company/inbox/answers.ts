@@ -42,6 +42,9 @@ export interface PressHooks {
 
 const EMPTY: AnswersState = { presses: {}, own: {}, ownOpen: new Set(), whys: {} };
 
+/** v0.8: the items whose own-words box is open with words in it (inboxModel's InboxContext.drafting). */
+export const draftingOf = (state: Pick<AnswersState, 'own' | 'ownOpen'>): ReadonlySet<string> => new Set([...state.ownOpen].filter((key) => (state.own[key] ?? '').trim() !== ''));
+
 const findItem = (company: CompanyView, id: string): Item | undefined => allItems(company).find((i) => itemId(i) === id);
 const answerOfItem = (item: Item) => (item.kind === 'question' ? item.question.answer : item.approval.answer);
 const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -74,6 +77,7 @@ export class AnswerStore {
   isPending(itemKey: string): boolean {
     return this.inFlight.has(itemKey);
   }
+
 
   /** Asks that the next Undo drawn for this item takes focus (the feed: a pressed answer's Undo has it). */
   wantUndoFocus(itemKey: string): void {

@@ -35,7 +35,7 @@ const dockLoad = import.meta.glob<{ Dock?: ComponentType<DockProps> }>('./talk/D
  * The dock's props: every view's, the company's talk link, and where it stands. `onFeed` says when the feed opens or
  * closes; `onChip` runs a chip under the empty talk bar as the palette runs its command.
  */
-export type DockProps = TabProps & { link: TalkLink; board: boolean; office: boolean; phone: boolean; founding: boolean; onFeed: (open: boolean) => void; onChip?: (chip: TalkChip) => void; /** The inbox shows beside the office: the strip leaves out what it lists. */ inboxBeside?: boolean };
+export type DockProps = TabProps & { link: TalkLink; board: boolean; office: boolean; phone: boolean; founding: boolean; onFeed: (open: boolean) => void; onChip?: (chip: TalkChip) => void; /** The inbox shows beside the office: the strip leaves out what it lists. */ inboxBeside?: boolean; /** v0.8: the inbox card over the talk bar, and what its See all opens. */ card?: boolean; onSeeAll?: () => void };
 
 export const Inbox = inboxLoad ? lazy(async () => ({ default: required((await inboxLoad()).Inbox, 'inbox/Inbox.tsx', 'Inbox') })) : null;
 export const PersonPanel = personLoad ? lazy(async () => ({ default: required((await personLoad()).PersonPanel, 'person/PersonPanel.tsx', 'PersonPanel') })) : null;

@@ -24,6 +24,9 @@ import {
   tell,
   until,
   watchErrors,
+  openInbox,
+  inboxCard,
+  switchTo,
 } from './v3-kit.ts';
 import { api, view } from './v3-world.ts';
 
@@ -49,8 +52,9 @@ const demoProgress = async (page: Page, id: string) => {
   await expect(progressHead(page)).toBeVisible({ timeout: 30_000 });
 };
 
-test.describe('landing on progress', () => {
-  test('a lobby card lands on progress with the stage drawn beside it and the side panel closed', async ({ page, request }, info) => {
+// v0.8 (SPEC-v0.8.md, "office first"): a company opens on its office; Progress is a panel of its own, one at a time.
+test.describe('landing on the office, progress on demand', () => {
+  test('a lobby card lands on the office with the card; Progress opens beside it with the side panel closed, and the inbox closes it', async ({ page, request }, info) => {
     test.setTimeout(120_000);
     const errors = watchErrors(page);
     const id = await running(request, `progress-land-${info.project.name}`);
@@ -58,6 +62,10 @@ test.describe('landing on progress', () => {
     const card = cardOf(page, id);
     await expect(card).toBeVisible({ timeout: 30_000 });
     await card.click();
+    await expectAddress(page, companyAddress(id));
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
+    await expect(panelTitle(page)).toBeHidden();
+    await switchTo(page, 'Progress');
     await expectAddress(page, companyAddress(id, { main: 'progress' }));
     await expect(progressHead(page)).toBeVisible({ timeout: 30_000 });
     // One stage everywhere: the column's pill and the bar's say the same word (a phone's bar has the stage's dot).
@@ -65,25 +73,23 @@ test.describe('landing on progress', () => {
     if (isDesk(page)) await expect(page.getByRole('banner')).toContainText('Working');
     await expect(page.locator('[data-progress]')).toContainText('A plant care app with watering streaks');
     if (isDesk(page)) {
-      // The office draws whole beside the column; the side panel starts closed, and the map keys stay on the office.
+      // The office draws whole beside the column; the side panel stays closed.
       await expect(page.locator('.stage[data-mode="office"] canvas')).toBeVisible();
       await expect(panelTitle(page)).toBeHidden();
-      await expect(inboxKey(page)).toHaveAttribute('aria-expanded', 'false');
-      await expect(page.getByRole('button', { name: 'Fit the office in view', exact: true })).toHaveCount(0);
       const column = await page.locator('[data-progress]').boundingBox();
       const window = page.viewportSize() ?? { width: 1440, height: 900 };
       expect((column?.x ?? 0) + (column?.width ?? 0), 'the column leaves the office room').toBeLessThan(window.width * 0.6);
-      // Inbox opens the panel beside progress, and closes it again.
-      await inboxKey(page).click();
+      // One panel at a time: the inbox closes Progress and opens over the office.
+      await openInbox(page);
       await expect(panelTitle(page)).toBeVisible();
-      await inboxKey(page).click();
-      await expect(panelTitle(page)).toBeHidden();
+      await expectAddress(page, companyAddress(id));
+      await expect(progressHead(page)).toHaveCount(0);
     }
     await shot(page, 'progress-landed', info);
     expect(errors).toEqual([]);
   });
 
-  test("a world's sign on the demo's mat lands on progress too, and says Done for a finished company", async ({ page }) => {
+  test("a world's sign on the demo's mat lands on the office too, and says Done for a finished company", async ({ page }) => {
     test.skip(!isDesk(page), 'The worlds on the mat are a desktop thing; phones list the cards, checked above.');
     const errors = watchErrors(page);
     await open(page, '/?demo');
@@ -93,34 +99,31 @@ test.describe('landing on progress', () => {
     await expect(sign).toBeVisible({ timeout: 30_000 });
     await expect(sign).toContainText('Done');
     await sign.click();
-    await expectAddress(page, companyAddress('rhine-swim', { main: 'progress' }));
-    await expect(progressHead(page)).toBeVisible({ timeout: 30_000 });
+    await expectAddress(page, companyAddress('rhine-swim'));
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
     expect(errors).toEqual([]);
   });
 });
 
 test.describe("the demo café's progress", () => {
-  test('needs-you links open the inbox on their item and the plan as its own view', async ({ page }, info) => {
+  // v0.8: Progress says how many need you in one line, with See all; the card over the talk bar shows the next one.
+  test('needs you is one line with See all, not a second list of the inbox', async ({ page }, info) => {
     const errors = watchErrors(page);
     await openProgress(page, DEMO);
     const needs = section(page, /^Needs you/);
     await expect(needs).toBeVisible();
-    // An inbox item: Answer opens it in the side panel, progress staying the main view.
-    const answer = needs.getByRole('link', { name: /^Answer: / }).first();
-    const href = await answer.getAttribute('href');
-    expect(href, 'Answer opens the inbox on its item').toMatch(/^\/c\/demo\/progress\?panel=inbox\//);
-    const question = ((await answer.getAttribute('aria-label')) ?? '').replace(/^Answer: /, '').slice(0, 40);
-    await answer.click();
-    await expect.poll(() => addressOf(page)).toMatch(/^\/c\/demo\/progress\?panel=inbox\//);
-    // The side panel opens beside progress on the inbox, at that item (a phone's sheet comes up on it).
-    await expect(sidePanel(page).getByText(question).first()).toBeVisible();
-    await expect(sidePanel(page).getByRole('button', { name: 'Back to the inbox' })).toBeVisible();
-    await shot(page, 'progress-needs-answer', info);
-    // The plan: its own view, to approve it there.
-    await openProgress(page, DEMO);
-    await section(page, /^Needs you/).getByRole('link', { name: /^Open the plan: / }).click();
-    await expectAddress(page, companyAddress(DEMO, { main: 'plan' }));
-    await expect(page.getByRole('heading', { name: 'The plan', level: 3, exact: true })).toBeVisible();
+    await expect(needs.getByRole('listitem')).toHaveCount(0);
+    if (isDesk(page)) {
+      await expect(needs).toContainText(/^Needs you\s*\S+ things need you\. The next one is above the talk bar\./);
+      await expect(inboxCard(page)).toBeVisible();
+    } else {
+      // A phone's progress fills the screen: the card waits for the office, and the line doesn't point at it.
+      await expect(needs).toContainText(/^Needs you\s*\S+ things need you\. See all$/);
+      await expect(inboxCard(page)).toHaveCount(0);
+    }
+    await shot(page, 'progress-needs-line', info);
+    await needs.getByRole('button', { name: 'See all', exact: true }).click();
+    await expect(panelTitle(page)).toHaveAccessibleName(/^Inbox\b/);
     expect(errors).toEqual([]);
   });
 
@@ -203,7 +206,7 @@ test.describe('More and the old addresses', () => {
     ];
     for (const c of cases) {
       await open(page, c.path);
-      await expect(inboxKey(page), c.path).toBeVisible({ timeout: 30_000 });
+      await expect(moreKey(page), c.path).toBeVisible({ timeout: 30_000 });
       if (c.path.includes('?panel=') && !desk) await expect(c.sees(page), c.path).toBeAttached({ timeout: 30_000 });
       else await expect(c.sees(page), c.path).toBeVisible({ timeout: 30_000 });
     }
@@ -212,14 +215,20 @@ test.describe('More and the old addresses', () => {
 });
 
 test.describe('the simpler bar and talk bar', () => {
-  test('the bar holds the stage, three views, the meter, Inbox and More; Actions, the ledger and the toggle moved', async ({ page }, info) => {
+  // v0.8: the slim bar is Lobby, the name, the stage, the meter and More; the views and Inbox moved into More.
+  test('the bar holds the stage, the meter and More; the views, Inbox, Actions, the ledger and the toggle moved', async ({ page }, info) => {
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
     const bar = page.getByRole('banner');
+    await expect(bar.getByRole('navigation', { name: 'Views' })).toHaveCount(0);
+    await expect(inboxKey(page)).toHaveCount(0);
     await expect(bar.getByRole('button', { name: 'Actions', exact: true })).toHaveCount(0);
     await expect(bar.getByRole('button', { name: /^(Hide|Show) the side panel$/ })).toHaveCount(0);
     await expect(bar.getByText('At work', { exact: true })).toHaveCount(0);
     await expect(bar.getByText('Burn, last 5 min')).toHaveCount(0);
+    await openMore(page);
+    await expect(inboxKey(page)).toHaveAccessibleName(/^Inbox \d+, \S+ needs? you$/);
+    await page.keyboard.press('Escape');
     // The demo's preview isn't running, so Preview waits in More.
     await expect(bar.getByRole('button', { name: 'Preview', exact: true })).toHaveCount(0);
     if (isDesk(page)) {
@@ -233,9 +242,12 @@ test.describe('the simpler bar and talk bar', () => {
     expect(errors).toEqual([]);
   });
 
-  test('the live strip rides on the office only, and an empty box offers chips that run as the palette does', async ({ page }, info) => {
+  // v0.8: the live strip is off by default (More's "Show the live strip" brings it back), and rides on the office only.
+  test('the live strip is off until More shows it, rides on the office only, and an empty box offers chips that run as the palette does', async ({ page }, info) => {
     const errors = watchErrors(page);
     await openCompany(page, DEMO);
+    await expect(strip(page)).toHaveCount(0);
+    await (await openMore(page)).getByRole('button', { name: 'Show the live strip' }).click();
     if (!layoutOf(page).short) await expect(strip(page)).toBeVisible({ timeout: 30_000 });
     await openProgress(page, DEMO);
     await expect(strip(page)).toHaveCount(0);
@@ -300,7 +312,7 @@ test.describe('the end of a plan', () => {
     await shot(page, 'progress-final-review', info);
 
     // The inbox opens on the handover: what you asked for first, then the CEO's words.
-    await inboxKey(page).click();
+    await openInbox(page);
     if (!isDesk(page)) await sheetUp(page);
     const handover = sidePanel(page).getByRole('region', { name: 'Done: the final handover' });
     await expect(handover).toBeVisible({ timeout: 30_000 });

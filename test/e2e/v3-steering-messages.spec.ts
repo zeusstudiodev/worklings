@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { THE_OFFICE } from '../../src/core/company.ts';
-import { deskTurns, feed, feedKey, layoutOf, type Mention, openCompany, openPanel, panelTitle, running, shot, sidePanel, strip, talk, talkBox, tell, until, watchErrors } from './v3-kit.ts';
+import { deskTurns, feed, feedKey, type Mention, openCompany, openPanel, panelTitle, running, shot, sidePanel, talk, talkBox, tell, until, watchErrors } from './v3-kit.ts';
 import { api } from './v3-world.ts';
 
 // H40 (AC17) and H41 (AC18): a message to a room, a team and everyone, sent from the talk bar with `@`, how each
@@ -37,10 +37,8 @@ async function sendTo(page: Page, to: Mention, text: string, line: RegExp) {
   await openCompany(page, id);
   await talk(page, to, text);
   await expect(talkBox(page)).toHaveAccessibleDescription(/^Sent\./);
-  if (layoutOf(page).phone) {
-    await talkBox(page).blur();
-    await strip(page).click();
-  } else await feedKey(page).click();
+  // v0.8: Feed is in the talk bar on phones too.
+  await feedKey(page).click();
   await expect(feed(page)).toContainText(line);
 }
 

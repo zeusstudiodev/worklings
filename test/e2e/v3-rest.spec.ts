@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { open, running, shot, sidePanel, watchErrors } from './v3-kit.ts';
+import { open, openInbox, running, shot, sidePanel, watchErrors } from './v3-kit.ts';
 import { lobby, RESETS_AT_S, REST_HUB, say, view } from './v3-world.ts';
 
 // A usage limit rests every company of a hub until the reset, so this spec has a hub of its own and runs
@@ -18,7 +18,8 @@ test.describe('a usage-limit rest', () => {
     await open(page, `/c/${id}`, REST_HUB);
     const until = String(await page.evaluate(`new Date(${RESETS_AT_S * 1000}).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })`));
     await expect(page.getByRole('banner')).toContainText(`Resting until ${until}`, { timeout: 30_000 });
-    // A callout tops the inbox, the side panel's home, with the state's sentence and its action.
+    // A callout tops the inbox, with the state's sentence and its action (v0.8: the inbox opens from More).
+    await openInbox(page);
     const inbox = sidePanel(page);
     await expect(inbox).toContainText(`Resting until ${until}, when your plan's limit resets. Work picks up by itself.`);
     await expect(inbox.getByRole('button', { name: 'Try now' })).toBeVisible();

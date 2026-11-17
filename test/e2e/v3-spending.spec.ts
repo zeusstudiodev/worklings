@@ -4,7 +4,7 @@
 // and 375 px (projects v3 and v3-phone): nothing scrolls sideways, and focus is never lost or hidden.
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { tokensShort } from '../../web/src/company/spending/spendingModel.ts';
-import { boardFrame, expectNoSidewaysScroll, hiddenFocus, inboxKey, layoutOf, nameFor, open, openBoard, openCompany, openPanel, running, scratchOf, shot, sheetUp, sidePanel, tell, waitForProposal, watchErrors } from './v3-kit.ts';
+import { boardFrame, expectNoSidewaysScroll, hiddenFocus, layoutOf, nameFor, open, openBoard, openCompany, openPanel, running, scratchOf, shot, sheetUp, sidePanel, tell, waitForProposal, watchErrors, moreKey } from './v3-kit.ts';
 import { api, found, view } from './v3-world.ts';
 
 /** Where focus is, in a few words, and whether the page has lost it (focus on the body, or on nothing). */
@@ -339,7 +339,7 @@ test.describe('the demo companies', () => {
     const errors = watchErrors(page);
     // The demo companies live in the page: the tab enters the demo at the café, then opens one by its address.
     await open(page, '/c/demo');
-    await expect(inboxKey(page)).toBeVisible({ timeout: 30_000 });
+    await expect(moreKey(page)).toBeVisible({ timeout: 30_000 });
     await openCompany(page, 'plant-pal');
     await sheetUp(page);
     const plan = sidePanel(page).getByRole('region', { name: 'Spending plan' });
@@ -353,7 +353,7 @@ test.describe('the demo companies', () => {
     await plan.getByLabel('Company budget').fill('12.50');
     await plan.getByLabel('Company budget').press('Enter');
     await expect(plan.getByText('Company budget is $12.50.')).toBeVisible();
-    await expect(inboxKey(page)).toBeVisible();
+    await expect(moreKey(page)).toBeVisible();
     await expectNoSidewaysScroll(page, 'the demo proposal');
     await shot(page, 'spend-demo-proposal', info);
     expect(errors).toEqual([]);

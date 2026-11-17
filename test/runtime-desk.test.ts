@@ -194,6 +194,11 @@ describe('a desk', () => {
       expect(w.starts()).toHaveLength(1);
       await w.rec.waitFor(isDesk('ada', 'idle'));
       expect(w.rec.heard.filter(isTurn('ada'))).toHaveLength(1);
+      // v0.8: a message to the warm, idle desk opens a turn of the person's, never one of Claude Code's own.
+      const from = w.rec.heard.length;
+      w.board.deliver(plan, { text: 'From Robin: thanks, one more check', messageId: 'm-3' });
+      await w.rec.waitFor(isTurn('ada'), { from });
+      expect(w.rec.heard.filter((e) => e.kind === 'own-turn')).toEqual([]);
     } finally {
       await w.close();
     }
@@ -286,6 +291,10 @@ describe('a desk', () => {
       await w.rec.waitFor(isDesk('ada', 'closed'), { what: 'the desk to close after its background command' });
       const turns = w.rec.heard.filter(isTurn('ada'));
       expect(turns.map((t) => t.result.text)).toEqual(['Started it.', 'The background command finished.']);
+      // v0.8: the turn the background command's notification opened is Claude Code's own, between the two results; the
+      // turn the message opened is not.
+      const order = w.rec.heard.filter((e) => (e.kind === 'turn' || e.kind === 'own-turn') && e.person === 'ada').map((e) => e.kind);
+      expect(order).toEqual(['turn', 'own-turn', 'turn']);
       expect(w.log().some((e) => e.event === 'exit' && e.code === 0)).toBe(true);
     } finally {
       await w.close();

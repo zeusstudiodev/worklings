@@ -30,6 +30,11 @@ export interface SidePanelProps {
   bounds: PanelBounds;
   /** The inbox's count, on the pull. */
   inbox: number;
+  /**
+   * Whether a hidden docked panel leaves its pull on the window's edge: only before the start, for the proposal. Since v0.8
+   * the panel closes after the start, and the inbox card over the talk bar is the way back to what needs you.
+   */
+  pull?: boolean;
   /** Phones: the sheet only peeks (its head and first line) over the office until it is opened, by a press or a swipe up. */
   peek?: boolean;
   onPeek?: () => void;
@@ -138,7 +143,7 @@ export function SidePanel(props: SidePanelProps) {
       tabIndex={-1}
       inert={props.inert || (!shown && !docked) || undefined}
     >
-      {docked && <Separator {...props} />}
+      {docked && (props.shown || props.pull === true) && <Separator {...props} />}
       {(shown || !docked) && (
         <div ref={paper} className="side-panel__paper" hidden={!shown} {...(phone ? gesture : {})}>
           {peeking && <Peek name={head.title ? `Open ${head.title.opens ?? `the ${head.title.text.toLowerCase()}`}${head.title.sentence ? `. ${head.title.sentence}` : ''}` : 'Open the side panel'} onOpen={props.onPeek} />}
@@ -169,7 +174,8 @@ export function SidePanel(props: SidePanelProps) {
                 <Icon name="close" />
               </button>
             )}
-            {!phone && (
+            {/* v0.8: after the start, hiding is closing, so Hide shows only where there is no × to do it. */}
+            {!phone && (head.onHome === null || props.pull === true) && (
               <button type="button" className="side-panel__key side-panel__key--icon" aria-label="Hide the side panel" title="Hide the side panel" onClick={() => props.onHidden(true)}>
                 <Icon name="hide" />
               </button>
