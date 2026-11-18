@@ -11,6 +11,8 @@ around it), [SPEC-v0.8.md](SPEC-v0.8.md) (office first) and [docs/benchmark.md](
   mode. A [contract test](test/parity-contract.test.ts) holds its launch to plain `claude -p` plus the short list of
   allowed differences in [src/core/plain.ts](src/core/plain.ts), and the parity bench found no difference 20 pairs can
   detect ([docs/benchmark.md](docs/benchmark.md)).
+- **Packs** (0.4.0): Kickoff, as a plain file in the project's `.claude/`, off by default and added in the start form or
+  with `worklings new --pack kickoff`. Not recommended yet: it missed its bench rule on cost.
 - **The office around it:** one inbox card for Claude Code's own permission prompts and end-of-turn words, its todo list
   as a task board, its subagents as helpers with their own cost, budgets as Claude Code's own `--max-budget-usd`, plan
   first as an extra, a lobby of projects, portfolios, the studio chat, the timeline, dashboards and the preview.
@@ -22,16 +24,14 @@ around it), [SPEC-v0.8.md](SPEC-v0.8.md) (office first) and [docs/benchmark.md](
 
 ## Next
 
-- **Packs for a one-session job, each measured before the office suggests it.** A pack is Claude Code's own parts
-  (skills, subagents, rules and hooks) installed into the project's `.claude/`, plain files you can read, edit or delete,
-  with your own setup still on top. Each is off by default with its cost shown first, and runs on the kinds of task it
-  claims to help, paired against the plain baseline as the parity bench was:
-  - **Kickoff:** a few scoping questions in the inbox before building, for a short or vague request.
-  - **Check before done:** run the project's tests and build, and look at the result, before saying done.
-  - **A review round:** an independent strict review, then one fix round by the same session. The evidence so far is
-    v0.6's: about a tie at twice the cost, on two tasks. Today it exists only inside the experimental team.
-  - **Parallel builders** for a job that divides along a contract. Untested.
-  - **Best of two.** Untested.
+- **More measured packs.** v0.9 built packs ([SPEC-v0.9.md](SPEC-v0.9.md)): opt-in Claude Code setup in the project's
+  `.claude/`, recommended only where a paired bench shows it helped. None met its rule in the first bench
+  ([docs/benchmark.md](docs/benchmark.md#packs)): kickoff won every pair on short requests but cost 3x plain because it
+  built what the person wanted, and ships opt-in in 0.4.0; check before done and the review round were level or behind,
+  and were not shipped. Next: kickoff with a person who only says "go with your recommendations",
+  the review round on the biggest tasks, and two packs still untested:
+  - **Parallel builders** for a job that divides along a contract.
+  - **Best of two.**
 - **A better parity bench:** more pairs, a decision rule checked against two identical arms before it runs, and a
   bench that a model-written test which never exits can't stall.
 - **Real-world checks still to do:** a real tailnet with a real phone, and the full test suite and a real job on macOS

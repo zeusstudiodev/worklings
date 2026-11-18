@@ -47,6 +47,8 @@ describe('check-public: Zeus Studio publishes it', () => {
     expect(foreignHome(`gh repo view ${OTHER}/worklings`)).toBeGreaterThanOrEqual(0);
     expect(foreignHome(`https://${OTHER}.github.io/worklings/`)).toBeGreaterThanOrEqual(0);
     expect(foreignHome('the worklings package')).toBe(-1);
+    expect(foreignHome('files:[`rules/worklings-kickoff.md`]')).toBe(-1);
+    expect(foreignHome(`https://github.com/${OTHER}/worklings.git`)).toBeGreaterThanOrEqual(0);
   });
 
   it("knows the maintainer's own commit identity from a studio or noreply one", () => {

@@ -86,12 +86,17 @@ export function stagePill(stage: CompanyStage, sentence: string): CompanyState {
 
 /** How far along: done and planned, with the share for a bar (null when nothing is planned yet). */
 export interface CardProgress {
-  /** "1 of 3 milestones, 11 of 17 tasks", "4 of 9 tasks", "No plan yet". */
+  /** "1 of 3 milestones, 11 of 17 tasks", "4 of 9 tasks", "No plan yet"; a one-session job's "2 of 5 to-dos done". */
   line: string;
   share: number | null;
 }
 
-export function progressLine(s: Pick<CompanySummary, 'milestones' | 'tasks'>): CardProgress {
+export function progressLine(s: Pick<CompanySummary, 'milestones' | 'tasks' | 'todos'>): CardProgress {
+  if (s.todos) {
+    const { done, planned } = s.todos;
+    if (planned === 0) return { line: 'No to-do list yet', share: null };
+    return { line: `${done} of ${planned} ${planned === 1 ? 'to-do' : 'to-dos'} done`, share: done / planned };
+  }
   const { milestones: m, tasks: t } = s;
   const parts = [...(m.planned > 0 ? [`${m.done} of ${m.planned} ${m.planned === 1 ? 'milestone' : 'milestones'}`] : []), ...(t.planned > 0 ? [`${t.done} of ${t.planned} ${t.planned === 1 ? 'task' : 'tasks'}`] : [])];
   if (parts.length === 0) return { line: 'No plan yet', share: null };

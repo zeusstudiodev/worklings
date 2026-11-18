@@ -12,7 +12,7 @@ import { StatePill } from '../ui/StatePill.tsx';
 import { useMediaQuery } from '../../lib/hooks.ts';
 import { checkRows, countsLine } from './checklistModel.ts';
 import { ChecklistRows } from './ChecklistRows.tsx';
-import { type MilestoneRow, progressView, type SinceView, waitingWords } from './progressModel.ts';
+import { type MilestoneRow, packsLine, progressView, type SinceView, waitingWords } from './progressModel.ts';
 
 /** "Three things need you.", "One thing needs you." */
 const needsLine = (n: number): string => `${capital(countWord(n))} ${n === 1 ? 'thing needs' : 'things need'} you.`;
@@ -74,6 +74,7 @@ export function Progress(props: TabProps & { now: number; onInbox: () => void })
           ) : (
             <p className="progress__muted">No goal yet. Your words show here once you start the company.</p>
           )}
+          {packsLine(company.packs) && <p className="progress__packs">{packsLine(company.packs)}</p>}
           <div className="progress__meter">
             <p className="progress__figures">{view.progress.line}</p>
             {share !== null && (
@@ -113,45 +114,70 @@ export function Progress(props: TabProps & { now: number; onInbox: () => void })
           </p>
         </section>
 
-        <section className="progress__section" aria-labelledby={`${id}-checklist`}>
-          <h3 id={`${id}-checklist`} className="progress__h3">
-            Checklist
-          </h3>
-          {view.fixing && (
-            <p className="progress__fixing" role="status">
-              <span className="task-word task-word--working">Fixing</span> {view.fixing.line}
-            </p>
-          )}
-          {view.seen && (
-            <div className={`progress__seen progress__seen--${view.seen.tone}`}>
-              <p className="progress__seen-line">{view.seen.line}</p>
-              {view.seen.detail && <p className="progress__seen-detail">{view.seen.detail}</p>}
-            </div>
-          )}
-          {checklist && rows.length > 0 ? (
-            <>
-              <p className="progress__note">{countsLine(checklist)}</p>
-              <ChecklistRows rows={rows} onTask={openTask} />
-            </>
-          ) : (
-            <p className="progress__muted">No checklist yet. The CEO writes one with the plan: each thing you asked for, as a sentence that can be checked, and the tasks that build it.</p>
-          )}
-        </section>
+        {/* A one-session job never has a checklist or milestones: its own to-do list stands in for them. */}
+        {view.noChecklist !== null && (
+          <section className="progress__section" aria-labelledby={`${id}-checklist`}>
+            <h3 id={`${id}-checklist`} className="progress__h3">
+              Checklist
+            </h3>
+            {view.fixing && (
+              <p className="progress__fixing" role="status">
+                <span className="task-word task-word--working">Fixing</span> {view.fixing.line}
+              </p>
+            )}
+            {view.seen && (
+              <div className={`progress__seen progress__seen--${view.seen.tone}`}>
+                <p className="progress__seen-line">{view.seen.line}</p>
+                {view.seen.detail && <p className="progress__seen-detail">{view.seen.detail}</p>}
+              </div>
+            )}
+            {checklist && rows.length > 0 ? (
+              <>
+                <p className="progress__note">{countsLine(checklist)}</p>
+                <ChecklistRows rows={rows} onTask={openTask} />
+              </>
+            ) : (
+              <p className="progress__muted">{view.noChecklist}</p>
+            )}
+          </section>
+        )}
 
-        <section className="progress__section" aria-labelledby={`${id}-milestones`}>
-          <h3 id={`${id}-milestones`} className="progress__h3">
-            Milestones
-          </h3>
-          {view.milestones.length === 0 ? (
-            <p className="progress__muted">{view.noPlan}</p>
-          ) : (
-            <ol className="milestones">
-              {view.milestones.map((m, i) => (
-                <Milestone key={m.id} m={m} n={i + 1} companyId={companyId} onTask={openTask} />
-              ))}
-            </ol>
-          )}
-        </section>
+        {view.todos !== null ? (
+          <section className="progress__section" aria-labelledby={`${id}-todos`}>
+            <h3 id={`${id}-todos`} className="progress__h3">
+              To-do list
+            </h3>
+            {view.todos.length === 0 ? (
+              <p className="progress__muted">{view.noPlan}</p>
+            ) : (
+              <ul className="milestone__tasks progress__todos">
+                {view.todos.map((t) => (
+                  <li key={t.key} className="ptask">
+                    <span className="ptask__main">
+                      <span className="ptask__title">{t.title}</span>
+                    </span>
+                    <span className={`task-word task-word--${t.tone}`}>{t.word}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : (
+          <section className="progress__section" aria-labelledby={`${id}-milestones`}>
+            <h3 id={`${id}-milestones`} className="progress__h3">
+              Milestones
+            </h3>
+            {view.milestones.length === 0 ? (
+              <p className="progress__muted">{view.noPlan}</p>
+            ) : (
+              <ol className="milestones">
+                {view.milestones.map((m, i) => (
+                  <Milestone key={m.id} m={m} n={i + 1} companyId={companyId} onTask={openTask} />
+                ))}
+              </ol>
+            )}
+          </section>
+        )}
 
         <Since since={view.since} id={`${id}-since`} onInbox={onInbox} />
     </div>

@@ -1,4 +1,5 @@
 // What the browser and the lobby get from a company: the state, the org and the live desks, in the contract's shapes.
+import type { JobPack } from '../core/packs.ts';
 import type { DeskWork } from '../core/plain.ts';
 import { checklistView } from '../core/checklist.ts';
 import { blankDesk, type CompanyState, type DeskRecord, dict, HOUR_MS, isOpenItem, own } from '../core/company-state.ts';
@@ -52,6 +53,8 @@ export interface ViewInput {
   catalogue?: InstalledCatalogue | null;
   /** v0.7: a plain desk's own todo list and subagents, read from its stream. */
   work?: DeskWork | null;
+  /** v0.9: a plain job's packs as they stand in its folder (read by the company at most every few seconds). */
+  packs?: JobPack[] | null;
 }
 
 const newest = <T>(list: readonly T[], max: number): T[] => list.slice(Math.max(0, list.length - max));
@@ -249,7 +252,7 @@ export function buildView(i: ViewInput): CompanyView {
     phase: s.phase,
     prompt: s.prompt,
     shape: s.shape,
-    ...(s.shape === 'plain' ? { launch: { ...s.launch }, todos: i.work?.todos ?? [], helpers: i.work?.helpers ?? [] } : {}),
+    ...(s.shape === 'plain' ? { launch: { ...s.launch }, packs: i.packs ?? [], todos: i.work?.todos ?? [], helpers: i.work?.helpers ?? [] } : {}),
     stakeholder: s.stakeholder,
     branch: s.branch,
     theme: i.studio?.office?.theme ?? s.proposal?.theme ?? 'office',
@@ -344,6 +347,7 @@ export function lobbyEntryOf(i: ViewInput): LobbyCompany {
       spent: spend,
       budget: s.settings.budget.company,
       checklist: checklistOf(s)?.counts ?? null,
+      ...(s.shape === 'plain' ? { todos: i.work?.todos ?? [] } : {}),
     },
     i.now,
   );

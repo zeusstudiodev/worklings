@@ -11,6 +11,8 @@ import { detect } from '../composer/detect.ts';
 import { parseFrontmatter } from '../core/frontmatter.ts';
 import { inSentence, parseStudio } from '../core/studio.ts';
 import { isOurs } from '../server/hooks-config.ts';
+import type { FolderPacks } from '../core/packs.ts';
+import { folderPacks } from '../packs/install.ts';
 import { isInside } from '../server/office.ts';
 
 /** The longest folder path the hub takes: Windows' classic limit, which many tools still trip over. */
@@ -117,12 +119,22 @@ const LEFT_OUT = new Set(['$recycle.bin', 'system volume information', 'config.m
 
 /** What `detect` found in a folder, as one sentence: "A web app with React, Vite and TypeScript." */
 export function describeFolder(root: string, library: Library): string {
+  return readFolderKind(root, library).sentence;
+}
+
+/** What `detect` found, as describeFolder's sentence and the kind of project the pack recommendations read (v0.9). */
+export function readFolderKind(root: string, library: Library): { sentence: string; domain: string | null; empty: boolean } {
   let found: ReturnType<typeof detect>;
   try {
     found = detect(root, library);
   } catch {
-    return "Worklings couldn't read this folder.";
+    return { sentence: "Worklings couldn't read this folder.", domain: null, empty: false };
   }
+  const domain = found.domains[0]?.id ?? null;
+  return { sentence: sentenceOf(found, library), domain: found.isEmpty ? null : domain, empty: found.isEmpty };
+}
+
+function sentenceOf(found: ReturnType<typeof detect>, library: Library): string {
   if (found.isEmpty) return found.rootFiles.length === 0 && found.folders.length === 0 ? 'An empty folder.' : 'No code here yet.';
   const names = [...new Set(found.frameworks.map((f) => f.replace(/\s+[\^~<>=v]*\d\S*$/, '')))].slice(0, 3);
   const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}` : (names[0] ?? '');
@@ -450,6 +462,8 @@ export interface FolderListing {
   detected: string;
   /** What starting a company there would mean, before the press. */
   notes: string[];
+  /** v0.9: the packs there, whether .claude/ takes more, and the kind of project the recommendations read. */
+  packs: FolderPacks;
 }
 
 export interface ListingOptions {
@@ -496,7 +510,8 @@ export async function listFolder(raw: unknown, places: Places & ListingOptions):
     notes.push('It has uncommitted changes; the company leaves them be.');
   }
   notes.push(...setupNotes(path));
-  return { path, parent: dirname(path) === path ? null : dirname(path), folders, detected: describeFolder(path, places.library), notes };
+  const kind = readFolderKind(path, places.library);
+  return { path, parent: dirname(path) === path ? null : dirname(path), folders, detected: kind.sentence, notes, packs: folderPacks(path, kind) };
 }
 
 const BAD_NAME = /[<>:"/\\|?*]/;

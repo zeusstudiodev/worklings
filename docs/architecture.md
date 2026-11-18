@@ -655,6 +655,29 @@ as the sentences to put above Approve. It is null once the plan is approved, so 
   TaskUpdate, `task_started`/`task_notification` of subagents, and subagents' own requests; the company folds them into
   `CompanyView.todos` and `helpers` (each helper priced from its requests' usage), which `SessionBoard` shows.
 
+### Packs (v0.9; SPEC-v0.9.md)
+
+- **The catalogue** (`src/core/packs.ts`, pure): `PACKS` names each pack's files under `.claude/`, what it is for, what it
+  costs and what the bench measured; `recommendPacks` reads the task kinds (`short`, `existing` or `new`, and the
+  detector's domain) and `RECOMMENDED`, which only the bench fills. The files are in `library/packs/<id>/`, laid out as
+  they land. 0.4.0 ships Kickoff alone (one rule file); check before done and the review round were measured and not
+  shipped.
+- **The installer** (`src/packs/install.ts`): `installPacks` checks everything first (a file of the person's own in a
+  pack's place, an edited or partly removed pack, a record it can't read, a `.claude/` it can't write), then copies the
+  files through `plainPath` and writes the record (`worklings-packs.json` in `.claude/`) with each file's SHA-256.
+  `folderPacks` reads each pack's state, counting a file as the pack's only when it has the library's exact contents;
+  `removePack` deletes the files that still match; `undoInstall` takes an install back for a job that didn't start.
+- **Who installs:** the hub, in `addCompany`, after the folder checks and before the company is founded, for a plain job
+  only (`packs` on `POST /api/companies`); and the CLI (`worklings new --pack`, `worklings packs add|remove`). No desk
+  writes the files, so `src/runtime/approvals.ts` is untouched. The founded event keeps the ids (`CompanyState.packs`);
+  `CompanyView.packs` is how each stands in the folder now (`jobPacks`, read at most every 5 s).
+- **The launch doesn't change:** a pack is project setup, like the person's own `.claude/`, so `plainDeskArgs` is the same
+  with or without packs; the parity contract test checks it.
+- **The folder reading** (`GET /api/folders`) adds `packs` (`FolderPacks`: each pack's state, `.claude/`'s writability,
+  the detected domain).
+- **The web:** the start form's Add row (`web/src/company/start/PackRow.tsx`, words in `packRowModel.ts`) and the line
+  under the goal in Progress (`packsLine` in `progressModel.ts`).
+
 ### One session, then a review (v0.5; SPEC-v0.5.md)
 
 - **The solo shape** is what the CLI founds (`COMPANY_SHAPES[0]`; `WORKLINGS_SHAPE=harness|classic` for the others):

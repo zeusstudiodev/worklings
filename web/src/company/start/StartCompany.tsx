@@ -4,6 +4,9 @@
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { LIMITS, type LobbyView } from '../../../../src/core/company.ts';
 import type { WorkChoice } from '../../../../src/core/plain.ts';
+import { type FolderPacks, noPacks, type PackId } from '../../../../src/core/packs.ts';
+import { PackRow } from './PackRow.tsx';
+import { packsToSend } from './packRowModel.ts';
 import type { FolderInfo, HubActions } from '../api.ts';
 import { joinPath, parentOf } from '../paths.ts';
 import { cutMiddle } from '../model.ts';
@@ -74,6 +77,8 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false, de
   const [folder, setFolder] = useState(tryIt ? RECORDED_FOLDER : '');
   const [prompt, setPrompt] = useState(tryIt ? RECORDED_PROMPT : '');
   const [work, setWork] = useState<WorkChoice>('plain');
+  // v0.9: the packs the person ticked; all off when the form opens, and a recommendation never ticks one.
+  const [packs, setPacks] = useState<PackId[]>([]);
   const [info, setInfo] = useState<{ path: string; reading: FolderReading } | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const [browsing, setBrowsing] = useState(false);
@@ -122,6 +127,8 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false, de
   // Why a company can't start in this folder, once: a refused start, else what the reading found.
   const folderRefusal = startProblem?.where === 'folder' ? startProblem.text : shown?.kind === 'refused' ? shown.refusal : shown?.kind === 'folder' ? shown.folder.refusal : null;
   const unavailable = blocked ?? (online ? null : 'The office is reconnecting, so starting waits.');
+  // What the folder holds for the Add row: the hub's reading, a new folder's nothing, or not known yet.
+  const folderPacks: FolderPacks | null = shown?.kind === 'folder' ? shown.folder.packs : shown?.kind === 'new' ? noPacks(true) : null;
 
   const start = async () => {
     if (unavailable || starting) return;
@@ -143,7 +150,7 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false, de
     }
     setStarting(true);
     try {
-      const { id: company } = await hub.createCompany(typed, words, work);
+      const { id: company } = await hub.createCompany(typed, words, work, work === 'plain' ? packsToSend(packs, folderPacks) : []);
       remember(typed);
       // The company takes the start form's place, so Back goes to the lobby rather than to a form already sent; the
       // first run's form is part of the lobby, which stays. A session goes straight to work; the team's CEO drafts first.
@@ -290,6 +297,8 @@ export function StartCompany({ hub, lobby, blocked, online, embedded = false, de
           </label>
         ))}
       </fieldset>
+
+      {work === 'plain' && <PackRow id={`${id}-packs`} chosen={packs} onChange={setPacks} folder={folderPacks} words={prompt} demo={demo} />}
 
       <div className="start-block">
         <button type="submit" className="button button--primary button--large" aria-disabled={unavailable !== null || starting || undefined} aria-describedby={`${id}-cost`}>

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
-import { accessSync, appendFileSync, chmodSync, closeSync, constants, copyFileSync, createReadStream, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { accessSync, appendFileSync, chmodSync, closeSync, constants, copyFileSync, createReadStream, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve, sep, win32 } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { execFile, spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { createInterface } from "node:readline/promises";
 import { createServer } from "node:net";
 import { homedir, tmpdir } from "node:os";
 import { StringDecoder } from "node:string_decoder";
-import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createServer as createServer$1 } from "node:http";
 import { lstat, open, readFile, readdir, rm, stat } from "node:fs/promises";
 import { Buffer as Buffer$1 } from "node:buffer";
@@ -178,6 +178,364 @@ function cleanLaunch(raw) {
 		permissionMode: isMode(o.permissionMode) ? o.permissionMode : null,
 		planFirst: o.planFirst === true
 	};
+}
+// src/core/packs.ts
+var PACK_IDS = ["kickoff"];
+var isPackId = (v) => typeof v === "string" && PACK_IDS.includes(v);
+var PACKS = [{
+	id: "kickoff",
+	title: "Kickoff",
+	does: "Claude Code reads the project, then asks two to four questions that change the result, each with its pick, and waits for your answers.",
+	forWhat: "For short or open requests",
+	cost: "One round of questions in the inbox before the build, and one answer from you.",
+	measured: "In our tests it came closer to what was asked than plain Claude Code in all 6 runs, with a stand-in who knew the full request answering. The questions cost a few cents; the whole job about 3x a plain guess, a few tens of cents.",
+	costCeiling: 1.5,
+	files: ["rules/worklings-kickoff.md"]
+}];
+var packOf = (id) => PACKS.find((p) => p.id === id);
+/** The pack ids in a list read from a record or the log, in catalogue order; anything else is left out. */
+var packList = (raw) => Array.isArray(raw) ? PACK_IDS.filter((id) => raw.includes(id)) : [];
+/** The packs a request names, in catalogue order, or a sentence saying which name isn't a pack. */
+function cleanPackIds(raw) {
+	if (raw === void 0 || raw === null) return {
+		ok: true,
+		ids: []
+	};
+	if (!Array.isArray(raw)) return {
+		ok: false,
+		message: "Name the packs as a list."
+	};
+	for (const id of raw) if (!isPackId(id)) return {
+		ok: false,
+		message: `${typeof id === "string" ? `"${id.slice(0, 40)}"` : "That"} isn't a pack. The packs are ${PACK_IDS.join(", ")}.`
+	};
+	return {
+		ok: true,
+		ids: PACK_IDS.filter((id) => raw.includes(id))
+	};
+}
+var PACK_RECORD = "worklings-packs.json";
+var emptyRecord = () => ({
+	version: 1,
+	packs: {}
+});
+var isObj$28 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+/** The record from its JSON, keeping only what is well formed: it is a project file anyone may edit. */
+function parsePackRecord(raw) {
+	const out = emptyRecord();
+	if (!isObj$28(raw) || !isObj$28(raw.packs)) return out;
+	for (const id of PACK_IDS) {
+		if (!Object.hasOwn(raw.packs, id)) continue;
+		const e = raw.packs[id];
+		if (!isObj$28(e) || !isObj$28(e.files)) continue;
+		const files = {};
+		for (const [path, hash] of Object.entries(e.files)) if (packOf(id).files.includes(path) && typeof hash === "string" && /^[0-9a-f]{64}$/.test(hash)) files[path] = hash;
+		out.packs[id] = {
+			version: typeof e.version === "number" ? e.version : 1,
+			added: typeof e.added === "string" ? e.added : "",
+			files
+		};
+	}
+	return out;
+}
+/**
+* A pack's state from what is on disk: each file's hash now (null when missing) and the library's hashes. Only files with
+* the library's exact contents count as the pack as added, whatever the record says: the record is a project file anyone
+* may write, so a hash in it never vouches for a file.
+*/
+function stateOf$1(id, entry, now, expected) {
+	const files = packOf(id).files;
+	const there = files.filter((f) => now[f] !== null && now[f] !== void 0);
+	if (there.length === 0) return { state: "absent" };
+	if (entry) {
+		if (there.length < files.length) return { state: "partial" };
+		return files.every((f) => now[f] === expected[f]) ? { state: "installed" } : { state: "edited" };
+	}
+	const own = there.find((f) => now[f] !== expected[f]);
+	if (own !== void 0) return {
+		state: "conflict",
+		file: own
+	};
+	return there.length === files.length ? { state: "installed" } : { state: "partial" };
+}
+// src/paths.ts
+function first$2(...candidates) {
+	const paths = candidates.map((c) => fileURLToPath(new URL(c, import.meta.url)));
+	return paths.find((p) => existsSync(p)) ?? paths[0] ?? "";
+}
+/** The curated library: library/ at the package root, or next to the bundled runtime. */
+var LIBRARY_DIR = first$2("../library/", "./library/");
+/** The built web app: dist/web/ in the package, or web/ next to the bundled runtime. */
+var WEB_DIR = first$2("../dist/web/", "./web/");
+var PACKAGE_JSON = first$2("../package.json", "./package.json");
+// src/safe-fs.ts
+var isLink = (path) => lstatSync(path, { throwIfNoEntry: false })?.isSymbolicLink() === true;
+/**
+* Resolves `target` (absolute, or relative to `root`) and returns it when it lies inside `root` and no folder or file
+* between the two is a link. Otherwise throws `Err` with a message for the person running the command.
+*/
+function plainPath(root, target, Err = Error) {
+	const base = resolve(root);
+	const full = resolve(base, target);
+	const rel = relative(base, full);
+	if (rel === "") return full;
+	if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new Err(`${target} is outside the project folder.`);
+	let current = base;
+	for (const part of rel.split(sep)) {
+		current = join(current, part);
+		if (isLink(current)) throw new Err(`${relative(base, current).replaceAll("\\", "/")} is a symlink or junction; Worklings doesn't read or write through links.`);
+	}
+	return full;
+}
+// src/packs/install.ts
+/** A pack that can't be added or removed, with the sentence that says why. */
+var PackRefusal = class extends Error {};
+var sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
+/** The most of the record read. */
+var RECORD_BYTES = 1048576;
+/** The pack's own copy of a file, in the library. */
+var sourceOf = (id, file, library = LIBRARY_DIR) => join(library, "packs", id, ...file.split("/"));
+/** Each of a pack's files as the library has them. */
+function sources(id, library) {
+	const out = {};
+	for (const file of packOf(id).files) out[file] = readFileSync(sourceOf(id, file, library));
+	return out;
+}
+var expectedOf = (id, library) => Object.fromEntries(Object.entries(sources(id, library)).map(([f, b]) => [f, sha(b)]));
+/** A file's hash, or null when it isn't a plain file there (missing, a folder, a link, unreadable). */
+function hashAt(path) {
+	try {
+		if (isLink(path)) return null;
+		return statSync(path, { throwIfNoEntry: false })?.isFile() ? sha(readFileSync(path)) : null;
+	} catch {
+		return null;
+	}
+}
+var claudeDir = (root) => plainPath(root, ".claude", PackRefusal);
+var inClaude$1 = (root, file) => plainPath(root, join(".claude", ...file.split("/")), PackRefusal);
+/** The record as a file holds it: missing, read, or there but not something Worklings can read (never written over). */
+function loadRecord(root) {
+	try {
+		const path = inClaude$1(root, PACK_RECORD);
+		const s = statSync(path, { throwIfNoEntry: false });
+		if (!s) return { kind: "none" };
+		if (!s.isFile() || s.size > RECORD_BYTES) return { kind: "unreadable" };
+		const raw = JSON.parse(readFileSync(path, "utf8").replace(/^\uFEFF/, ""));
+		if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { kind: "unreadable" };
+		return {
+			kind: "read",
+			record: parsePackRecord(raw)
+		};
+	} catch {
+		return { kind: "unreadable" };
+	}
+}
+function readRecord(root) {
+	const loaded = loadRecord(root);
+	return loaded.kind === "read" ? loaded.record : emptyRecord();
+}
+var UNREADABLE_RECORD = `This folder's .claude/${PACK_RECORD} isn't a record Worklings can read, so it leaves the packs alone. Fix or delete that file first.`;
+function writeRecord(root, record) {
+	const path = inClaude$1(root, PACK_RECORD);
+	if (Object.keys(record.packs).length === 0) {
+		if (existsSync(path)) unlinkSync(path);
+		return;
+	}
+	writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
+}
+/** The folders under .claude/ a pack writes into. */
+var PACK_FOLDERS = [...new Set(PACK_IDS.flatMap((id) => packOf(id).files.map((f) => f.split("/").slice(0, -1).join("/")).filter(Boolean)))];
+/** Why .claude/ can't take files, or null when it can. */
+function blockedWhy(root) {
+	const blocked = "Worklings can't write to this folder's .claude/, so packs can't be added.";
+	try {
+		const dir = claudeDir(root);
+		if (existsSync(dir) && !statSync(dir).isDirectory()) return blocked;
+		accessSync(existsSync(dir) ? dir : root, constants.W_OK);
+		for (const sub of PACK_FOLDERS) {
+			const at = join(dir, ...sub.split("/"));
+			if (existsSync(at)) {
+				if (isLink(at) || !statSync(at).isDirectory()) return blocked;
+				accessSync(at, constants.W_OK);
+			}
+		}
+		const record = join(dir, PACK_RECORD);
+		if (existsSync(record)) {
+			if (isLink(record) || !statSync(record).isFile()) return blocked;
+			accessSync(record, constants.W_OK);
+		}
+		return null;
+	} catch {
+		return blocked;
+	}
+}
+/** How every pack stands in a folder, for the start form. `domain` and `empty` are the detector's. */
+function folderPacks(root, kind, library = LIBRARY_DIR) {
+	const record = readRecord(root);
+	const packs = {};
+	for (const id of PACK_IDS) {
+		const now = {};
+		for (const file of packOf(id).files) try {
+			now[file] = hashAt(inClaude$1(root, file));
+		} catch {
+			now[file] = null;
+		}
+		packs[id] = stateOf$1(id, record.packs[id], now, expectedOf(id, library));
+	}
+	return {
+		blocked: existsSync(root) ? blockedWhy(root) : null,
+		domain: kind.domain,
+		empty: kind.empty,
+		packs
+	};
+}
+var NOTHING = {
+	dirs: [],
+	files: [],
+	record: null
+};
+/**
+* Adds packs to the project's .claude/. Everything is checked before anything is written: a file of the person's own in
+* a pack's place, a pack edited or partly removed, a record it can't read, or a .claude/ it can't write refuses the lot.
+* A write that fails half way takes back what it wrote.
+*/
+function installPacks(root, ids, o = {}) {
+	const library = o.library ?? LIBRARY_DIR;
+	const wanted = PACK_IDS.filter((id) => ids.includes(id));
+	if (wanted.length === 0) return {
+		added: [],
+		already: [],
+		made: NOTHING
+	};
+	const blocked = blockedWhy(root);
+	if (blocked) throw new PackRefusal(blocked);
+	const loaded = loadRecord(root);
+	if (loaded.kind === "unreadable") throw new PackRefusal(UNREADABLE_RECORD);
+	const record = loaded.kind === "read" ? loaded.record : emptyRecord();
+	const places = folderPacks(root, {
+		domain: null,
+		empty: false
+	}, library).packs;
+	const added = [];
+	const already = [];
+	for (const id of wanted) {
+		const place = places[id];
+		const title = packOf(id).title;
+		if (place.state === "installed") already.push(id);
+		else if (place.state === "conflict") throw new PackRefusal(`This folder has its own .claude/${place.file ?? ""}, so the ${title} pack would replace it. Rename that file, or leave the pack out.`);
+		else if (place.state === "edited" || place.state === "partial") throw new PackRefusal(record.packs[id] ? `The ${title} pack is in this folder already, edited or partly removed. Worklings leaves it as it is: remove it with \`worklings packs remove ${id}\` to add it afresh.` : `Part of the ${title} pack is in this folder already, and it isn't in the record. Worklings leaves it as it is: delete its files in .claude/ to add it afresh.`);
+		else added.push(id);
+	}
+	if (added.length === 0) return {
+		added,
+		already,
+		made: NOTHING
+	};
+	const recordPath = inClaude$1(root, PACK_RECORD);
+	const made = {
+		dirs: [],
+		files: [],
+		record: null
+	};
+	const mkdir = (dir) => {
+		const missing = [];
+		for (let d = dir; !existsSync(d); d = dirname(d)) missing.unshift(d);
+		for (const d of missing) {
+			mkdirSync(d);
+			made.dirs.push(d);
+		}
+	};
+	try {
+		const at = new Date((o.now ?? Date.now)()).toISOString();
+		for (const id of added) {
+			const files = {};
+			for (const [file, bytes] of Object.entries(sources(id, library))) {
+				const path = inClaude$1(root, file);
+				mkdir(dirname(path));
+				writeFileSync(path, bytes, { flag: "wx" });
+				made.files.push(path);
+				files[file] = sha(bytes);
+			}
+			record.packs[id] = {
+				version: 1,
+				added: at,
+				files
+			};
+		}
+		made.record = { before: existsSync(recordPath) ? readFileSync(recordPath) : null };
+		writeRecord(root, record);
+	} catch (error) {
+		restore(root, made);
+		throw error instanceof PackRefusal ? error : new PackRefusal(`Worklings couldn't add the packs: ${error instanceof Error ? error.message : String(error)}`);
+	}
+	return {
+		added,
+		already,
+		made
+	};
+}
+/** Puts back what an install made or changed; never throws, and leaves anything that changed since as it is. */
+function restore(root, made) {
+	const quietly = (step) => {
+		try {
+			step();
+		} catch {}
+	};
+	if (made.record) {
+		const recordPath = inClaude$1(root, PACK_RECORD);
+		quietly(() => made.record?.before ? writeFileSync(recordPath, made.record.before) : existsSync(recordPath) && unlinkSync(recordPath));
+	}
+	for (const path of [...made.files].reverse()) quietly(() => unlinkSync(path));
+	for (const dir of [...made.dirs].reverse()) quietly(() => readdirSync(dir).length === 0 && rmdirSync(dir));
+}
+/** Takes back an install for a job that didn't start: the files it wrote, the record, and the folders it made. Never throws. */
+function undoInstall(root, installed) {
+	restore(root, installed.made);
+}
+/** Removes a pack: its files that are still the library's and the record's, then its line in the record. */
+function removePack(root, id, library = LIBRARY_DIR) {
+	const loaded = loadRecord(root);
+	if (loaded.kind === "unreadable") throw new PackRefusal(UNREADABLE_RECORD);
+	const record = loaded.kind === "read" ? loaded.record : emptyRecord();
+	const entry = record.packs[id];
+	if (!entry) throw new PackRefusal(`The ${packOf(id).title} pack isn't recorded in this folder's .claude/${PACK_RECORD}, so Worklings leaves its files alone; delete them yourself if you don't want them.`);
+	const expected = expectedOf(id, library);
+	const removed = [];
+	const kept = [];
+	for (const file of packOf(id).files) {
+		const path = inClaude$1(root, file);
+		const now = hashAt(path);
+		if (now === null) continue;
+		if (now === entry.files[file] && now === expected[file]) {
+			unlinkSync(path);
+			removed.push(file);
+			for (let dir = dirname(path); dir !== claudeDir(root) && readdirSync(dir).length === 0; dir = dirname(dir)) rmdirSync(dir);
+		} else kept.push(file);
+	}
+	delete record.packs[id];
+	writeRecord(root, record);
+	return {
+		removed,
+		kept
+	};
+}
+/** The packs a job started with, and how each stands in its folder now. */
+function jobPacks(root, ids, library = LIBRARY_DIR) {
+	if (ids.length === 0) return [];
+	let places = null;
+	try {
+		places = folderPacks(root, {
+			domain: null,
+			empty: false
+		}, library).packs;
+	} catch {
+		places = null;
+	}
+	return PACK_IDS.filter((id) => ids.includes(id)).map((id) => ({
+		id,
+		title: packOf(id).title,
+		state: places?.[id].state ?? "absent"
+	}));
 }
 // src/browser.ts
 /** The program that opens a link on each system, and its arguments. */
@@ -9542,16 +9900,6 @@ function stringList(value) {
 	if (typeof value === "string") return value.split(",").map((v) => v.trim()).filter(Boolean);
 	return [];
 }
-// src/paths.ts
-function first$2(...candidates) {
-	const paths = candidates.map((c) => fileURLToPath(new URL(c, import.meta.url)));
-	return paths.find((p) => existsSync(p)) ?? paths[0] ?? "";
-}
-/** The curated library: library/ at the package root, or next to the bundled runtime. */
-var LIBRARY_DIR = first$2("../library/", "./library/");
-/** The built web app: dist/web/ in the package, or web/ next to the bundled runtime. */
-var WEB_DIR = first$2("../dist/web/", "./web/");
-var PACKAGE_JSON = first$2("../package.json", "./package.json");
 // src/composer/library.ts
 /** The library shipped with the package (see paths.ts for where that is in each layout). */
 var DEFAULT_LIBRARY = LIBRARY_DIR;
@@ -9813,25 +10161,6 @@ function lintLibrary(lib) {
 		}
 	}
 	return problems;
-}
-// src/safe-fs.ts
-var isLink = (path) => lstatSync(path, { throwIfNoEntry: false })?.isSymbolicLink() === true;
-/**
-* Resolves `target` (absolute, or relative to `root`) and returns it when it lies inside `root` and no folder or file
-* between the two is a link. Otherwise throws `Err` with a message for the person running the command.
-*/
-function plainPath(root, target, Err = Error) {
-	const base = resolve(root);
-	const full = resolve(base, target);
-	const rel = relative(base, full);
-	if (rel === "") return full;
-	if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new Err(`${target} is outside the project folder.`);
-	let current = base;
-	for (const part of rel.split(sep)) {
-		current = join(current, part);
-		if (isLink(current)) throw new Err(`${relative(base, current).replaceAll("\\", "/")} is a symlink or junction; Worklings doesn't read or write through links.`);
-	}
-	return full;
 }
 // src/composer/write.ts
 var normalise = (text) => text.replace(/\r\n/g, "\n");
@@ -12817,14 +13146,26 @@ var LEFT_OUT = /* @__PURE__ */ new Set([
 	"documents and settings",
 	"node_modules"
 ]);
-/** What `detect` found in a folder, as one sentence: "A web app with React, Vite and TypeScript." */
-function describeFolder(root, library) {
+/** What `detect` found, as describeFolder's sentence and the kind of project the pack recommendations read (v0.9). */
+function readFolderKind(root, library) {
 	let found;
 	try {
 		found = detect(root, library);
 	} catch {
-		return "Worklings couldn't read this folder.";
+		return {
+			sentence: "Worklings couldn't read this folder.",
+			domain: null,
+			empty: false
+		};
 	}
+	const domain = found.domains[0]?.id ?? null;
+	return {
+		sentence: sentenceOf(found, library),
+		domain: found.isEmpty ? null : domain,
+		empty: found.isEmpty
+	};
+}
+function sentenceOf(found, library) {
 	if (found.isEmpty) return found.rootFiles.length === 0 && found.folders.length === 0 ? "An empty folder." : "No code here yet.";
 	const names = [...new Set(found.frameworks.map((f) => f.replace(/\s+[\^~<>=v]*\d\S*$/, "")))].slice(0, 3);
 	const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}` : names[0] ?? "";
@@ -13180,12 +13521,14 @@ async function listFolder(raw, places) {
 	if (!inRepo(path)) notes.push(entries.length === 0 ? "Not a git repository: starting runs git init so the work has its own branch." : "Not a git repository, so finished tasks won't be committed until it is one.");
 	else if (places.chosen === true && await uncommitted(path, places.env ?? process.env, places.gitTimeoutMs ?? GIT_MS)) notes.push("It has uncommitted changes; the company leaves them be.");
 	notes.push(...setupNotes(path));
+	const kind = readFolderKind(path, places.library);
 	return {
 		path,
 		parent: dirname(path) === path ? null : dirname(path),
 		folders,
-		detected: describeFolder(path, places.library),
-		notes
+		detected: kind.sentence,
+		notes,
+		packs: folderPacks(path, kind)
 	};
 }
 var BAD_NAME = /[<>:"/\\|?*]/;
@@ -17931,6 +18274,7 @@ function foundedState(e) {
 		prompt: e.prompt,
 		shape: isCompanyShape(e.shape) ? e.shape : "classic",
 		launch: cleanLaunch(e.launch),
+		packs: packList(e.packs),
 		stakeholder: e.stakeholder,
 		createdAt: e.at,
 		phase: "founding",
@@ -18633,6 +18977,7 @@ function reviveState(raw) {
 		prompt: textOr(raw.prompt, ""),
 		shape: isCompanyShape(raw.shape) ? raw.shape : "classic",
 		launch: cleanLaunch(raw.launch),
+		packs: packList(raw.packs),
 		stakeholder: textOr(raw.stakeholder, ""),
 		createdAt: finiteOr(raw.createdAt, 0),
 		phase: isPhase(raw.phase) ? raw.phase : "founding",
@@ -24790,7 +25135,11 @@ function summaryOf(i, now) {
 		},
 		preview: null,
 		movedAt: moves.length > 0 ? Math.max(...moves) : null,
-		checklist: i.checklist ? { ...i.checklist } : null
+		checklist: i.checklist ? { ...i.checklist } : null,
+		...i.todos ? { todos: {
+			done: i.todos.filter((t) => t.status === "completed").length,
+			planned: i.todos.length
+		} } : {}
 	};
 }
 /**
@@ -39117,7 +39466,7 @@ var MAKERS = [
 	"startTailnet"
 ];
 async function makers(given = {}) {
-	const real = MAKERS.every((key) => given[key] !== void 0) ? null : (await import("./assets/real-DAenHwPG.js")).REAL;
+	const real = MAKERS.every((key) => given[key] !== void 0) ? null : (await import("./assets/real-NyS1ctGZ.js")).REAL;
 	const pick = (key) => {
 		const value = given[key] ?? real?.[key];
 		if (!value) throw new Error(`The hub has no ${key}.`);
@@ -39518,8 +39867,12 @@ async function startHub(o) {
 	function addCompany(input) {
 		return serial(async () => {
 			if (closingDown) throw new HttpError(503, "The hub is closing. Add the folder again once it runs.", { code: "closing" });
+			const named = cleanPackIds(input.packs);
+			if (!named.ok) throw new HttpError(400, named.message, { code: "bad-input" });
+			const packs = named.ids;
 			const typed = typeof input.folder === "string" ? resolve(input.folder.trim()) : null;
 			const broken = typed ? [...seats.values()].find((s) => s.state === "broken" && sameFolder(s.root, typed)) : void 0;
+			if (broken && packs.length > 0) throw new HttpError(409, "A company worked in this folder before, so adding it reopens that company. Packs are added when a new job starts.", { code: "packs" });
 			if (broken) {
 				const again = openRegistered({
 					id: broken.id,
@@ -39540,6 +39893,7 @@ async function startHub(o) {
 				throw new HttpError(check.status, check.message, { code: check.code });
 			}
 			const root = check.root;
+			if (packs.length > 0 && check.exists && hasCompanyState(root)) throw new HttpError(409, "A company worked in this folder before, so adding it reopens that company. Packs are added when a new job starts.", { code: "packs" });
 			if (check.exists && hasCompanyState(root)) {
 				try {
 					plainPath(root, ".worklings");
@@ -39580,10 +39934,18 @@ async function startHub(o) {
 				state: !existsSync(join(root, ".worklings"))
 			};
 			if (ours.folder) mkdirSync(root);
+			let installed = null;
 			try {
 				const stakeholder = await stakeholderName(dir, root, env);
 				const id = newId(root);
 				const shape = o.shape ?? (isWorkChoice(input.work) ? shapeOfChoice(input.work) : "classic");
+				if (packs.length > 0 && shape !== "plain") throw new HttpError(400, "Packs are for a one-session job; a team has its own reviewer.", { code: "packs" });
+				if (packs.length > 0) try {
+					installed = installPacks(root, packs);
+				} catch (error) {
+					if (error instanceof PackRefusal) throw new HttpError(409, error.message, { code: "packs" });
+					throw error;
+				}
 				const { opened, unlock } = opening(root, (desks) => make.createCompany({
 					id,
 					root,
@@ -39595,10 +39957,14 @@ async function startHub(o) {
 					...clock,
 					...o.env ? { env: o.env } : {},
 					...shape !== "classic" ? { shape } : {},
-					...shape === "plain" ? { launch: cleanLaunch(input.launch) } : {}
+					...shape === "plain" ? {
+						launch: cleanLaunch(input.launch),
+						packs
+					} : {}
 				}));
 				return seat(opened, root, unlock, false);
 			} catch (error) {
+				if (installed) undoInstall(root, installed);
 				takeBack(root, ours);
 				throw error;
 			}
@@ -39764,14 +40130,16 @@ async function startHub(o) {
 				"folder",
 				"prompt",
 				"launch",
-				"work"
+				"work",
+				"packs"
 			]);
 			if (body.work !== void 0 && !isWorkChoice(body.work)) throw new HttpError(400, "Say how the work runs: plain or team.", { code: "bad-input" });
 			const added = await addCompany({
 				folder: body.folder,
 				prompt: body.prompt,
 				launch: body.launch,
-				work: body.work
+				work: body.work,
+				packs: body.packs
 			});
 			return send$3(res, added.reopened ? 200 : 201, added);
 		}
@@ -39994,6 +40362,8 @@ Usage
       --model <m>, --effort <e>        For this job only; left out, your Claude Code's own defaults
       --permission-mode <mode>         For this job only (acceptEdits, auto, bypassPermissions, manual, dontAsk)
       --plan-first                     Start in Claude Code's plan mode; you approve the plan in the inbox
+      --pack <name>                    Add a pack to the project's .claude/ first (repeat, or a,b):
+                                       ${PACK_IDS.join(", ")}; off unless named
       --team                           A team instead (experimental): a Lead, a Builder and a Reviewer
       --port <n>, --tailnet, --no-open As for the hub
   worklings office [dir]             Watch a project's Claude Code sessions in the 3D office (default: this folder)
@@ -40009,6 +40379,10 @@ Usage
       --add <roles> --remove <roles>   Adjust the team (comma-separated role ids)
       --force                          Replace files you edited (backed up to .claude/studio/backup/)
       --dry-run                        Show what would be written
+  worklings packs [dir]              List the packs and which this folder has (plain files in .claude/)
+  worklings packs add <name> [dir]   Add a pack to the folder's .claude/
+  worklings packs remove <name> [dir]
+                                     Remove a pack: the files of it you didn't edit
   worklings replay [dir]             Replay a past Claude Code session of a project in the office
       --session <id|latest>            Which session (default latest; the start of an id is enough)
       --speed <n>                      Playback speed (default 4)
@@ -40271,7 +40645,7 @@ async function launchHub(port, options, token) {
 	}), port, "a hub");
 }
 /** What a hub already running on `port` says to a new company: null when nothing answers there. */
-async function askHub(port, token, folder, prompt, launch, work) {
+async function askHub(port, token, folder, prompt, launch, work, packs) {
 	let res;
 	try {
 		res = await fetch(`http://127.0.0.1:${port}/api/companies`, {
@@ -40284,7 +40658,8 @@ async function askHub(port, token, folder, prompt, launch, work) {
 				folder,
 				prompt,
 				launch,
-				work
+				work,
+				...packs.length > 0 ? { packs } : {}
 			}),
 			signal: AbortSignal.timeout(6e4)
 		});
@@ -40315,6 +40690,14 @@ function launchOf(options) {
 	if (typeof asked.permissionMode === "string" && launch.permissionMode === null) throw new Error(`--permission-mode takes ${PERMISSION_MODES.join(", ")}; for plan mode, use --plan-first.`);
 	return launch;
 }
+/** The packs `--pack` names (repeated, or comma-separated); a name that isn't a pack is refused here. */
+function packsOf(options) {
+	const raw = options.pack;
+	const named = cleanPackIds((Array.isArray(raw) ? raw : typeof raw === "string" ? [raw] : []).flatMap((n) => String(n).split(",")).map((n) => n.trim()).filter(Boolean));
+	if (!named.ok) throw new Error(named.message);
+	if (named.ids.length > 0 && options.team === true) throw new Error("Packs are for a one-session job; a team has its own reviewer. Leave out --team or --pack.");
+	return named.ids;
+}
 /** How the job runs: one Claude Code session, unless `--team` asks for the experimental team. */
 function launchWork(options) {
 	return options.team === true ? "team" : "plain";
@@ -40330,7 +40713,8 @@ async function newCompany(positionals, options) {
 	const token = loadToken();
 	const port = options.port === void 0 ? runningHub(hubDir(worklingsHome()))?.port ?? 7430 : portOf(options, false, DEFAULT_HUB_PORT);
 	const launch = launchOf(options);
-	const told = await askHub(port, token, folder, prompt, launch, launchWork(options));
+	const packs = packsOf(options);
+	const told = await askHub(port, token, folder, prompt, launch, launchWork(options), packs);
 	if (told) {
 		const link = `http://127.0.0.1:${port}/c/${encodeURIComponent(told.id)}/progress?token=${token}`;
 		out(told.reopened ? `${folder} already has a company: it is back in the lobby.` : `Started a job in ${folder}.`);
@@ -40347,7 +40731,8 @@ async function newCompany(positionals, options) {
 			folder,
 			prompt,
 			launch,
-			work: launchWork(options)
+			work: launchWork(options),
+			packs
 		});
 	} catch (error) {
 		await hub.close();
@@ -40492,6 +40877,7 @@ var commands = {
 	},
 	new(positionals, options) {
 		if (typeof options.prompt === "string" && !options.offline) return newCompany(positionals, options);
+		if (options.pack !== void 0) throw new Error("--pack goes with --prompt, for a job; `worklings packs add <name>` adds one to a folder.");
 		const root = dirArg(positionals);
 		const library = libraryFrom(options);
 		const detection = detect(root, library);
@@ -40557,6 +40943,52 @@ var commands = {
 		if (d.folders.length > 0) out(`  Folders: ${d.folders.join(", ")}`);
 		out(d.domains.length > 0 ? "  Looks like:" : "  No specific kind of project detected (the generic studio fits).");
 		for (const m of d.domains.slice(0, 3)) out(`    ${m.id} (score ${m.score}): ${m.reasons.join(", ")}`);
+		return 0;
+	},
+	packs(positionals, options) {
+		const [verb, ...rest] = positionals;
+		if (verb === "add" || verb === "remove") {
+			const named = cleanPackIds([rest[0] ?? ""]);
+			if (!named.ok || named.ids.length === 0) throw new Error(`Say which pack: ${PACK_IDS.join(", ")}.`);
+			const id = named.ids[0];
+			const root = dirArg(rest.slice(1));
+			if (!existsSync(root)) throw new Error(`No such folder: ${root}`);
+			const title = PACKS.find((p) => p.id === id)?.title ?? id;
+			if (verb === "add") {
+				out(installPacks(root, [id]).added.length > 0 ? `Added ${title} to ${root}'s .claude/ (recorded in .claude/${PACK_RECORD}).` : `${root} has ${title} already.`);
+				return 0;
+			}
+			const gone = removePack(root, id);
+			out(`Removed ${title}: ${gone.removed.length} file${gone.removed.length === 1 ? "" : "s"}.`);
+			if (gone.kept.length > 0) out(`  Kept, because they were edited: ${gone.kept.map((f) => `.claude/${f}`).join(", ")}. Delete them yourself if you don't want them.`);
+			return 0;
+		}
+		const root = dirArg(positionals);
+		if (!existsSync(root)) throw new Error(`No such folder: ${root}`);
+		const there = folderPacks(root, {
+			domain: null,
+			empty: false
+		});
+		if (json(options, PACKS.map((p) => ({
+			id: p.id,
+			title: p.title,
+			for: p.forWhat,
+			cost: p.cost,
+			files: p.files,
+			state: there.packs[p.id].state
+		})))) return 0;
+		const said = {
+			absent: "not here",
+			installed: "here",
+			edited: "here, edited",
+			partial: "partly removed",
+			conflict: "blocked by a file of your own"
+		};
+		for (const p of PACKS) {
+			out(`${p.id.padEnd(18)} ${p.title}: ${said[there.packs[p.id].state] ?? ""}`);
+			out(`${" ".repeat(19)}${p.forWhat}. ${p.cost}`);
+		}
+		if (there.blocked) out(there.blocked);
 		return 0;
 	},
 	domains(_positionals, options) {
@@ -40698,6 +41130,7 @@ var ORDER = [
 	"doctor",
 	"new",
 	"office",
+	"packs",
 	"replay",
 	"detect",
 	"domains",
@@ -40770,7 +41203,11 @@ async function main(argv) {
 			effort: { type: "string" },
 			"permission-mode": { type: "string" },
 			"plan-first": { type: "boolean" },
-			team: { type: "boolean" }
+			team: { type: "boolean" },
+			pack: {
+				type: "string",
+				multiple: true
+			}
 		},
 		allowPositionals: true,
 		strict: true
@@ -40800,4 +41237,4 @@ main(process.argv.slice(2)).then((code) => {
 	err(error instanceof Error ? error.message : String(error));
 	process.exitCode = 1;
 });
-export { roleFromLibrary as $, detect as $n, SOLO_REVIEWER as $t, movedInOrder as A, managerOf as An, isPending as At, ReshapeError as B, tokenFile as Bn, heldTurn as Bt, pathsOverlap as C, THE_OFFICE as Cn, LEASHES as Cr, blankDesk as Ct, planSize as D, chainUp as Dn, VERDICTS as Dr, isCompanyEvent as Dt, planInbox as E, below as En, STEERING_TOOLS as Er, foundedState as Et, unmarkedRecheckItems as F, reportsOf as Fn, acksInView as Ft, studioForChange as G, readAgents as Gn, cleanBudget as Gt, inClaude as H, MANIFEST as Hn, steeringView as Ht, verdictOpenLines as I, toolsFor as In, isDeliveredHow as It, lintNewRole as J, redactClip as Jn, spendingViewOf as Jt, writeManifest as K, oneLine$1 as Kn, multipleWords as Kt, acceptLine as L, turnText as Ln, STEERING_ID_PREFIX as Lt, checklistCountsLine as M, mayMessage as Mn, reviveState as Mt, checklistLines as N, peopleOf as Nn, TRACE_LIMITS as Nt, planWaitingFor as O, introduce as On, __exportAll as Or, isOpenItem as Ot, checklistView as P, personById as Pn, ackIdFor as Pt, placeNote as Q, PACKAGE_JSON as Qn, ACCEPTANCE_REL as Qt, parseStep as R, startTailnet as Rn, blankSettings as Rt, pathInside as S, STAKEHOLDER as Sn, EFFORTS as Sr, ID_PREFIX as St, planGoverns as T, VIEW_LIMITS as Tn, PLAN_LIMITS as Tr, fold as Tt, manifestText$1 as U, agentFileOf as Un, taskOfTurn as Ut, applyReshape as V, killDesk as Vn, reversibleIn as Vt, planChange as W, loadProjectStudio as Wn, budgetLevel as Wt, orgAgentFile as X, writePlan as Xn, countWord as Xt, onlyNotesDiffer as Y, redactSecrets as Yn, clip$2 as Yt, ownsNote as Z, plainPath as Zn, capital as Zt, approvedVersion as _, LIMITS as _n, plainStudio as _r, checkScoping as _t, classifyPermission as a, MODEL_LEVELS as an, ROLE_MODELS as ar, claudeCode as at, latestVersion as b, QUESTION_WAIT_MS as bn, DECISION_LIMITS as br, cutText as bt, scanCommand as c, SEAT_TITLES as cn, titleFromId as cr, workView as ct, isAtWork as d, seatEffort as dn, BASE_DEPARTMENT_INFO as dr, readInstalled as dt, harnessPlan as en, CLAUDE_START as er, roleFromProposal as et, sameTurnHandoverSince as f, SIZE_RULES as fn, isBaseDepartment as fr, TailorError as ft, approvedScope as g, BATCH_WINDOW_MS as gn, cleanLaunch as gr, checkProposal as gt, summaryOf as h, ASK_KINDS as hn, TURN_STOPPED as hr, applyOfficeChange as ht, plainVerdict as i, DEFAULT_PRESET as in, ROLE_ID as ir, SCRATCH_PATH_MARK as it, carryChecklist as j, mayAssign as jn, own as jt, waitClosure as k, isManager as kn, isOpenTask as kt, importRulePaths as l, isPresetId as ln, resolveLoads as lr, startedBy as lt, sinceStart as m, isCheckerSeat as mn, PLAIN_PERSON as mr, andList$2 as mt, checkDashboard as n, soloFixLines as nn, withClaudeBlock as nr, tailorPerson as nt, orgToolRules as o, PRESETS as on, inSentence as or, emptyWorkBook as ot, sinceOf as p, companySize as pn, OWN_TURN_REASON as pr, OFFICE_ROOMS as pt, backTo as q, safeId as qn, presetInfos as qt, plainAnswer as r, soloPlan as rn, DEPARTMENT_ORDER as rr, HarnessError as rt, stopsByPid as s, PRESET_IDS as sn, slugId as sr, foldWork as st, orgToolsHandler as t, seatOf as tn, LEGACY_CLAUDE_START as tr, staffOf as tt, AT_WORK as u, presetGuidance as un, sameLoads as ur, installedNames as ut, changesSentence as v, MESSAGE_PAGE as vn, CHECKLIST_LIMITS as vr, proposalLoadCosts as vt, planChanges as w, UNDO_MS as wn, PLAN_APPROVALS as wr, dict as wt, normalizePlanPath as x, REPORT_FORM as xn, DEFAULT_PLAN_APPROVAL as xr, HOUR_MS as xt, checkPlan as y, OrgRefusal as yn, CHECKLIST_PAGE as yr, cutSentence as yt, commandProblem as z, sameToken as zn, effectiveLeash as zt };
+export { roleFromLibrary as $, LEGACY_CLAUDE_START as $n, SOLO_REVIEWER as $t, movedInOrder as A, managerOf as An, __exportAll as Ar, isPending as At, ReshapeError as B, tokenFile as Bn, heldTurn as Bt, pathsOverlap as C, THE_OFFICE as Cn, DEFAULT_PLAN_APPROVAL as Cr, blankDesk as Ct, planSize as D, chainUp as Dn, PLAN_LIMITS as Dr, isCompanyEvent as Dt, planInbox as E, below as En, PLAN_APPROVALS as Er, foundedState as Et, unmarkedRecheckItems as F, reportsOf as Fn, acksInView as Ft, studioForChange as G, readAgents as Gn, cleanBudget as Gt, inClaude as H, MANIFEST as Hn, steeringView as Ht, verdictOpenLines as I, toolsFor as In, isDeliveredHow as It, lintNewRole as J, redactClip as Jn, spendingViewOf as Jt, writeManifest as K, oneLine$1 as Kn, multipleWords as Kt, acceptLine as L, turnText as Ln, STEERING_ID_PREFIX as Lt, checklistCountsLine as M, mayMessage as Mn, reviveState as Mt, checklistLines as N, peopleOf as Nn, TRACE_LIMITS as Nt, planWaitingFor as O, introduce as On, STEERING_TOOLS as Or, isOpenItem as Ot, checklistView as P, personById as Pn, ackIdFor as Pt, placeNote as Q, CLAUDE_START as Qn, ACCEPTANCE_REL as Qt, parseStep as R, startTailnet as Rn, blankSettings as Rt, pathInside as S, STAKEHOLDER as Sn, DECISION_LIMITS as Sr, ID_PREFIX as St, planGoverns as T, VIEW_LIMITS as Tn, LEASHES as Tr, fold as Tt, manifestText$1 as U, agentFileOf as Un, taskOfTurn as Ut, applyReshape as V, killDesk as Vn, reversibleIn as Vt, planChange as W, loadProjectStudio as Wn, budgetLevel as Wt, orgAgentFile as X, writePlan as Xn, countWord as Xt, onlyNotesDiffer as Y, redactSecrets as Yn, clip$2 as Yt, ownsNote as Z, detect as Zn, capital as Zt, approvedVersion as _, LIMITS as _n, TURN_STOPPED as _r, checkScoping as _t, classifyPermission as a, MODEL_LEVELS as an, slugId as ar, claudeCode as at, latestVersion as b, QUESTION_WAIT_MS as bn, CHECKLIST_LIMITS as br, cutText as bt, scanCommand as c, SEAT_TITLES as cn, sameLoads as cr, workView as ct, isAtWork as d, seatEffort as dn, jobPacks as dr, readInstalled as dt, harnessPlan as en, withClaudeBlock as er, roleFromProposal as et, sameTurnHandoverSince as f, SIZE_RULES as fn, plainPath as fr, TailorError as ft, approvedScope as g, BATCH_WINDOW_MS as gn, PLAIN_PERSON as gr, checkProposal as gt, summaryOf as h, ASK_KINDS as hn, OWN_TURN_REASON as hr, applyOfficeChange as ht, plainVerdict as i, DEFAULT_PRESET as in, inSentence as ir, SCRATCH_PATH_MARK as it, carryChecklist as j, mayAssign as jn, own as jt, waitClosure as k, isManager as kn, VERDICTS as kr, isOpenTask as kt, importRulePaths as l, isPresetId as ln, BASE_DEPARTMENT_INFO as lr, startedBy as lt, sinceStart as m, isCheckerSeat as mn, packList as mr, andList$2 as mt, checkDashboard as n, soloFixLines as nn, ROLE_ID as nr, tailorPerson as nt, orgToolRules as o, PRESETS as on, titleFromId as or, emptyWorkBook as ot, sinceOf as p, companySize as pn, PACKAGE_JSON as pr, OFFICE_ROOMS as pt, backTo as q, safeId as qn, presetInfos as qt, plainAnswer as r, soloPlan as rn, ROLE_MODELS as rr, HarnessError as rt, stopsByPid as s, PRESET_IDS as sn, resolveLoads as sr, foldWork as st, orgToolsHandler as t, seatOf as tn, DEPARTMENT_ORDER as tr, staffOf as tt, AT_WORK as u, presetGuidance as un, isBaseDepartment as ur, installedNames as ut, changesSentence as v, MESSAGE_PAGE as vn, cleanLaunch as vr, proposalLoadCosts as vt, planChanges as w, UNDO_MS as wn, EFFORTS as wr, dict as wt, normalizePlanPath as x, REPORT_FORM as xn, CHECKLIST_PAGE as xr, HOUR_MS as xt, checkPlan as y, OrgRefusal as yn, plainStudio as yr, cutSentence as yt, commandProblem as z, sameToken as zn, effectiveLeash as zt };

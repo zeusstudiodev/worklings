@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0, 18 November 2026
+
+- **The Kickoff pack, opt-in.** For a short or open request, Claude Code reads the project first, then ends its turn with
+  two to four questions that change the result, each with its recommended answer, and waits; in a job they land in the
+  inbox. It is one plain rule file in the project's `.claude/` that you can read, edit or delete, with your own setup
+  still on top. Add it in the start form's new Add row or with `worklings new --pack kickoff`; list or remove packs with
+  `worklings packs`. It is off unless you add it, the job's launch is the same with or without it, and a job's packs
+  show on its Progress. In our bench, on three short requests with a stand-in who knew the full request answering, the
+  judge preferred it in all six runs and it passed 60 points more of the hidden tests; the whole job cost about 3x a
+  plain guess, which missed the cost line set before the bench, so the office doesn't recommend it.
+- **A one-session job's Progress no longer talks about a CEO.** It showed "No checklist yet. The CEO writes one with the
+  plan" and "No plan yet. The CEO proposes one" for one Claude Code session, which has neither. Progress now shows
+  Claude Code's own to-do list there and how much of it is done, and a team's copy names whoever leads it. Its card in
+  the lobby counts the same to-dos instead of saying "No plan yet".
+- **Two more packs, measured and not shipped.** Check before done (the project's checks before saying done) and a review
+  round (an independent reviewer, then one fix round) were benched the same way and didn't help: level on hidden tests,
+  a judge mean of 0.38 and 0.58 where 0.5 is a tie. The numbers and caveats are in
+  [docs/benchmark.md](docs/benchmark.md#packs) and the README's Packs section.
+
 ## 0.3.1, 18 November 2026
 
 - **A new launch film.** A 30-second trailer replaces the screen recording: the lobby, a busy office (the demo's

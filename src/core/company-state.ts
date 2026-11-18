@@ -30,6 +30,7 @@ import {
 import type { Dashboard } from './dashboard.ts';
 import type { OrgProposal } from './org.ts';
 import { type CompanyShape, isCompanyShape } from './harness-shape.ts';
+import { packList, type PackId } from './packs.ts';
 import { cleanLaunch, type PlainLaunch } from './plain.ts';
 import { DEFAULT_PRESET, isPresetId, MODEL_LEVELS, presetModels, PRESETS } from './presets.ts';
 import { cleanBudget } from './spending.ts';
@@ -153,6 +154,8 @@ export interface CompanyState {
   shape: CompanyShape;
   /** v0.7: a plain company's launch choices; everything null (Claude Code's own defaults) for other shapes. */
   launch: PlainLaunch;
+  /** v0.9: the packs a plain job started with (SPEC-v0.9.md); none for other shapes and for jobs before v0.9. */
+  packs: PackId[];
   createdAt: number;
   phase: CompanyPhase;
   branch: string | null;
@@ -213,7 +216,7 @@ export interface CompanyState {
   counters: Record<IdKind, number>;
 }
 
-export type FoundedEvent = { type: 'founded'; id: string; name: string; root: string; prompt: string; stakeholder: string; at: number; shape?: CompanyShape; launch?: PlainLaunch };
+export type FoundedEvent = { type: 'founded'; id: string; name: string; root: string; prompt: string; stakeholder: string; at: number; shape?: CompanyShape; launch?: PlainLaunch; packs?: PackId[] };
 
 /** Every change to a company. A batch is one line in the log, so a change of several parts lands whole or not at all. */
 export type CompanyEvent =
@@ -309,6 +312,7 @@ export function foundedState(e: FoundedEvent): CompanyState {
     prompt: e.prompt,
     shape: isCompanyShape(e.shape) ? e.shape : 'classic',
     launch: cleanLaunch(e.launch),
+    packs: packList(e.packs),
     stakeholder: e.stakeholder,
     createdAt: e.at,
     phase: 'founding',
@@ -826,6 +830,7 @@ export function reviveState(raw: unknown): CompanyState | null {
     prompt: textOr(raw.prompt, ''),
     shape: isCompanyShape(raw.shape) ? raw.shape : 'classic',
     launch: cleanLaunch(raw.launch),
+    packs: packList(raw.packs),
     stakeholder: textOr(raw.stakeholder, ''),
     createdAt: finiteOr(raw.createdAt, 0),
     phase: isPhase(raw.phase) ? raw.phase : 'founding',

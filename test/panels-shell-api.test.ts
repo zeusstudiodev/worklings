@@ -264,7 +264,7 @@ describe("the hub's own actions", () => {
     const listing = { path: 'C:\\Users\\you', parent: 'C:\\Users', folders: ['Projects'], detected: 'A folder with no app Worklings recognises.', notes: ['Not a git repository.'] };
     const calls = fakeHub((call) => (call.method === 'POST' ? json(201, { path: 'C:\\Users\\you\\fresh' }) : json(200, listing)));
     const hub = liveHub(null);
-    await expect(hub.folders('C:\\Users\\you')).resolves.toEqual({ ...listing, refusal: null });
+    await expect(hub.folders('C:\\Users\\you')).resolves.toEqual({ ...listing, refusal: null, packs: null });
     await expect(hub.newFolder('C:\\Users\\you', 'fresh')).resolves.toBe('C:\\Users\\you\\fresh');
     expect(calls.map((c) => c.url)).toEqual(['/api/folders?path=C%3A%5CUsers%5Cyou', '/api/folders']);
   });

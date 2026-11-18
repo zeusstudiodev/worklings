@@ -2,6 +2,7 @@
 // hub's actions change, with the small delays a hub has (a message reaching someone, an answer applying after its undo
 // window, the CEO's draft arriving), so every flow can be tried in a browser with no hub. Replies are made up and say
 // nothing. Timers are the platform's own (not window's), so tests can drive the demo with a fake clock.
+import { noPacks } from '../../../src/core/packs.ts';
 import {
   below,
   chainUp,
@@ -1378,7 +1379,7 @@ export class DemoHub {
       notes.push(folders.length === 0 ? 'Not a git repository: starting runs git init so the work has its own branch.' : "Not a git repository, so finished tasks won't be committed until it is one.");
     }
     if (DEMO_UNCOMMITTED.has(path)) notes.push('It has uncommitted changes; the company leaves them be.');
-    return { path, parent: parentOf(path), folders, detected: DEMO_DETECTED[path] ?? (folders.length === 0 ? 'An empty folder.' : 'A folder with no app Worklings recognises.'), notes, refusal: null };
+    return { path, parent: parentOf(path), folders, detected: DEMO_DETECTED[path] ?? (folders.length === 0 ? 'An empty folder.' : 'A folder with no app Worklings recognises.'), notes, refusal: null, packs: noPacks(folders.length === 0) };
   }
 
   /**

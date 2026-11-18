@@ -2,6 +2,7 @@
 // actions (starting and removing companies, the hub's desks, the folder browser). Every refusal becomes an ActionError
 // carrying the office's sentence; a request that never got an answer says so in the same words everywhere.
 import type { WorkChoice } from '../../../src/core/plain.ts';
+import { cleanFolderPacks, type FolderPacks, type PackId } from '../../../src/core/packs.ts';
 import type { CompanySettings, DeskState, DeskView, Message, MessagePage, OfficeChange, PreviewView } from '../../../src/core/company.ts';
 import { DESK_STATES, STAKEHOLDER } from '../../../src/core/company.ts';
 import type { OrgProposal } from '../../../src/core/org.ts';
@@ -262,12 +263,15 @@ export interface FolderInfo {
   notes: string[];
   /** Why a company can't start here, with the fix: "Café Lumen already runs here. Open it from the lobby." */
   refusal: string | null;
+  /** v0.9: the packs there and the kind of project, for the start form's Add row; null from a hub before v0.9. */
+  packs: FolderPacks | null;
 }
 
 export interface HubActions {
   /** 201 {id}: the CEO starts drafting. */
   /** `work`: one Claude Code session (plain) or the experimental team. */
-  createCompany(folder: string, prompt: string, work?: WorkChoice): Promise<{ id: string }>;
+  /** `packs` (v0.9): added to the project's .claude/ before a one-session job starts. */
+  createCompany(folder: string, prompt: string, work?: WorkChoice, packs?: readonly PackId[]): Promise<{ id: string }>;
   /** Closes its desks and takes it out of the lobby; the folder and `.worklings/` stay. */
   removeCompany(id: string): Promise<void>;
   /** Adds a folder that already holds `.worklings/` back to the lobby (the Undo of a removal). */
@@ -303,6 +307,7 @@ function asFolder(body: unknown, asked: string): FolderInfo {
     detected: isStr(fields.detected) && fields.detected.trim() ? fields.detected : null,
     notes,
     refusal: refusalText,
+    packs: cleanFolderPacks(fields.packs),
   };
 }
 
@@ -313,8 +318,8 @@ function asId(body: unknown): { id: string } {
 
 export function liveHub(token: string | null): HubActions {
   return {
-    async createCompany(folder, prompt, work = 'plain') {
-      return asId((await call('/api/companies', token, { body: { folder, prompt, work } })).body);
+    async createCompany(folder, prompt, work = 'plain', packs = []) {
+      return asId((await call('/api/companies', token, { body: { folder, prompt, work, ...(packs.length > 0 ? { packs } : {}) } })).body);
     },
     async removeCompany(id) {
       await call(`/api/companies/${encodeURIComponent(id)}`, token, { method: 'DELETE' });

@@ -7,7 +7,7 @@ import { ActionError } from '../web/src/company/types.ts';
 
 const COMPANIES = 'C:\\Users\\you\\Projects\\companies';
 
-const listing = (path: string): FolderInfo => ({ path, parent: null, folders: [], detected: 'A folder with no app Worklings recognises.', notes: [], refusal: null });
+const listing = (path: string): FolderInfo => ({ path, parent: null, folders: [], detected: 'A folder with no app Worklings recognises.', notes: [], refusal: null, packs: null });
 
 /** A hub that knows these folders, answers others as missing, and records what it was asked. */
 function fakeFolders(existing: readonly string[], refuse: Record<string, ActionError> = {}) {

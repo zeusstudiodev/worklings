@@ -69,7 +69,8 @@ export function personalIdentity(text) {
 }
 
 /** Links to Worklings' repository, demo or marketplace under an owner other than scripts/home.json's. */
-const HOME_LINKS = /github\.com\/([\w.-]+)\/worklings\b|\b([\w-]+)\.github\.io\/worklings\b|(?:marketplace add |--marketplace |--repo |repos\/|gh repo (?:create|view|edit) |`)([\w.-]+)\/worklings\b/gi;
+// `(?![\w-])`: `rules/worklings-kickoff.md` is a file a pack installs, not another owner's copy of the repository.
+const HOME_LINKS = /github\.com\/([\w.-]+)\/worklings(?![\w-])|\b([\w-]+)\.github\.io\/worklings(?![\w-])|(?:marketplace add |--marketplace |--repo |repos\/|gh repo (?:create|view|edit) |`)([\w.-]+)\/worklings(?![\w-])/gi;
 
 /** Where in the line a link to another owner's Worklings starts, or -1. */
 export function foreignHome(line) {

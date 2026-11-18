@@ -2,6 +2,8 @@
 // CompanyApi, the switchboard tells it what desks do through DeskEvents, and every change goes into the signed log
 // (store.ts) before anything acts on it. The org rules come from src/core/company.ts; the company never writes
 // .claude/ itself (OrgOps does) and never runs git itself (GitOps does).
+import { type JobPack, packList, type PackId } from '../core/packs.ts';
+import { jobPacks } from '../packs/install.ts';
 import { randomBytes } from 'node:crypto';
 import { existsSync, statSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
@@ -4122,7 +4124,19 @@ export class Company implements CompanyHandle, SteeringApi {
       modelOverride: this.modelOverride(),
       catalogue: this.catalogue(),
       work: this.state.shape === 'plain' ? workView(this.workOf(PLAIN_PERSON)) : null,
+      packs: this.state.shape === 'plain' ? this.packsNow() : null,
     };
+  }
+
+  /** v0.9: the job's packs as they stand in the folder, read at most every few seconds (a person may edit or delete them). */
+  private packsRead: { at: number; value: JobPack[] } | null = null;
+  private packsNow(): JobPack[] {
+    if (this.state.packs.length === 0) return [];
+    const now = this.now();
+    if (this.packsRead && now - this.packsRead.at < 5_000) return this.packsRead.value;
+    const value = jobPacks(this.root, this.state.packs);
+    this.packsRead = { at: now, value };
+    return value;
   }
 
   /** The installed catalogue the proposal assigns from, read from Claude Code's own files at most every few seconds, and only before the start. */
@@ -4766,7 +4780,7 @@ function plainProject(name: string): ProjectStudio {
   return { studio: plainStudio(name), source: 'manifest', errors: [] };
 }
 
-export function foundCompany(o: CompanyOptions & { prompt: string; stakeholder: string; id?: string; shape?: CompanyShape; launch?: PlainLaunch }): Company {
+export function foundCompany(o: CompanyOptions & { prompt: string; stakeholder: string; id?: string; shape?: CompanyShape; launch?: PlainLaunch; packs?: readonly PackId[] }): Company {
   const root = resolve(o.root);
   if (!statSync(root, { throwIfNoEntry: false })?.isDirectory()) throw new OrgRefusal('invalid', `There's no folder at ${root}.`);
   if (o.id !== undefined && (!COMPANY_ID.test(o.id) || o.id.includes('--'))) {
@@ -4798,6 +4812,7 @@ export function foundCompany(o: CompanyOptions & { prompt: string; stakeholder: 
       at: (o.now ?? Date.now)(),
       ...(o.shape === 'harness' || o.shape === 'solo' || o.shape === 'plain' ? { shape: o.shape } : {}),
       ...(o.shape === 'plain' ? { launch: cleanLaunch(o.launch) } : {}),
+      ...(o.shape === 'plain' && o.packs && o.packs.length > 0 ? { packs: packList(o.packs) } : {}),
     },
   });
   const company = withStore(store, () => new Company(o, root, store, studio));

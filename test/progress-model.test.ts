@@ -11,7 +11,7 @@ import { fixingView, goalWords, milestoneRows, needsRows, progressView, seenView
 import { summaryOf } from '../src/core/overview.ts';
 import { companyState, stateOfCompany } from '../web/src/company/model.ts';
 import { stagePill } from '../web/src/company/lobby/lobbyModel.ts';
-import { company, min, NOW, question, task } from './panels-work-kit.ts';
+import { company, min, NOW, person, question, task } from './panels-work-kit.ts';
 import { milestone, plan, planView, version } from './steering-plan-kit.ts';
 
 const steering = (versions: PlanVersion[], approved: number | null): CompanyView['steering'] => ({
@@ -261,5 +261,57 @@ describe('fix rounds and what the office saw (v0.3)', () => {
     const skipped = company({ tasks: [task('t-5', 'qa-engineer', 'Final check', { look: look({ state: 'skipped' }) })] });
     expect(seenView(skipped, NOW)?.line).toContain("didn't open it in a browser");
     expect(seenView(company(), NOW)).toBeNull();
+  });
+});
+
+// 0.4.0: a one-session job (v0.7's plain company) has no CEO, plan, milestones or checklist. Progress spoke of the CEO's
+// plan to it (0.3.1); now it shows Claude Code's own to-do list, and a team's copy names whoever leads it.
+describe('a one-session job', () => {
+  const plain = (extra: Partial<CompanyView> = {}) =>
+    company({ shape: 'plain', phase: 'running', people: [person('builder', 'Claude Code', 'Claude Code', 'desk', { level: 'ceo' })], todos: [], helpers: [], ...extra });
+  /** Every sentence the view shows before any work, as one string. */
+  const words = (c: CompanyView) => {
+    const v = progressView(c, NOW);
+    return [v.noPlan, v.noChecklist ?? '', v.progress.line, v.stage.word].join(' ');
+  };
+
+  it("never mentions a CEO, a plan or a checklist, and says where Claude Code's to-do list shows", () => {
+    for (const phase of ['founding', 'proposed', 'running'] as const) {
+      const text = words(plain({ phase }));
+      expect(text).not.toMatch(/CEO|plan|checklist/i);
+    }
+    const view = progressView(plain(), NOW);
+    expect(view.noChecklist).toBeNull();
+    expect(view.todos).toEqual([]);
+    expect(view.progress).toEqual({ line: 'No to-do list yet', share: null });
+    expect(view.noPlan).toBe('No to-do list yet. When Claude Code keeps one for this job, its items show here and on the task board.');
+  });
+
+  it("shows Claude Code's own to-do list in its order, each in a word, and how far along it is", () => {
+    const view = progressView(
+      plain({
+        todos: [
+          { id: '1', text: 'Read the **README**', status: 'completed' },
+          { id: '2', text: 'Add the streak counter', status: 'in_progress' },
+          { id: '3', text: 'Write the tests', status: 'pending' },
+        ],
+      }),
+      NOW,
+    );
+    expect(view.todos?.map((t) => [t.title, t.word, t.tone])).toEqual([
+      ['Read the README', 'Done', 'done'],
+      ['Add the streak counter', 'Working', 'working'],
+      ['Write the tests', 'Not started', 'neutral'],
+    ]);
+    expect(view.progress.line).toBe('1 of 3 to-dos done');
+    expect(view.progress.share).toBeCloseTo(1 / 3);
+  });
+
+  it('names whoever leads a team: the CEO in a company, the lead in the experimental team', () => {
+    expect(progressView(company({ phase: 'running' }), NOW).noPlan).toBe('No plan yet. The CEO proposes one, and you approve it before work starts.');
+    expect(progressView(company({ phase: 'running' }), NOW).noChecklist).toMatch(/^No checklist yet\. The CEO writes one/);
+    const solo = company({ shape: 'solo', phase: 'founding', people: [person('lead', 'Lead', 'Lead', 'direction', { level: 'ceo' })] });
+    expect(progressView(solo, NOW).noPlan).toBe('The lead is drafting your company. The plan comes once you start it.');
+    expect(progressView(solo, NOW).todos).toBeNull();
   });
 });

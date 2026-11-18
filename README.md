@@ -187,6 +187,41 @@ better. The launch is also held to plain `claude -p` by a test
 
 Why Worklings doesn't change how Claude Code works, with every benchmark behind that choice: [docs/benchmark.md](docs/benchmark.md).
 
+## Packs
+
+Packs are opt-in Claude Code setup a one-session job can start with: plain files in the project's `.claude/` that you can
+read, edit or delete, with your own CLAUDE.md, skills and settings still loading on top. They are off unless you add
+them, in the start form's Add row or with `worklings new --pack <name>`, and the job's launch is the same with or without
+them. `worklings packs [dir]` lists what a folder has; `worklings packs remove <name>` takes one out (the files of it you
+didn't edit, nothing else).
+
+0.4.0 ships one pack:
+
+| Pack | What it adds | For |
+|---|---|---|
+| `kickoff` | A rule: read the project first, then ask two to four questions that change the result, each with a recommended answer, and wait | Short or open requests |
+
+Worklings recommends a pack only where it beat plain Claude Code in a paired bench by a rule fixed before the bench ran
+([SPEC-v0.9.md](SPEC-v0.9.md)). None has yet, so the start form recommends none. What the bench found (blank profile,
+Sonnet, hidden tests and a blind Opus judge in both orders, $27.53 in all):
+
+- **Kickoff**, on three short requests (6 pairs), with a stand-in person who knew the full request and answered only
+  what was asked: the judge preferred the kickoff arm in every pair, and it passed 60 points more of the hidden tests.
+  Plain Claude Code never asked; it built from the short words. It missed the rule's cost line (1.5x): the median job
+  cost 3.0x plain's, because it built what the person wanted rather than a smaller guess. The question round itself cost
+  $0.04 to $0.13.
+
+Two more were measured and not shipped:
+
+- **Check before done** (a rule and a `Stop` hook: run the project's checks, and run what it made, before saying done),
+  on four tasks (8 pairs): the same hidden tests as plain (all passed in both arms), a judge mean of 0.38 where 0.5 is a
+  tie, at 1.04x the cost. It left a dev server or preview running twice.
+- **Review round** (a read-only reviewer subagent, then one fix round), on three bigger tasks (6 pairs): the same hidden
+  tests, a judge mean of 0.58 (two wins on the API, one win and one loss on the bookshop, a loss and a tie on the
+  multi-file change), at 1.27x the cost and up to five times the wall time.
+
+The numbers and their caveats: [docs/benchmark.md](docs/benchmark.md#packs).
+
 ## The team (experimental)
 
 Choose "A team (experimental)" in the start form, or `worklings new --team`: a Lead plans, a Builder builds, and a
@@ -325,7 +360,8 @@ npx worklings new ./plant-pal --prompt "A plant-care app with watering streaks"
 ```
 
 Add `--model`, `--effort` or `--permission-mode` (`acceptEdits`, `auto`, `bypassPermissions`, `manual`, `dontAsk`) for
-this job, `--plan-first` to start in plan mode, or `--team` for the experimental team. If a hub is running, the job
+this job, `--plan-first` to start in plan mode, `--pack <name>` to start with a [pack](#packs), or `--team` for the
+experimental team. If a hub is running, the job
 starts there; if not, one starts for it. The hub listens on `127.0.0.1:7430` unless you pass `--port`, and prints a link
 with an access token (kept in `~/.worklings/token`). A folder that already has a company reopens it. Stop the hub, which
 closes every desk first, with `npx worklings hub --stop`; when it opens again, desks pick up where they stopped.
@@ -420,7 +456,8 @@ plain HTTP, so use it on a network you trust.
 | `worklings hub [--stop]` | The same; `--stop` stops the hub and closes every desk first |
 | `worklings demo` | The demo company, made up, with no Claude Code (port 7420; `--port`) |
 | `worklings doctor` | Check Node, Claude Code and its sign-in, git, the hub's ports and Tailscale |
-| `worklings new [dir] --prompt <text>` | Start a job: Claude Code works on your words as you wrote them (`--model`, `--effort`, `--permission-mode`, `--plan-first`, `--team`) |
+| `worklings new [dir] --prompt <text>` | Start a job: Claude Code works on your words as you wrote them (`--model`, `--effort`, `--permission-mode`, `--plan-first`, `--pack`, `--team`) |
+| `worklings packs [dir]`, `packs add <name>`, `packs remove <name>` | List, add or remove [packs](#packs) in a folder's `.claude/` |
 | `worklings new [dir]` | Write a studio (`--domain`, `--rigor`, `--idea`, `--stack`, `--add`, `--remove`, `--dry-run`, `--force`, `--offline`) |
 | `worklings office [dir]` | Watch a project's Claude Code sessions (port 7421; `--yes`, `--lan`, `--no-open`) |
 | `worklings detect [dir]` | Show the detected stack, commands and kinds of project |
@@ -433,7 +470,7 @@ plain HTTP, so use it on a network you trust.
 | `worklings replay [dir]` | Replay a recorded session (`--session`, `--speed`) |
 | `worklings lint-library` | Check a library folder against the writing bar |
 
-Add `--json` to `new`, `detect`, `domains`, `adopt`, `hooks` and `doctor` for machine-readable output. The plugin adds
+Add `--json` to `new`, `detect`, `domains`, `adopt`, `hooks`, `packs` and `doctor` for machine-readable output. The plugin adds
 `/worklings:hub`, `/worklings:new`, `/worklings:office`, `/worklings:hire`, `/worklings:fire` and `/worklings:adopt`.
 
 ## How it works
@@ -510,7 +547,7 @@ Point it only at runs you trust: it reads the company's log without checking its
 - **macOS and Linux** have not run the full tests or a real job; Windows is where Worklings was built.
 - **Sessions are not sandboxed** (see above), and Claude Code is the only agent tool supported.
 - **The team** is an experiment that has not beaten one session.
-- The version is 0.3.1. Claude Code's internal protocols can change under it.
+- The version is 0.4.0. Claude Code's internal protocols can change under it.
 
 [ROADMAP.md](ROADMAP.md) has what comes next and what Worklings will not do.
 

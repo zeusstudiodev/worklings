@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type DeskEvents, STAKEHOLDER, UNDO_MS } from '../src/core/company.ts';
 import { emptyWorkBook, foldWork, workSignals } from '../src/core/desk-work.ts';
-import { stageOf, summaryInputOfView } from '../src/core/overview.ts';
+import { stageOf, summaryInputOfView, summaryOf } from '../src/core/overview.ts';
 import { cleanLaunch, DEFAULT_LAUNCH, PLAIN_PERSON } from '../src/core/plain.ts';
 import { createCompany, openCompany } from '../src/company/index.ts';
 import { ended, FakeDesks, fakeGit, fakeOrg, KEY, newProject } from './company-kit.ts';
@@ -47,6 +47,17 @@ describe('a plain company', () => {
     expect(r.org.calls).toEqual([]);
     expect(r.git.calls).toEqual([]);
     expect(v.launch?.permissionMode).toBe('acceptEdits');
+  });
+
+  it("counts the session's own to-dos for the lobby card and the progress view, not a plan", () => {
+    const view = plainRig().company.view();
+    expect(summaryOf(summaryInputOfView(view), Date.now()).todos).toEqual({ done: 0, planned: 0 });
+    const todos = [
+      { id: '1', text: 'Read the parser', status: 'completed' as const },
+      { id: '2', text: 'Add the flag', status: 'in_progress' as const },
+    ];
+    expect(summaryOf(summaryInputOfView({ ...view, todos }), Date.now()).todos).toEqual({ done: 1, planned: 2 });
+    expect(summaryOf(summaryInputOfView({ ...view, shape: 'classic', todos }), Date.now()).todos).toBeUndefined();
   });
 
   it("puts the session's last words in the inbox when its turn ends, and sends the reply back verbatim", async () => {

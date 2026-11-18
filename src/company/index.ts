@@ -1,6 +1,7 @@
 // The company seam (docs/architecture.md, "Seams between the streams"): createCompany for a new company, openCompany
 // for one already in a folder's .worklings/. Both give the hub a CompanyHandle. Tests pass a fake `git`; the hub
 // passes nothing and gets the real one.
+import type { PackId } from '../core/packs.ts';
 import type { PlainLaunch } from '../core/plain.ts';
 import type { CompanyDeps } from '../core/company.ts';
 import { type Company, foundCompany, type GitOps, reopenCompany } from './company.ts';
@@ -23,7 +24,7 @@ interface Extras {
 }
 
 /** A Company is a CompanyHandle; its `idle()` resolves once the git work queued so far is done. */
-export function createCompany(o: CompanyDeps & { root: string; prompt: string; stakeholder: string; id?: string; shape?: 'plain' | 'solo' | 'harness' | 'classic'; launch?: PlainLaunch } & Extras): Company {
+export function createCompany(o: CompanyDeps & { root: string; prompt: string; stakeholder: string; id?: string; shape?: 'plain' | 'solo' | 'harness' | 'classic'; launch?: PlainLaunch; packs?: readonly PackId[] } & Extras): Company {
   // The record of what each desk may load is signed with the same key as the log (src/org/approved-loads.ts).
   useApprovalKey(o.root, o.key);
   return foundCompany({ ...o, git: o.git ?? realGit });

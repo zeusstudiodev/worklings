@@ -5,6 +5,8 @@
 // on loopback only. With --tailnet, `tailscale serve` reaches a second loopback port that has the pages, streams and API
 // (token required) but no intake and no folder browser, since Tailscale passes the phone's own Host header through.
 import { cleanLaunch, isWorkChoice, shapeOfChoice } from '../core/plain.ts';
+import { cleanPackIds } from '../core/packs.ts';
+import { type Installed, installPacks, PackRefusal, undoInstall } from '../packs/install.ts';
 import { existsSync, mkdirSync, readdirSync, rmdirSync, rmSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { homedir } from 'node:os';
@@ -117,7 +119,7 @@ export interface RunningHub {
    * What POST /api/companies does: a new company in the folder, or the one already in its .worklings/. Without a prompt
    * only the one already there, as the lobby's Undo of a removal asks.
    */
-  addCompany(input: { folder: unknown; prompt?: unknown; launch?: unknown; work?: unknown }): Promise<{ id: string; reopened: boolean }>;
+  addCompany(input: { folder: unknown; prompt?: unknown; launch?: unknown; work?: unknown; packs?: unknown }): Promise<{ id: string; reopened: boolean }>;
   lobby(): StudioLobbyView;
   /** Closes every company (their desks are killed), the previews, the tailnet and the server. */
   close(): Promise<void>;
@@ -468,12 +470,17 @@ export async function startHub(o: HubOptions): Promise<RunningHub> {
   /** The Undo of a removal for a company whose folder moved or was deleted. */
   const folderGone = (root: string) => new HttpError(400, `Its folder isn't at ${shortFolder(root)} any more. If it moved, add it from where it is now.`, { code: 'missing' });
 
-  function addCompany(input: { folder: unknown; prompt?: unknown; launch?: unknown; work?: unknown }): Promise<{ id: string; reopened: boolean }> {
+  function addCompany(input: { folder: unknown; prompt?: unknown; launch?: unknown; work?: unknown; packs?: unknown }): Promise<{ id: string; reopened: boolean }> {
     return serial(async () => {
       if (closingDown) throw new HttpError(503, 'The hub is closing. Add the folder again once it runs.', { code: 'closing' });
+      // v0.9: the packs a new one-session job starts with (SPEC-v0.9.md); none unless the person named them.
+      const named = cleanPackIds(input.packs);
+      if (!named.ok) throw new HttpError(400, named.message, { code: 'bad-input' });
+      const packs = named.ids;
       // A company that couldn't open gets another try when its folder is added again.
       const typed = typeof input.folder === 'string' ? resolve(input.folder.trim()) : null;
       const broken = typed ? [...seats.values()].find((s) => s.state === 'broken' && sameFolder(s.root, typed)) : undefined;
+      if (broken && packs.length > 0) throw new HttpError(409, 'A company worked in this folder before, so adding it reopens that company. Packs are added when a new job starts.', { code: 'packs' });
       if (broken) {
         const again = openRegistered({ id: broken.id, root: broken.root });
         seats.set(broken.id, again);
@@ -490,6 +497,9 @@ export async function startHub(o: HubOptions): Promise<RunningHub> {
         throw new HttpError(check.status, check.message, { code: check.code });
       }
       const root = check.root;
+      if (packs.length > 0 && check.exists && hasCompanyState(root)) {
+        throw new HttpError(409, 'A company worked in this folder before, so adding it reopens that company. Packs are added when a new job starts.', { code: 'packs' });
+      }
       if (check.exists && hasCompanyState(root)) {
         try {
           plainPath(root, '.worklings');
@@ -525,14 +535,26 @@ export async function startHub(o: HubOptions): Promise<RunningHub> {
       // What this call makes, so a company that can't be made there leaves the folder as it found it.
       const ours = { folder: !check.exists, state: !existsSync(join(root, '.worklings')) };
       if (ours.folder) mkdirSync(root);
+      let installed: Installed | null = null;
       try {
         const stakeholder = await stakeholderName(dir, root, env);
         const id = newId(root);
         // The company keeps its shape in its own state (the founded event), so it reopens as it was made.
         const shape = o.shape ?? (isWorkChoice(input.work) ? shapeOfChoice(input.work) : 'classic');
-        const { opened, unlock } = opening(root, (desks) => make.createCompany({ id, root, prompt, stakeholder, key: hubKey, org, desks, ...clock, ...(o.env ? { env: o.env } : {}), ...(shape !== 'classic' ? { shape } : {}), ...(shape === 'plain' ? { launch: cleanLaunch(input.launch) } : {}) }));
+        if (packs.length > 0 && shape !== 'plain') throw new HttpError(400, 'Packs are for a one-session job; a team has its own reviewer.', { code: 'packs' });
+        // The office adds the packs itself, at the person's request and before the session starts: no desk writes them.
+        if (packs.length > 0) {
+          try {
+            installed = installPacks(root, packs);
+          } catch (error) {
+            if (error instanceof PackRefusal) throw new HttpError(409, error.message, { code: 'packs' });
+            throw error;
+          }
+        }
+        const { opened, unlock } = opening(root, (desks) => make.createCompany({ id, root, prompt, stakeholder, key: hubKey, org, desks, ...clock, ...(o.env ? { env: o.env } : {}), ...(shape !== 'classic' ? { shape } : {}), ...(shape === 'plain' ? { launch: cleanLaunch(input.launch), packs } : {}) }));
         return seat(opened, root, unlock, false);
       } catch (error) {
+        if (installed) undoInstall(root, installed);
         takeBack(root, ours);
         throw error;
       }
@@ -683,9 +705,9 @@ export async function startHub(o: HubOptions): Promise<RunningHub> {
     if (method === 'POST' && path === '/api/companies') {
       // v0.4: a first prompt of up to LIMITS.prompt characters, four bytes each at most in UTF-8, and its folder.
       // v0.7: a plain job's launch choices (model, effort, permission mode, plan first), each optional; cleanLaunch keeps what it knows.
-      const body = fields(await readBody(req, 280 * KB), ['folder', 'prompt', 'launch', 'work']);
+      const body = fields(await readBody(req, 280 * KB), ['folder', 'prompt', 'launch', 'work', 'packs']);
       if (body.work !== undefined && !isWorkChoice(body.work)) throw new HttpError(400, 'Say how the work runs: plain or team.', { code: 'bad-input' });
-      const added = await addCompany({ folder: body.folder, prompt: body.prompt, launch: body.launch, work: body.work });
+      const added = await addCompany({ folder: body.folder, prompt: body.prompt, launch: body.launch, work: body.work, packs: body.packs });
       return send(res, added.reopened ? 200 : 201, added);
     }
     const removing = /^\/api\/companies\/([^/]+)$/.exec(path);

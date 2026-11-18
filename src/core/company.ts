@@ -1,5 +1,6 @@
 // v3: the company the office runs. The shapes the switchboard, the org tools, the hub and the web app share, and the
 // org rules more than one of them applies. Pure, with no Node APIs: the web app imports it.
+import type { JobPack } from './packs.ts';
 import type { Loads } from './loads.ts';
 import type { PlanSummary } from './plan-summary.ts';
 import type { CostEstimate } from './cost-estimate.ts';
@@ -739,6 +740,8 @@ export interface CompanyView {
   shape?: 'plain' | 'solo' | 'harness' | 'classic';
   /** v0.7: a plain company's launch choices (the person's own Claude Code decides whatever is null). */
   launch?: PlainLaunch;
+  /** v0.9: the packs a plain job started with, and how each stands in its folder now (SPEC-v0.9.md). */
+  packs?: JobPack[];
   /** v0.7: the plain desk's own todo list and its subagents, read from its stream. */
   todos?: TodoItem[];
   helpers?: HelperView[];
@@ -908,6 +911,8 @@ export interface CompanySummary {
   preview: string | null;
   movedAt: number | null;
   checklist: Record<ChecklistState, number> | null;
+  /** A one-session job's own to-do list, counted; absent for a team, whose progress is its plan. */
+  todos?: { done: number; planned: number };
 }
 
 /** When the stakeholder last opened the company, and the last look of the visit before. */

@@ -5,10 +5,13 @@
 // tests (test/progress-model.test.ts).
 import { type CompanyStage, type CompanyView, FIX_ROUNDS, type NeedsYouItem, type SinceDigest, type Task, type TaskLook } from '../../../../src/core/company.ts';
 import { isOpenTask } from '../../../../src/core/company-state.ts';
+import type { JobPack } from '../../../../src/core/packs.ts';
+import type { TodoItem } from '../../../../src/core/plain.ts';
 import { clip, coarseAge, countWord, plainText } from '../../../../src/core/now.ts';
 import { needsYouOf, stageOf, summaryInputOfView, summaryOf, type SummaryInput } from '../../../../src/core/overview.ts';
 import { approvedVersion, latestVersion } from '../../../../src/core/plan.ts';
 import { type Plan, type PlanTask } from '../../../../src/core/steering.ts';
+import { inSentence } from '../../../../src/core/studio.ts';
 import { capital } from '../../../../src/core/words.ts';
 import { dollars } from '../../lib/format.ts';
 import type { CompanyRoute } from '../address.ts';
@@ -308,9 +311,44 @@ export interface ProgressView {
   spend: string;
   needs: NeedsRow[];
   milestones: MilestoneRow[];
-  /** What the milestones say when there are none: no plan yet, or the CEO still drafting. */
+  /** What the milestones say when there are none: no plan yet, or whoever leads still drafting. */
   noPlan: string;
+  /** What the checklist says before there is one; null for a one-session job, which never has one. */
+  noChecklist: string | null;
+  /** A one-session job's own to-do list, as Claude Code keeps it; null for a team, which has milestones instead. */
+  todos: TodoRow[] | null;
   since: SinceView;
+}
+
+/** One item of Claude Code's own to-do list, in a word. */
+export interface TodoRow {
+  key: string;
+  title: string;
+  word: TaskWord;
+  tone: StateTone;
+}
+
+/** Whether the job is one Claude Code session (v0.7), which has no plan, milestones, checklist or CEO. */
+const isPlainJob = (c: Pick<CompanyView, 'shape'>): boolean => c.shape === 'plain';
+
+/** Who leads a team, in a sentence: "the CEO", "the lead". */
+function leaderOf(c: Pick<CompanyView, 'people'>): string {
+  const title = c.people.find((p) => p.level === 'ceo')?.title;
+  return `the ${title ? inSentence(title) : 'CEO'}`;
+}
+
+const TODO_WORD: Readonly<Record<TodoItem['status'], TaskWord>> = { pending: 'Not started', in_progress: 'Working', completed: 'Done' };
+
+/** Claude Code's to-do list as rows, in its own order. */
+export function todoRows(todos: readonly TodoItem[]): TodoRow[] {
+  return todos.map((t) => ({ key: t.id, title: clip(plainText(t.text), 120), word: TODO_WORD[t.status], tone: TASK_TONE[TODO_WORD[t.status]] }));
+}
+
+/** How far a one-session job's to-do list is: "2 of 5 to-dos done", or none kept yet. */
+export function todoProgress(todos: readonly TodoItem[]): CardProgress {
+  if (todos.length === 0) return { line: 'No to-do list yet', share: null };
+  const done = todos.filter((t) => t.status === 'completed').length;
+  return { line: `${done} of ${todos.length} ${todos.length === 1 ? 'to-do' : 'to-dos'} done`, share: done / todos.length };
 }
 
 /** The prompt as the stakeholder wrote it, plain and on one line: its first sentence leads, the rest follows. */
@@ -323,21 +361,36 @@ export function goalWords(prompt: string): { lead: string; rest: string } | null
 
 export function progressView(c: CompanyView, now: number): ProgressView {
   const summary = summaryOf(summaryInputOf(c), now);
+  const plain = isPlainJob(c);
+  const leader = leaderOf(c);
   return {
     goal: goalWords(c.prompt) ?? (c.goal ? goalWords(c.goal.text) : null),
     stage: fixingView(c) !== null && (summary.stage === 'working' || summary.stage === 'checking') ? { word: 'Fixing', tone: 'working' } : stageWord(summary.stage),
     fixing: fixingView(c),
     seen: seenView(c, now),
-    progress: progressLine(summary),
+    progress: plain ? todoProgress(c.todos ?? []) : progressLine(summary),
     spend: spendLine(summary.spend),
     needs: needsRows(c, now),
     milestones: milestoneRows(c),
-    noPlan:
-      c.phase === 'founding'
-        ? 'The CEO is drafting your company. The plan comes once you start it.'
+    noPlan: plain
+      ? "No to-do list yet. When Claude Code keeps one for this job, its items show here and on the task board."
+      : c.phase === 'founding'
+        ? `${capital(leader)} is drafting your company. The plan comes once you start it.`
         : c.phase === 'proposed'
-          ? 'The plan comes once you start the company: the CEO writes it first thing.'
-          : 'No plan yet. The CEO proposes one, and you approve it before work starts.',
+          ? `The plan comes once you start the company: ${leader} writes it first thing.`
+          : `No plan yet. ${capital(leader)} proposes one, and you approve it before work starts.`,
+    noChecklist: plain ? null : `No checklist yet. ${capital(leader)} writes one with the plan: each thing you asked for, as a sentence that can be checked, and the tasks that build it.`,
+    todos: plain ? todoRows(c.todos ?? []) : null,
     since: sinceView(c, now),
   };
+}
+
+/** v0.9: what packs a one-session job started with, as Progress says it under the goal; null when none. */
+export function packsLine(packs: readonly JobPack[] | undefined): string | null {
+  if (!packs || packs.length === 0) return null;
+  const how = (p: JobPack): string =>
+    p.state === 'edited' ? `${p.title} (edited since)` : p.state === 'partial' ? `${p.title} (partly removed since)` : p.state === 'absent' || p.state === 'conflict' ? `${p.title} (removed since)` : p.title;
+  const names = packs.map(how);
+  const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}` : (names[0] ?? '');
+  return `Started with ${packs.length === 1 ? 'the pack' : 'the packs'} ${list}: files in the project's .claude/ you can edit or delete.`;
 }

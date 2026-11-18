@@ -1,10 +1,10 @@
-import { $ as roleFromLibrary, $n as detect, $t as SOLO_REVIEWER, A as movedInOrder, An as managerOf$1, At as isPending, B as ReshapeError, Bn as tokenFile, Bt as heldTurn, C as pathsOverlap, Cn as THE_OFFICE, Cr as LEASHES, Ct as blankDesk, D as planSize, Dn as chainUp, Dr as VERDICTS, Dt as isCompanyEvent, E as planInbox, En as below, Er as STEERING_TOOLS, Et as foundedState, F as unmarkedRecheckItems, Fn as reportsOf, Ft as acksInView, G as studioForChange, Gn as readAgents, Gt as cleanBudget, H as inClaude, Hn as MANIFEST, Ht as steeringView, I as verdictOpenLines, In as toolsFor, It as isDeliveredHow, J as lintNewRole, Jn as redactClip, Jt as spendingViewOf, K as writeManifest, Kn as oneLine, Kt as multipleWords, L as acceptLine, Ln as turnText, Lt as STEERING_ID_PREFIX, M as checklistCountsLine, Mn as mayMessage, Mt as reviveState, N as checklistLines, Nn as peopleOf, Nt as TRACE_LIMITS, O as planWaitingFor, On as introduce, Or as __exportAll, Ot as isOpenItem, P as checklistView, Pn as personById, Pt as ackIdFor, Q as placeNote, Qn as PACKAGE_JSON, Qt as ACCEPTANCE_REL, R as parseStep, Rn as startTailnet, Rt as blankSettings, S as pathInside, Sn as STAKEHOLDER, Sr as EFFORTS, St as ID_PREFIX, T as planGoverns, Tn as VIEW_LIMITS, Tr as PLAN_LIMITS, Tt as fold, U as manifestText, Un as agentFileOf, Ut as taskOfTurn, V as applyReshape, Vn as killDesk, Vt as reversibleIn, W as planChange, Wn as loadProjectStudio, Wt as budgetLevel, X as orgAgentFile, Xn as writePlan, Xt as countWord, Y as onlyNotesDiffer, Yn as redactSecrets, Yt as clip$3, Z as ownsNote, Zn as plainPath, Zt as capital, _ as approvedVersion, _n as LIMITS, _r as plainStudio, _t as checkScoping, a as classifyPermission, an as MODEL_LEVELS, ar as ROLE_MODELS, at as claudeCode, b as latestVersion, bn as QUESTION_WAIT_MS, br as DECISION_LIMITS, bt as cutText, c as scanCommand, cn as SEAT_TITLES, cr as titleFromId, ct as workView, d as isAtWork, dn as seatEffort, dr as BASE_DEPARTMENT_INFO, dt as readInstalled, en as harnessPlan, et as roleFromProposal, f as sameTurnHandoverSince, fn as SIZE_RULES, fr as isBaseDepartment, ft as TailorError, g as approvedScope, gr as cleanLaunch, gt as checkProposal, h as summaryOf, hn as ASK_KINDS, hr as TURN_STOPPED, ht as applyOfficeChange, i as plainVerdict, in as DEFAULT_PRESET, ir as ROLE_ID, it as SCRATCH_PATH_MARK, j as carryChecklist, jn as mayAssign, jt as own$1, k as waitClosure, kn as isManager, kt as isOpenTask, l as importRulePaths, ln as isPresetId, lr as resolveLoads, lt as startedBy, m as sinceStart, mn as isCheckerSeat, mr as PLAIN_PERSON, mt as andList$2, n as checkDashboard, nn as soloFixLines, nr as withClaudeBlock, nt as tailorPerson, o as orgToolRules, on as PRESETS, or as inSentence, ot as emptyWorkBook, p as sinceOf, pn as companySize, pr as OWN_TURN_REASON, pt as OFFICE_ROOMS, q as backTo, qn as safeId, qt as presetInfos, r as plainAnswer$1, rn as soloPlan, rr as DEPARTMENT_ORDER, rt as HarnessError, s as stopsByPid, sn as PRESET_IDS, sr as slugId, st as foldWork, t as orgToolsHandler, tn as seatOf, tt as staffOf, u as AT_WORK$2, un as presetGuidance, ur as sameLoads, ut as installedNames, v as changesSentence, vn as MESSAGE_PAGE, vr as CHECKLIST_LIMITS, vt as proposalLoadCosts, w as planChanges, wn as UNDO_MS, wr as PLAN_APPROVALS, wt as dict, x as normalizePlanPath, xn as REPORT_FORM, xr as DEFAULT_PLAN_APPROVAL, xt as HOUR_MS, y as checkPlan, yn as OrgRefusal, yr as CHECKLIST_PAGE, yt as cutSentence, z as commandProblem, zn as sameToken, zt as effectiveLeash } from "../cli.mjs";
+import { $ as roleFromLibrary, $t as SOLO_REVIEWER, A as movedInOrder, An as managerOf$1, Ar as __exportAll, At as isPending, B as ReshapeError, Bn as tokenFile, Bt as heldTurn, C as pathsOverlap, Cn as THE_OFFICE, Cr as DEFAULT_PLAN_APPROVAL, Ct as blankDesk, D as planSize, Dn as chainUp, Dr as PLAN_LIMITS, Dt as isCompanyEvent, E as planInbox, En as below, Er as PLAN_APPROVALS, Et as foundedState, F as unmarkedRecheckItems, Fn as reportsOf, Ft as acksInView, G as studioForChange, Gn as readAgents, Gt as cleanBudget, H as inClaude, Hn as MANIFEST, Ht as steeringView, I as verdictOpenLines, In as toolsFor, It as isDeliveredHow, J as lintNewRole, Jn as redactClip, Jt as spendingViewOf, K as writeManifest, Kn as oneLine, Kt as multipleWords, L as acceptLine, Ln as turnText, Lt as STEERING_ID_PREFIX, M as checklistCountsLine, Mn as mayMessage, Mt as reviveState, N as checklistLines, Nn as peopleOf, Nt as TRACE_LIMITS, O as planWaitingFor, On as introduce, Or as STEERING_TOOLS, Ot as isOpenItem, P as checklistView, Pn as personById, Pt as ackIdFor, Q as placeNote, Qt as ACCEPTANCE_REL, R as parseStep, Rn as startTailnet, Rt as blankSettings, S as pathInside, Sn as STAKEHOLDER, Sr as DECISION_LIMITS, St as ID_PREFIX, T as planGoverns, Tn as VIEW_LIMITS, Tr as LEASHES, Tt as fold, U as manifestText, Un as agentFileOf, Ut as taskOfTurn, V as applyReshape, Vn as killDesk, Vt as reversibleIn, W as planChange, Wn as loadProjectStudio, Wt as budgetLevel, X as orgAgentFile, Xn as writePlan, Xt as countWord, Y as onlyNotesDiffer, Yn as redactSecrets, Yt as clip$3, Z as ownsNote, Zn as detect, Zt as capital, _ as approvedVersion, _n as LIMITS, _r as TURN_STOPPED, _t as checkScoping, a as classifyPermission, an as MODEL_LEVELS, ar as slugId, at as claudeCode, b as latestVersion, bn as QUESTION_WAIT_MS, br as CHECKLIST_LIMITS, bt as cutText, c as scanCommand, cn as SEAT_TITLES, cr as sameLoads, ct as workView, d as isAtWork, dn as seatEffort, dr as jobPacks, dt as readInstalled, en as harnessPlan, er as withClaudeBlock, et as roleFromProposal, f as sameTurnHandoverSince, fn as SIZE_RULES, fr as plainPath, ft as TailorError, g as approvedScope, gr as PLAIN_PERSON, gt as checkProposal, h as summaryOf, hn as ASK_KINDS, hr as OWN_TURN_REASON, ht as applyOfficeChange, i as plainVerdict, in as DEFAULT_PRESET, ir as inSentence, it as SCRATCH_PATH_MARK, j as carryChecklist, jn as mayAssign, jt as own$1, k as waitClosure, kn as isManager, kr as VERDICTS, kt as isOpenTask, l as importRulePaths, ln as isPresetId, lr as BASE_DEPARTMENT_INFO, lt as startedBy, m as sinceStart, mn as isCheckerSeat, mr as packList, mt as andList$2, n as checkDashboard, nn as soloFixLines, nr as ROLE_ID, nt as tailorPerson, o as orgToolRules, on as PRESETS, or as titleFromId, ot as emptyWorkBook, p as sinceOf, pn as companySize, pr as PACKAGE_JSON, pt as OFFICE_ROOMS, q as backTo, qn as safeId, qt as presetInfos, r as plainAnswer$1, rn as soloPlan, rr as ROLE_MODELS, rt as HarnessError, s as stopsByPid, sn as PRESET_IDS, sr as resolveLoads, st as foldWork, t as orgToolsHandler, tn as seatOf, tr as DEPARTMENT_ORDER, tt as staffOf, u as AT_WORK$2, un as presetGuidance, ur as isBaseDepartment, ut as installedNames, v as changesSentence, vn as MESSAGE_PAGE, vr as cleanLaunch, vt as proposalLoadCosts, w as planChanges, wn as UNDO_MS, wr as EFFORTS, wt as dict, x as normalizePlanPath, xn as REPORT_FORM, xr as CHECKLIST_PAGE, xt as HOUR_MS, y as checkPlan, yn as OrgRefusal, yr as plainStudio, yt as cutSentence, z as commandProblem, zn as sameToken, zt as effectiveLeash } from "../cli.mjs";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { accessSync, appendFileSync, closeSync, constants, cpSync, existsSync, fdatasyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync, writeSync } from "node:fs";
 import { basename, delimiter, dirname, isAbsolute, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { execFile, spawn } from "node:child_process";
 import { connect, createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { Agent, STATUS_CODES, createServer as createServer$1, request } from "node:http";
 import { access, copyFile, mkdir, mkdtemp, readdir, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import { setTimeout as setTimeout$1 } from "node:timers/promises";
@@ -6621,6 +6621,7 @@ function buildView(i) {
 		shape: s.shape,
 		...s.shape === "plain" ? {
 			launch: { ...s.launch },
+			packs: i.packs ?? [],
 			todos: i.work?.todos ?? [],
 			helpers: i.work?.helpers ?? []
 		} : {},
@@ -6745,7 +6746,8 @@ function lobbyEntryOf(i) {
 		helping: (i.work?.helpers ?? []).filter((h) => h.state === "working").length,
 		spent: spend,
 		budget: s.settings.budget.company,
-		checklist: checklistOf(s)?.counts ?? null
+		checklist: checklistOf(s)?.counts ?? null,
+		...s.shape === "plain" ? { todos: i.work?.todos ?? [] } : {}
 	}, i.now);
 	return {
 		id: s.id,
@@ -11212,8 +11214,22 @@ var Company = class {
 			stalled: this.stall?.shown ?? null,
 			modelOverride: this.modelOverride(),
 			catalogue: this.catalogue(),
-			work: this.state.shape === "plain" ? workView(this.workOf(PLAIN_PERSON)) : null
+			work: this.state.shape === "plain" ? workView(this.workOf(PLAIN_PERSON)) : null,
+			packs: this.state.shape === "plain" ? this.packsNow() : null
 		};
+	}
+	/** v0.9: the job's packs as they stand in the folder, read at most every few seconds (a person may edit or delete them). */
+	packsRead = null;
+	packsNow() {
+		if (this.state.packs.length === 0) return [];
+		const now = this.now();
+		if (this.packsRead && now - this.packsRead.at < 5e3) return this.packsRead.value;
+		const value = jobPacks(this.root, this.state.packs);
+		this.packsRead = {
+			at: now,
+			value
+		};
+		return value;
 	}
 	/** The installed catalogue the proposal assigns from, read from Claude Code's own files at most every few seconds, and only before the start. */
 	catalogueRead = null;
@@ -11910,7 +11926,8 @@ function foundCompany(o) {
 			stakeholder: cleanLine(o.stakeholder, 40),
 			at: (o.now ?? Date.now)(),
 			...o.shape === "harness" || o.shape === "solo" || o.shape === "plain" ? { shape: o.shape } : {},
-			...o.shape === "plain" ? { launch: cleanLaunch(o.launch) } : {}
+			...o.shape === "plain" ? { launch: cleanLaunch(o.launch) } : {},
+			...o.shape === "plain" && o.packs && o.packs.length > 0 ? { packs: packList(o.packs) } : {}
 		}
 	});
 	const company = withStore(store, () => new Company(o, root, store, studio));

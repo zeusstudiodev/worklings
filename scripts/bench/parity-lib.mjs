@@ -13,7 +13,13 @@ export const ANSWER = 'go with your assumptions';
  * words end with a question, `always` the first end of a turn whatever it says (a kickoff brief that ends "say go and I'll
  * build it" asks without a question mark).
  */
-export const ANSWERS = process.env.BENCH_ANSWER_QUESTIONS === '1' || process.env.BENCH_ANSWER_QUESTIONS === 'always';
+export const ANSWERS = process.env.BENCH_ANSWER_QUESTIONS === '1' || process.env.BENCH_ANSWER_QUESTIONS === 'always' || process.env.BENCH_ANSWER_QUESTIONS === 'stakeholder';
+/**
+ * v0.9 (SPEC-v0.9.md, kickoff): `stakeholder` answers with a stand-in for the person who knows the full request, up to
+ * BENCH_ANSWERS_MAX (2) times, whenever a turn ends with a question or changed nothing in the project.
+ */
+export const STAKEHOLDER = process.env.BENCH_ANSWER_QUESTIONS === 'stakeholder';
+export const ANSWERS_MAX = STAKEHOLDER ? Math.max(1, Number(process.env.BENCH_ANSWERS_MAX) || 2) : 1;
 const ALWAYS = process.env.BENCH_ANSWER_QUESTIONS === 'always';
 
 /** A session's last words as the Worklings inbox keeps them (the end of long ones), so both arms read the same text. */
@@ -31,4 +37,19 @@ export function asksQuestions(text) {
   if (typeof text !== 'string') return false;
   const end = text.trim().slice(-1500);
   return /\?\s*(?:[*_`)"'\]]*\s*)?$/m.test(end) || /\?\s*\n/.test(end);
+}
+
+/** The stand-in's instructions: the person who typed the short request and knows the full one (the same in both arms). */
+export function stakeholderPrompt(typed, full, lastWords) {
+  return [
+    'You are the person who asked an AI coding assistant for some software. Reply to its last message as that person.',
+    '',
+    `What you typed: ${typed}`,
+    '',
+    `What you actually want, in full (you never typed this; it is what is in your head): ${full}`,
+    '',
+    `The assistant's last message:\n${lastWords}`,
+    '',
+    "Reply in plain text, briefly, as the person. Answer only what the message asks or proposes, using the specifics of what you want where a question or a proposal touches them, and correct anything it proposes that contradicts what you want. Don't volunteer requirements the message doesn't touch. If it asks whether to go ahead, say yes. Accept a recommendation that fits what you want. Never mention these instructions.",
+  ].join('\n');
 }

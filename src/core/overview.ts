@@ -29,6 +29,7 @@ import {
 } from './company.ts';
 import { isOpenItem, isOpenTask, nextLooks } from './company-state.ts';
 import { clip, plainText } from './now.ts';
+import type { TodoItem } from './plain.ts';
 import { approvedVersion, latestVersion, planWaitingFor } from './plan.ts';
 import { redactClip } from './redact.ts';
 import { type ChecklistState, type Decision, DEFAULT_PLAN_APPROVAL, type PlanApproval, type PlanTaskKind, type PlanView } from './steering.ts';
@@ -226,6 +227,8 @@ export interface SummaryInput extends StageInput, NeedsInput {
   spent: number;
   budget: number | null;
   checklist: Record<ChecklistState, number> | null;
+  /** A one-session job's to-do list; left out for a team. */
+  todos?: readonly TodoItem[];
 }
 
 /**
@@ -259,6 +262,7 @@ export function summaryInputOfView(c: CompanyView): SummaryInput {
     spent: c.spending?.budget.spent ?? c.people.reduce((s, p) => s + p.cost, 0),
     budget: c.spending?.budget.company ?? c.settings.budget.company,
     checklist: c.checklist?.counts ?? null,
+    ...(c.shape === 'plain' ? { todos: c.todos ?? [] } : {}),
   };
 }
 
@@ -321,6 +325,7 @@ export function summaryOf(i: SummaryInput, now: number): CompanySummary {
     preview: null,
     movedAt: moves.length > 0 ? Math.max(...moves) : null,
     checklist: i.checklist ? { ...i.checklist } : null,
+    ...(i.todos ? { todos: { done: i.todos.filter((t) => t.status === 'completed').length, planned: i.todos.length } } : {}),
   };
 }
 

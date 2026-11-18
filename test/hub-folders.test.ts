@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { installPacks } from '../src/packs/install.ts';
 import { appendFileSync, chmodSync, copyFileSync, existsSync, linkSync, mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { delimiter, dirname, join, parse } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -255,6 +256,16 @@ describe("what a folder brings for Claude Code, which every person's session wou
     expect(await notesFor({ '.claude/settings.json': theirs })).toEqual([HOOKS('.claude/settings.json')]);
     const lookalike = { hooks: { Stop: [{ hooks: [{ ...officeHook, url: 'http://127.0.0.1:7421/hooks?from=worklings-bot' }] }] } };
     expect(await notesFor({ '.claude/settings.json': theirs, '.claude/settings.local.json': lookalike })).toEqual([HOOKS('.claude/settings.json and .claude/settings.local.json')]);
+  });
+
+  it('says which packs the folder has, for the start form (v0.9)', async () => {
+    const root = writeTree(tempDir(), { 'index.html': '<p>hi</p>' });
+    installPacks(root, ['kickoff']);
+    const listing = await listFolder(root, { ...places(), library });
+    if ('ok' in listing) throw new Error(listing.message);
+    expect(listing.notes.slice(1)).toEqual([]);
+    expect(listing.packs.packs.kickoff.state).toBe('installed');
+    expect(listing.packs.blocked).toBeNull();
   });
 
   it('names permission rules that let a session use tools without asking', async () => {

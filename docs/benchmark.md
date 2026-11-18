@@ -172,6 +172,54 @@ game in both pairs. The other six tasks were split or tied. The whole of v0.7, r
 - **A separate check on the maintainer's own setup** (the maintainer's CLAUDE.md, skills and plugins, two tasks, one run each): ties on
   both, with the same hidden tests passed. The Worklings desk loaded the same setup as plain Claude Code.
 
+## Packs
+
+v0.9 ([SPEC-v0.9.md](../SPEC-v0.9.md)) adds packs: opt-in Claude Code setup a job can start with, as plain files in the
+project's `.claude/`. Each was benched against plain Claude Code on the task kinds it claims to help, with the parity
+bench's paired method, before the office may recommend it (the v0.9 packs bench report). 0.4.0 ships Kickoff, opt-in and
+unrecommended; check before done and the review round were measured and not shipped.
+
+- **Arms:** both `claude -p` through the blank profile, Sonnet, Claude Code's default effort, `bypassPermissions` and
+  the kill refusal; the pack arm's folder had the pack added by Worklings' own installer. Since a job's launch is held
+  to plain `claude -p`, the pack is the only difference.
+- **Judge:** Opus, blind, both orders, with the pack's own files left out of both projects.
+- **The rule, fixed before the bench and checked against two identical arms first** (v0.7's 20 pairs, every choice of
+  tasks read both ways round): not worse on hidden tests (at most 2 points behind), and either a judge mean of at least
+  0.65 with no task behind or hidden tests at least 5 points ahead in two tasks, and the median pair's cost within the
+  pack's own line. Identical arms pass it about 7% of the time at three tasks and 3% at four.
+
+| Pack | Tasks (pairs) | Hidden tests, pack minus plain | Judge mean (0.5 is a tie) | Median cost ratio (its line) | Rule |
+|---|---|---|---|---|---|
+| Kickoff (shipped, opt-in) | link checker, feature, data script, as short requests (6) | +60 points | 1.00 | 3.02x (1.5x) | missed on cost |
+| Check before done (measured, not shipped) | game, API, multi-file change, bookshop (8) | 0 | 0.38 | 1.04x (1.5x) | missed |
+| Review round (measured, not shipped) | API, multi-file change, bookshop (6) | 0 | 0.58 | 1.27x (2.5x) | missed |
+
+The bench cost $27.53 in all: runs, the kickoff stand-in's answers, the judges and three Haiku probes.
+
+### Honest caveats
+
+- **Kickoff was measured the way it claims to help, which favours it by construction.** The request each arm got was
+  the first sentence or two of a task; a stand-in person (Sonnet, no tools) who knew the full request answered whenever
+  a turn ended asking something, using the full request's specifics where a question touched them. The same policy ran
+  in both arms, but plain Claude Code never asked, so only the kickoff arm learned what the person wanted. The hidden
+  tests and the judge used the full request. With a person who just says "go with your recommendations", kickoff would
+  only add a round trip; that was not measured.
+- **Kickoff's cost line was set for the question round** ("a few cents and one answer"), but the rule measured the
+  whole job, and the kickoff arm built the full request where plain built a smaller guess. The question round cost
+  $0.04 to $0.13; the whole job 3.0x plain's by the median pair. By the rule as written it is not recommended.
+- **Check before done changed nothing the hidden tests see:** both arms passed all of them on all four tasks. Plain
+  Sonnet already ran its tests on these tasks; the rule mostly made the session do that again, and, as far as the
+  sessions' output shows, the Stop hook had something to ask in one run. The pack's sessions twice left a dev server or preview running, though the rule
+  says to stop what they start.
+- **The review round's reviewer ran in every pack run** and the session made its fix round, but the judge split: wins on
+  the API in both pairs and on the bookshop once, a loss on the bookshop once and on the multi-file change once. The API
+  runs took about four to five times as long, partly a hung `npm test` the session waited out.
+- **Small numbers again:** six to eight pairs a pack, two runs a task, on Windows, with one model. The household task
+  was left out of the review round: with the multi-file change already behind, no result there could have changed the
+  decision.
+- **One order slip:** the first kickoff run (the feature task, round 1) was a smoke test of the bench and ran before
+  its plain pair, where round 1 runs plain first.
+
 ## What it means if you build agent harnesses
 
 - **Compare against a plain session first,** with the same model, effort and setup. Our first bench measured setup and
@@ -199,6 +247,6 @@ game in both pairs. The other six tasks were split or tied. The whole of v0.7, r
   stop it.
 - **Anything that changes how Claude Code works is opt-in,** shows its cost first and, before Worklings recommends it, has
   to beat plain Claude Code in a benchmark like the one above. The team of roles is there as an experiment for that
-  reason.
+  reason, and so is Kickoff, the one pack shipped: no pack has met its rule yet, so the office recommends none.
 
 If you measure something different, we'd like to hear it.

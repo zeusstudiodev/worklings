@@ -111,6 +111,13 @@ describe("a company's card", () => {
     expect(progressLine({ milestones: { done: 0, planned: 0 }, tasks: { done: 1, planned: 1 } })).toEqual({ line: '1 of 1 task', share: 1 });
   });
 
+  it("counts a one-session job's to-dos, never a plan it doesn't have", () => {
+    const none = { milestones: { done: 0, planned: 0 }, tasks: { done: 0, planned: 0 } };
+    expect(progressLine({ ...none, todos: { done: 0, planned: 0 } })).toEqual({ line: 'No to-do list yet', share: null });
+    expect(progressLine({ ...none, todos: { done: 1, planned: 1 } })).toEqual({ line: '1 of 1 to-do done', share: 1 });
+    expect(progressLine({ ...none, todos: { done: 2, planned: 5 } })).toEqual({ line: '2 of 5 to-dos done', share: 0.4 });
+  });
+
   it('says the checklist once the final review has marked it', () => {
     expect(checklistLine({ met: 0, partly: 0, 'not-met': 0, unchecked: 6 })).toBeNull();
     expect(checklistLine({ met: 5, partly: 1, 'not-met': 0, unchecked: 0 })).toBe('5 of 6 met, 1 partly met');

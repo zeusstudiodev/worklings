@@ -407,6 +407,24 @@ describe('cli hub and companies', () => {
     }
   });
 
+  it('sends the packs --pack names (repeated or comma-separated, each once), and refuses a name that is not a pack or a team with packs', async () => {
+    const hub = await standIn(201, { id: 'plant-pal', reopened: false });
+    try {
+      const folder = tempDir();
+      const result = await runLater('new', folder, '--prompt', 'A plant care app', '--pack', 'kickoff,kickoff', '--pack', 'kickoff', '--port', String(hub.port), '--no-open');
+      expect(result).toMatchObject({ code: 0, stderr: '' });
+      expect((hub.seen[0]?.body as { packs?: unknown }).packs).toEqual(['kickoff']);
+      const odd = await runLater('new', tempDir(), '--prompt', 'A plant care app', '--pack', 'from-github', '--port', String(hub.port), '--no-open');
+      expect([odd.code, odd.stderr]).toEqual([1, '"from-github" isn\'t a pack. The packs are kickoff.\n']);
+      const team = await runLater('new', tempDir(), '--prompt', 'A plant care app', '--pack', 'kickoff', '--team', '--port', String(hub.port), '--no-open');
+      expect(team.code).toBe(1);
+      expect(team.stderr).toContain('Packs are for a one-session job');
+      expect(hub.seen).toHaveLength(1);
+    } finally {
+      await hub.close();
+    }
+  });
+
   it("says what the hub refused, and what isn't a hub", async () => {
     const refusing = await standIn(409, { error: 'Café Lumen already runs here. Open it from the lobby.', code: 'exists' });
     const other = await standIn(404, { error: 'No such endpoint.' });

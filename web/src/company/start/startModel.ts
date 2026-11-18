@@ -40,7 +40,7 @@ export async function readFolder(hub: Pick<HubActions, 'folders'>, path: string)
 export const newFolderLine = (parent: string): string => `No folder here yet. Starting makes it in ${cutMiddle(parent, 40)}.`;
 
 /** The codes of the hub's start refusals that are about the folder (src/hub/folders.ts and addCompany). */
-const FOLDER_CODES = new Set(['bad-folder', 'missing', 'exists', 'inside', 'around', 'link', 'copy', 'cannot-run']);
+const FOLDER_CODES = new Set(['bad-folder', 'missing', 'exists', 'inside', 'around', 'link', 'copy', 'cannot-run', 'packs']);
 
 /** Whether a refused start is about the folder, so it shows by the folder field instead of a second time below. */
 export const aboutFolder = (error: unknown): boolean => error instanceof ActionError && error.code !== null && FOLDER_CODES.has(error.code);

@@ -4484,6 +4484,41 @@ html[data-still='on'] *::after {
   color: var(--ink-soft);
 }
 
+/* v0.9's Add row: packs are checkboxes, each a whole row to press like the work choices above it. */
+.start__packs {
+  display: grid;
+  gap: 6px;
+}
+
+.start__packs .start__hint {
+  margin-bottom: 2px;
+}
+
+.start__pack {
+  min-height: 44px;
+}
+
+.start__pack.is-disabled {
+  cursor: default;
+  border-style: dashed;
+}
+
+.start__pack-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--highlighter-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+.start__pack-note {
+  font-weight: 500;
+  color: var(--ink);
+}
+
 .start__hint {
   margin: 0;
   font-size: 0.8125rem;

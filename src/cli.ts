@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { cleanLaunch, PERMISSION_MODES, type PlainLaunch } from './core/plain.ts';
+import { cleanPackIds, PACK_IDS, PACK_RECORD, PACKS, type PackId } from './core/packs.ts';
+import { folderPacks, installPacks, removePack } from './packs/install.ts';
 import { EFFORTS } from './core/steering.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
@@ -49,6 +51,8 @@ Usage
       --model <m>, --effort <e>        For this job only; left out, your Claude Code's own defaults
       --permission-mode <mode>         For this job only (acceptEdits, auto, bypassPermissions, manual, dontAsk)
       --plan-first                     Start in Claude Code's plan mode; you approve the plan in the inbox
+      --pack <name>                    Add a pack to the project's .claude/ first (repeat, or a,b):
+                                       ${PACK_IDS.join(', ')}; off unless named
       --team                           A team instead (experimental): a Lead, a Builder and a Reviewer
       --port <n>, --tailnet, --no-open As for the hub
   worklings office [dir]             Watch a project's Claude Code sessions in the 3D office (default: this folder)
@@ -64,6 +68,10 @@ Usage
       --add <roles> --remove <roles>   Adjust the team (comma-separated role ids)
       --force                          Replace files you edited (backed up to .claude/studio/backup/)
       --dry-run                        Show what would be written
+  worklings packs [dir]              List the packs and which this folder has (plain files in .claude/)
+  worklings packs add <name> [dir]   Add a pack to the folder's .claude/
+  worklings packs remove <name> [dir]
+                                     Remove a pack: the files of it you didn't edit
   worklings replay [dir]             Replay a past Claude Code session of a project in the office
       --session <id|latest>            Which session (default latest; the start of an id is enough)
       --speed <n>                      Playback speed (default 4)
@@ -352,13 +360,13 @@ async function launchHub(port: number, options: Options, token: string): Promise
 }
 
 /** What a hub already running on `port` says to a new company: null when nothing answers there. */
-async function askHub(port: number, token: string, folder: string, prompt: string, launch: PlainLaunch, work: 'plain' | 'team'): Promise<{ id: string; reopened: boolean } | null> {
+async function askHub(port: number, token: string, folder: string, prompt: string, launch: PlainLaunch, work: 'plain' | 'team', packs: readonly PackId[]): Promise<{ id: string; reopened: boolean } | null> {
   let res: Response;
   try {
     res = await fetch(`http://127.0.0.1:${port}/api/companies`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify({ folder, prompt, launch, work }),
+      body: JSON.stringify({ folder, prompt, launch, work, ...(packs.length > 0 ? { packs } : {}) }),
       signal: AbortSignal.timeout(60_000),
     });
   } catch (error) {
@@ -382,6 +390,16 @@ function launchOf(options: Options): PlainLaunch {
   return launch;
 }
 
+/** The packs `--pack` names (repeated, or comma-separated); a name that isn't a pack is refused here. */
+function packsOf(options: Options): PackId[] {
+  const raw = options.pack;
+  const names = (Array.isArray(raw) ? raw : typeof raw === 'string' ? [raw] : []).flatMap((n) => String(n).split(',')).map((n) => n.trim()).filter(Boolean);
+  const named = cleanPackIds(names);
+  if (!named.ok) throw new Error(named.message);
+  if (named.ids.length > 0 && options.team === true) throw new Error('Packs are for a one-session job; a team has its own reviewer. Leave out --team or --pack.');
+  return named.ids;
+}
+
 /** How the job runs: one Claude Code session, unless `--team` asks for the experimental team. */
 function launchWork(options: Options): 'plain' | 'team' {
   return options.team === true ? 'team' : 'plain';
@@ -403,7 +421,8 @@ async function newCompany(positionals: string[], options: Options): Promise<numb
   const port = options.port === undefined ? (runningHub(hubDir(worklingsHome()))?.port ?? DEFAULT_HUB_PORT) : portOf(options, false, DEFAULT_HUB_PORT);
   // v0.7: the job's own launch choices; anything left out, or that Claude Code wouldn't take, is left to Claude Code.
   const launch = launchOf(options);
-  const told = await askHub(port, token, folder, prompt, launch, launchWork(options));
+  const packs = packsOf(options);
+  const told = await askHub(port, token, folder, prompt, launch, launchWork(options), packs);
   if (told) {
     const link = `http://127.0.0.1:${port}/c/${encodeURIComponent(told.id)}/progress?token=${token}`;
     out(told.reopened ? `${folder} already has a company: it is back in the lobby.` : `Started a job in ${folder}.`);
@@ -416,7 +435,7 @@ async function newCompany(positionals: string[], options: Options): Promise<numb
   if (!hub) return 1;
   let added: { id: string; reopened: boolean };
   try {
-    added = await hub.addCompany({ folder, prompt, launch, work: launchWork(options) });
+    added = await hub.addCompany({ folder, prompt, launch, work: launchWork(options), packs });
   } catch (error) {
     await hub.close();
     throw error;
@@ -553,6 +572,7 @@ const commands: Record<string, Command> = {
 
   new(positionals, options) {
     if (typeof options.prompt === 'string' && !options.offline) return newCompany(positionals, options);
+    if (options.pack !== undefined) throw new Error('--pack goes with --prompt, for a job; `worklings packs add <name>` adds one to a folder.');
     const root = dirArg(positionals);
     const library = libraryFrom(options);
     const detection = detect(root, library);
@@ -606,6 +626,38 @@ const commands: Record<string, Command> = {
     if (d.folders.length > 0) out(`  Folders: ${d.folders.join(', ')}`);
     out(d.domains.length > 0 ? '  Looks like:' : '  No specific kind of project detected (the generic studio fits).');
     for (const m of d.domains.slice(0, 3)) out(`    ${m.id} (score ${m.score}): ${m.reasons.join(', ')}`);
+    return 0;
+  },
+
+  packs(positionals, options) {
+    const [verb, ...rest] = positionals;
+    if (verb === 'add' || verb === 'remove') {
+      const named = cleanPackIds([rest[0] ?? '']);
+      if (!named.ok || named.ids.length === 0) throw new Error(`Say which pack: ${PACK_IDS.join(', ')}.`);
+      const id = named.ids[0] as PackId;
+      const root = dirArg(rest.slice(1));
+      if (!existsSync(root)) throw new Error(`No such folder: ${root}`);
+      const title = PACKS.find((p) => p.id === id)?.title ?? id;
+      if (verb === 'add') {
+        const done = installPacks(root, [id]);
+        out(done.added.length > 0 ? `Added ${title} to ${root}'s .claude/ (recorded in .claude/${PACK_RECORD}).` : `${root} has ${title} already.`);
+        return 0;
+      }
+      const gone = removePack(root, id);
+      out(`Removed ${title}: ${gone.removed.length} file${gone.removed.length === 1 ? '' : 's'}.`);
+      if (gone.kept.length > 0) out(`  Kept, because they were edited: ${gone.kept.map((f) => `.claude/${f}`).join(', ')}. Delete them yourself if you don't want them.`);
+      return 0;
+    }
+    const root = dirArg(positionals);
+    if (!existsSync(root)) throw new Error(`No such folder: ${root}`);
+    const there = folderPacks(root, { domain: null, empty: false });
+    if (json(options, PACKS.map((p) => ({ id: p.id, title: p.title, for: p.forWhat, cost: p.cost, files: p.files, state: there.packs[p.id].state })))) return 0;
+    const said: Record<string, string> = { absent: 'not here', installed: 'here', edited: 'here, edited', partial: 'partly removed', conflict: 'blocked by a file of your own' };
+    for (const p of PACKS) {
+      out(`${p.id.padEnd(18)} ${p.title}: ${said[there.packs[p.id].state] ?? ''}`);
+      out(`${' '.repeat(19)}${p.forWhat}. ${p.cost}`);
+    }
+    if (there.blocked) out(there.blocked);
     return 0;
   },
 
@@ -720,7 +772,7 @@ function editDistance(a: string, b: string): number {
 const meantAsFolder = (arg: string) => existsSync(resolve(arg)) || isAbsolute(arg) || /[\\/]/.test(arg) || arg.startsWith('.') || arg.startsWith('~');
 
 /** The commands in the order the help shows them. */
-const ORDER = ['hub', 'demo', 'doctor', 'new', 'office', 'replay', 'detect', 'domains', 'adopt', 'tailor', 'hire', 'fire', 'rehire', 'move', 'model', 'hooks', 'lint-library', 'help'];
+const ORDER = ['hub', 'demo', 'doctor', 'new', 'office', 'packs', 'replay', 'detect', 'domains', 'adopt', 'tailor', 'hire', 'fire', 'rehire', 'move', 'model', 'hooks', 'lint-library', 'help'];
 
 /** Says that a word is neither a command nor a folder, with the closest command and every command. */
 function unknownCommand(word: string): string {
@@ -770,6 +822,7 @@ async function main(argv: string[]): Promise<number> {
       'permission-mode': { type: 'string' },
       'plan-first': { type: 'boolean' },
       team: { type: 'boolean' },
+      pack: { type: 'string', multiple: true },
     },
     allowPositionals: true,
     strict: true,

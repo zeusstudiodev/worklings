@@ -29,6 +29,9 @@ const goal = goalOf(task);
 const start = join(taskDir(task), 'start');
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.worklings', '.worklings-shared', 'dist', 'build', 'coverage', 'test-results', 'playwright-report', '.next', '.cache']);
+// v0.9's packs bench (BENCH_JUDGE_SKIP_CLAUDE=1): the pack's own files under .claude/ are left out of both projects, so the
+// judge never sees which arm had a pack.
+if (process.env.BENCH_JUDGE_SKIP_CLAUDE === '1') SKIP_DIRS.add('.claude');
 const SKIP_FILES = /(^|[\\/])(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|.*\.(png|jpe?g|gif|ico|webp|woff2?|ttf|db|sqlite|zip|gz|pdf|mp3|mp4|wasm))$/i;
 const FILE_CAP = 60_000;
 const PROJECT_CAP = 110_000;
@@ -83,7 +86,8 @@ const startNote = existsSync(start)
 
 function prompt(first, second) {
   return [
-    'You are an expert reviewer comparing two independent attempts at the same request. Judge which one fulfils the request better for the person who asked: correctness first (does it do what was asked, including the details and edge cases the request states), then completeness, then the quality of the code, tests and documentation the request asks for. Judge only what you can see; neither attempt could ask questions. Prefer "tie" when the difference is small or a matter of taste.',
+    `You are an expert reviewer comparing two independent attempts at the same request. Judge which one fulfils the request better for the person who asked: correctness first (does it do what was asked, including the details and edge cases the request states), then completeness, then the quality of the code, tests and documentation the request asks for. Judge only what you can see${process.env.BENCH_JUDGE_ASKED === '1' ? '' : '; neither attempt could ask questions'}. Prefer "tie" when the difference is small or a matter of taste.`,
+    ...(process.env.BENCH_JUDGE_ASKED === '1' ? ['', 'The person typed a shorter request than the one below, and either attempt could ask the person questions before building; the request below is what the person wanted, so judge against it.'] : []),
     '',
     `The request:\n${goal}`,
     '',

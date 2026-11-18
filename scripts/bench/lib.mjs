@@ -45,7 +45,7 @@ export function requireTask(name) {
 }
 
 /** The goal both arms get: one paragraph, exactly as written in goal.md. */
-export const goalOf = (task) => readFileSync(join(taskDir(task), 'goal.md'), 'utf8').trim().replace(/\s*\n\s*/g, ' ');
+export const goalOf = (task, file = 'goal.md') => readFileSync(join(taskDir(task), file), 'utf8').trim().replace(/\s*\n\s*/g, ' ');
 
 export const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 export const writeJson = (file, value) => writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);

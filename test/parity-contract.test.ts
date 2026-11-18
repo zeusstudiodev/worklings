@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { DeskControl, DeskEvents } from '../src/core/company.ts';
 import { ALLOWED_DIFFERENCES, DEFAULT_LAUNCH, type PlainLaunch } from '../src/core/plain.ts';
+import { PACK_IDS, type PackId } from '../src/core/packs.ts';
+import { installPacks } from '../src/packs/install.ts';
 import { createCompany } from '../src/company/index.ts';
 import { createSwitchboard } from '../src/runtime/index.ts';
 import { deskEnvironment, officeHooks } from '../src/runtime/harness.ts';
@@ -48,7 +50,7 @@ const PROMPT = [
   'Keep the public API as it is. Quotes "like this", a backslash \\ and a line that starts with --flag stay verbatim.',
 ].join('\n');
 
-async function launched(launch: PlainLaunch) {
+async function launched(launch: PlainLaunch, packs: readonly PackId[] = []) {
   const dir = tempDir('worklings-parity-');
   const scratch = join(dir, 'scratch');
   mkdirSync(scratch);
@@ -63,10 +65,12 @@ async function launched(launch: PlainLaunch) {
   };
   const hub = await fakeHub();
   const root = newProject();
+  // v0.9: a pack is project setup the office adds before the session starts, as the hub does in addCompany.
+  if (packs.length > 0) installPacks(root, packs);
   const before = readdirSync(root).sort();
   const git = fakeGit();
   const company = createCompany({
-    key: KEY, org: fakeOrg(), git, warn: () => {}, root, prompt: PROMPT, stakeholder: 'Robin', shape: 'plain', launch,
+    key: KEY, org: fakeOrg(), git, warn: () => {}, root, prompt: PROMPT, stakeholder: 'Robin', shape: 'plain', launch, packs,
     desks: (events: DeskEvents, companyId: string): DeskControl => createSwitchboard({ companyId, root, hub, events, maxDesks: 4, idleMs: 60_000, env, claude: FAKE_DESK, scratch }),
   });
   const log = (): FakeLogEntry[] => (existsSync(logFile) ? readFileSync(logFile, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l) as FakeLogEntry) : []);
@@ -124,6 +128,18 @@ describe('the parity contract', () => {
       expect(r.gitCalls).toBe(0);
     }, forStarts(2));
   }
+
+  it('launches a job that starts with packs exactly as one without: a pack is files in the project, like its own .claude/', async () => {
+    const without = await launched(DEFAULT_LAUNCH);
+    const withPacks = await launched(DEFAULT_LAUNCH, PACK_IDS);
+    const flags = (argv: readonly string[]) => extraOver(argv, plainClaudeArgs({ prompt: PROMPT, launch: DEFAULT_LAUNCH })).map(([f, v]) => (f === '--session-id' || f === '--settings' ? f : `${f} ${v ?? ''}`));
+    expect(flags(withPacks.start.argv)).toEqual(flags(without.start.argv));
+    // The office's settings file is the same hooks and nothing else; the project's own .claude/settings.json holds the pack's.
+    expect(JSON.parse(withPacks.start.settings ?? '{}')).toEqual(plainDeskSettings(officeHooks(withPacks.hubUrl)));
+    expect(withPacks.first.message).toEqual({ role: 'user', content: PROMPT });
+    expect(withPacks.before).toContain('.claude');
+    expect(withPacks.after.filter((f) => !withPacks.before.includes(f))).toEqual(['.worklings']);
+  }, forStarts(4));
 
   it("gives the desk the person's environment, less the host session's wiring, plus only the session events and the hooks' token", () => {
     const base = { PATH: '/bin', ANTHROPIC_MODEL: 'sonnet', CLAUDE_CONFIG_DIR: '/home/x/.claude', HTTPS_PROXY: 'http://proxy', TEMP: '/tmp/x', CLAUDECODE: '1', CLAUDE_CODE_MAX_OUTPUT_TOKENS: '64000' };

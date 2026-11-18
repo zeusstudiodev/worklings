@@ -9,6 +9,7 @@ library/
   rules/<id>.md              path-scoped rules for a stack
   skills/<id>/SKILL.md       workflow skills and review gates
   domains/<id>.yaml          which roles, rules, skills and gates a kind of project gets, per rigor tier
+  packs/<id>/                v0.9: a pack's files, laid out as they land under a project's .claude/
 ```
 
 Rooms come from the nine base departments in `src/core/departments.ts`: `direction`, `design`, `engineering`,
@@ -145,3 +146,15 @@ Lean teams have 3 to 5 roles. Every id must exist in this library; the linter ch
 Pick detection signals that only this kind of project has. A signal that also shows up elsewhere (Playwright in any
 app's tests, Three.js on 3D marketing sites, pandas in plenty of APIs) will mislabel those projects, because a
 higher-priority domain wins as soon as one of its signals matches.
+
+## Packs: `packs/<id>/`
+
+Opt-in Claude Code setup a one-session job can start with (SPEC-v0.9.md), copied as it is into a project's `.claude/`
+when the person adds the pack. The catalogue in `src/core/packs.ts` names each file, and a unit test holds the two to each
+other. 0.4.0 ships `kickoff`, one rule file.
+
+- Every file name starts with `worklings-`, so a pack never takes the name of a person's own skill, agent or rule.
+- A rule without frontmatter loads in every session; keep it short, since every session pays for it.
+- Say at the top of each file which pack added it and how to turn it off.
+- Packs are written here and reviewed like the rest of the library, never generated per prompt or fetched from another
+  repository.

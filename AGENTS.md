@@ -236,6 +236,14 @@ module map; `docs/design.md` the office's visual system.
   the palette). The static demo's "Try it: start a project" replays one real plain job recorded once
   (`scripts/record-demo-run.mjs`, which costs money, then `scripts/make-demo-replay.mjs`) from
   `web/src/company/replay/recording.json`; a new recording goes through the same sanitizer and the privacy scan.
+- Packs (the maintainer, 18 Nov 2026; `SPEC-v0.9.md`): opt-in Claude Code setup for a one-session job, installed by the
+  office into the project's `.claude/` as plain files the person can read, edit or delete, and recorded in
+  `worklings-packs.json` in `.claude/`. 0.4.0 ships Kickoff alone, after the bench (the maintainer, 18 Nov 2026): check
+  before done and the review round were measured and not shipped, and their numbers stay in `docs/benchmark.md`. Off by
+  default; the office recommends one only by fixed rules (`RECOMMENDED` in `src/core/packs.ts`) on the task kinds where
+  it met its bench rule, and none has. No skills generated per prompt, nothing installed from third-party repositories,
+  and the launch doesn't change: the parity contract holds a job with packs to the same `claude -p`. The hub and the CLI install them before the session starts; no desk writes them, so
+  the desk policy for `.claude/` stays as it is.
 - Costs are API-equivalent estimates unless OpenTelemetry reports them.
 - Nothing is published (npm, GitHub, marketplace, Pages) without the maintainer's OK. Where it will live (the maintainer, 5 Nov 2026): the
   repo `zeusstudiodev/worklings`, the npm package `worklings`, the demo at https://zeusstudiodev.github.io/worklings/.
