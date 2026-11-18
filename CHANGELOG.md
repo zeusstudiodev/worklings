@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.1, 18 November 2026
+
+- **A new launch film.** A 30-second trailer replaces the screen recording: the lobby, a busy office (the demo's
+  made-up company, labelled), helpers fanning out with their cost and a permission prompt allowed from a phone (a real
+  Claude Code run, labelled). How it was made: `docs/launch/film/how-it-was-made.md`.
+- **The studio chat says what it can do with a plain job.** It reads every company but can message only a team's CEO: a
+  plain Claude Code job hears only you. The lobby used to say it asks every company's CEO.
+- **Why Worklings leaves Claude Code alone.** [docs/benchmark.md](docs/benchmark.md): the benchmarks of a company of
+  agents against one Claude Code session, and the parity bench behind 0.2. The roadmap is brought up to date.
+- **The lobby's first-run welcome and the plugin's hub skill** describe a job as your own Claude Code, not a company of
+  agents.
+- **The web demo has a preview card.** A link to it shared on X, Slack or Discord shows the preview image and what the
+  demo does.
+
 ## 0.3.0, 17 November 2026
 
 The office is calmer. It fills the screen, the next thing that needs you waits on one card, and everything else is a

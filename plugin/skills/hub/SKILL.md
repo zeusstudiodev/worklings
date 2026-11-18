@@ -1,9 +1,9 @@
 ---
 name: hub
 description: >-
-  Opens the Worklings hub: the lobby on this computer where companies of Claude Code agents run, each in its own 3D
-  office. Use when someone wants to run a company of agents, start one from a sentence, see how their companies are
-  doing or open the lobby.
+  Opens the Worklings hub: the lobby on this computer where your Claude Code jobs run, each in its own 3D office. Use
+  when someone wants to start a job from a sentence in the office, see how their jobs and companies are doing, approve
+  what Claude Code asks, or open the lobby.
 argument-hint: "[--port <n>] [--tailnet]"
 allowed-tools: Bash(worklings *)
 ---

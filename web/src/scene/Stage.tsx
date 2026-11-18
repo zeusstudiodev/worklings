@@ -44,6 +44,7 @@ import { PEOPLE_LAYER } from './people/rig.ts';
 import type { SceneCast } from './useCast.ts';
 import { modelLabel } from './alt.ts';
 import { type CameraDriver, StageCamera, useStageCamera } from './stageCamera.ts';
+import { FilmCamera } from './filmCamera.tsx';
 import '../company/shell/frame.css';
 
 export type { Insets, StageInsets };
@@ -839,6 +840,7 @@ export function Stage({ snapshot, layout, cast, clock, selection, onSelect, redu
               onFrame={onFrame}
               cap={phase === 'mini' ? MINI_FPS : null}
             />
+            {import.meta.env.VITE_WORKLINGS_FILM === '1' && <FilmCamera stage="office" />}
             <LabelProjector store={labels} />
           </LabelContext.Provider>
         </StaticChange.Provider>

@@ -392,7 +392,7 @@ function LobbyPanel({ lobby, stream, hub, demo, location, starting, onLeaveDemo 
               <h2 id="lobby-welcome" className="panel-title" tabIndex={-1} data-panel-heading>
                 Start your first company
               </h2>
-              <p className="lobby-welcome__text">Worklings runs a company of Claude Code sessions that builds what you describe. Pick a folder and say what to build.</p>
+              <p className="lobby-welcome__text">Worklings runs your own Claude Code on what you describe, with an office around it. Pick a folder and say what to build.</p>
               <StartCompany hub={hub} lobby={lobby} blocked={startBlock} online={online} demo={demo} embedded />
             </section>
           ) : (

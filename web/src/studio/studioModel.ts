@@ -73,7 +73,7 @@ export function studioCardLine(s: StudioView | null): string {
   if (!s) return 'Ask across every company.';
   if (s.state === 'thinking' || s.state === 'starting') return 'Thinking…';
   const last = [...s.entries].reverse().find((e) => e.kind === 'studio' || e.kind === 'reply');
-  if (!last) return 'Ask across every company: it reads them and asks their CEOs. It costs nothing until you write.';
+  if (!last) return 'Ask across every company: it reads them all and can message a team\'s CEO. It costs nothing until you write.';
   return last.kind === 'reply' ? `${last.by ?? 'A CEO'}${last.companies?.[0] ? ` at ${last.companies[0].name}` : ''}: ${last.text}` : last.text;
 }
 

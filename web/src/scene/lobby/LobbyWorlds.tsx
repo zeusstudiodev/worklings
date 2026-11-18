@@ -16,6 +16,7 @@ import { THEME_SWATCH } from '../../company/ui/ThemeStill.tsx';
 import { useReducedMotion } from '../../lib/hooks.ts';
 import { loadScenery } from '../art/loader.ts';
 import { LabelContext, LabelProjector, LabelStore } from '../labels.tsx';
+import { FilmCamera, filmHolds } from '../filmCamera.tsx';
 import { MAT, MAT_GRID } from '../palette.ts';
 import { WorldView } from './view.ts';
 import { doorFigure, type WorldParts, worldParts } from './world.ts';
@@ -120,6 +121,7 @@ export const LobbyWorlds = memo(function LobbyWorlds({ lobby, onEnter, insets = 
         <Mat />
         <LabelContext.Provider value={labels}>
           <Worlds companies={lobby.companies} slots={slots} opening={opening} onPick={enter} onArrived={arrived} />
+          {import.meta.env.VITE_WORKLINGS_FILM === '1' && <FilmCamera stage="lobby" />}
           <LabelProjector store={labels} />
         </LabelContext.Provider>
         <Camera bounds={bounds} insets={insets} opening={opening} slots={slots} />
@@ -229,7 +231,7 @@ function Camera({ bounds, insets, opening, slots }: { bounds: ReturnType<typeof 
 
   useFrame(({ camera, invalidate }) => {
     const base = fit.current;
-    if (!opening || !base) return;
+    if (!opening || !base || (import.meta.env.VITE_WORKLINGS_FILM === '1' && filmHolds('lobby'))) return;
     const cam = camera as OrthographicCamera;
     const slot = slots[opening.id];
     if (slot === undefined) return;

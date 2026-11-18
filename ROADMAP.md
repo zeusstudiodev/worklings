@@ -1,63 +1,80 @@
 # Roadmap
 
-What comes after v3, what is still open, and what Worklings will not do. There are no dates: the order is the order of
-work, and nothing here is a promise. The sources are `SPEC-v3.md` (its "Out of scope" and "Launch prep" sections) and
-the build's checklist in `.claude/runs/v3/checklist.json`. Ideas are welcome in
+What is built, what comes next, what is still open, and what Worklings will not do. There are no dates: the order is the
+order of work, and nothing here is a promise. The sources are [SPEC-v0.7.md](SPEC-v0.7.md) (Claude Code with an office
+around it), [SPEC-v0.8.md](SPEC-v0.8.md) (office first) and [docs/benchmark.md](docs/benchmark.md). Ideas are welcome in
 [Discussions](https://github.com/zeusstudiodev/worklings/discussions) and [issues](https://github.com/zeusstudiodev/worklings/issues).
 
-## Before the first release
+## Where it stands
 
-v3 and the launch pieces below are built and checked on this computer only. Nothing is published yet: publishing waits
-for the maintainer (`docs/launch/release-steps.md`).
+- **A job is one unmodified Claude Code session** on your words, with your own setup, tools, model, effort and permission
+  mode. A [contract test](test/parity-contract.test.ts) holds its launch to plain `claude -p` plus the short list of
+  allowed differences in [src/core/plain.ts](src/core/plain.ts), and the parity bench found no difference 20 pairs can
+  detect ([docs/benchmark.md](docs/benchmark.md)).
+- **The office around it:** one inbox card for Claude Code's own permission prompts and end-of-turn words, its todo list
+  as a task board, its subagents as helpers with their own cost, budgets as Claude Code's own `--max-budget-usd`, plan
+  first as an extra, a lobby of projects, portfolios, the studio chat, the timeline, dashboards and the preview.
+- **The team of roles** (a Lead, a Builder and a strict Reviewer with a fix round) is an experimental choice. In our
+  benches it cost about twice as much as one session and was not better.
+- **Install:** the Claude Code plugin from GitHub (`claude plugin marketplace add zeusstudiodev/worklings`), a clone, or
+  `npx worklings` once the npm package is published. The [live demo](https://zeusstudiodev.github.io/worklings/)
+  needs nothing installed and replays one real recorded run.
 
-- **Steering** is built. It has run end to end against a scripted Claude Code and twice against a real one: approving
-  the CEO's plan, messaging a room or everyone, seeing a message land, ordering the task board, the decision log, a
-  leash for each person, a command palette (Ctrl+K) and doing all of it by talking to the CEO.
-- **A one-command start**, `npx worklings`, opens the lobby with the demo company and a way to start your first
-  company, backed by a first-run check (`worklings doctor`). It works from `npm pack` in a clean folder and needs the
-  package to be published.
-- **The plugin from GitHub**, `claude plugin marketplace add zeusstudiodev/worklings`, works from a local marketplace. The
-  GitHub route needs the repository and the release commit that holds the plugin's runtime.
-- **A live demo in the browser**, with no install and no Claude Code, is built for GitHub Pages and checked as Pages
-  would serve it. It is not deployed.
-- **A hero video, feature clips and screenshots** of the v3 look are in `docs/launch/`.
-- **Still to do:** the last fixes from the design and accessibility gates, and a full run of every check on the
-  finished state.
+## Next
+
+- **Packs for a one-session job, each measured before the office suggests it.** A pack is Claude Code's own parts
+  (skills, subagents, rules and hooks) installed into the project's `.claude/`, plain files you can read, edit or delete,
+  with your own setup still on top. Each is off by default with its cost shown first, and runs on the kinds of task it
+  claims to help, paired against the plain baseline as the parity bench was:
+  - **Kickoff:** a few scoping questions in the inbox before building, for a short or vague request.
+  - **Check before done:** run the project's tests and build, and look at the result, before saying done.
+  - **A review round:** an independent strict review, then one fix round by the same session. The evidence so far is
+    v0.6's: about a tie at twice the cost, on two tasks. Today it exists only inside the experimental team.
+  - **Parallel builders** for a job that divides along a contract. Untested.
+  - **Best of two.** Untested.
+- **A better parity bench:** more pairs, a decision rule checked against two identical arms before it runs, and a
+  bench that a model-written test which never exits can't stall.
+- **Real-world checks still to do:** a real tailnet with a real phone, and the full test suite and a real job on macOS
+  and Linux.
+- **Each new Claude Code version** gets its stream-json, hook and MCP fixtures re-recorded and read before anything is
+  built on it ([docs/claude-code-surfaces.md](docs/claude-code-surfaces.md)).
 
 ## Known limits
 
 These are written down, not hidden.
 
 - **Phone access has not been tried on real hardware.** Tailnet mode (`worklings hub --tailnet`) was tested against a
-  fake `tailscale`. A run on a real tailnet with a real phone is still to do.
+  fake `tailscale`; the phone layout was checked in a phone-sized browser.
 - **Windows is the system it was built and tested on.** The package check runs on Windows, macOS and Linux in CI, but
   the full test suite and the end-to-end tests have only been run on Windows.
-- **Desks are not sandboxed.** A person's code runs as you. Isolating desks per operating-system user or container would
-  go further and is not in v3. See [SECURITY.md](SECURITY.md).
-- **Approvals nobody answers** for about 10 minutes, or that are open when the hub restarts, count as a no.
+- **Sessions are not sandboxed.** Code a session runs, runs as you. See [SECURITY.md](SECURITY.md).
+- **The task board shows a todo list only when the model keeps one.** Sonnet 5.5 and Haiku 5.5 keep none unless your
+  Claude Code turns the todo tools on.
+- **In a team, a question nobody answers in time counts as a no,** unless its asker said every option can be undone.
 - **The tailnet link carries the long-lived token.**
 - **Project allow rules** in a repository's Claude Code settings do not apply to a desk until the folder is trusted.
 - **The preview starts the project's `dev` or `start` script through `npm`**, even when the project uses pnpm, yarn or
   bun. A project with no such script has no preview.
 - **Claude Code's inner workings can change.** The stream-json and MCP protocols and the transcript format are pinned
-  by recorded fixtures for Claude Code 2.1.312, and each new version needs a re-check.
+  by recorded fixtures for Claude Code 2.1.312.
 
 ## Later, not promised
 
-- **Other tools than Claude Code**, Codex first. The code that starts, feeds, interrupts and closes a person's session
-  sits behind a small interface (`src/runtime/harness.ts`), so a second tool can be added without rewriting the company.
-- **Safer desks.** Running each desk as its own operating-system user, or in a container, so code a person runs cannot
+- **Other tools than Claude Code**, Codex first. The code that starts, feeds, interrupts and closes a session sits
+  behind a small interface (`src/runtime/harness.ts`), so a second tool can be added without rewriting the office.
+- **Safer sessions.** Running each one as its own operating-system user, or in a container, so code it runs cannot
   reach the office's token.
-- **More kinds of project and roles** in the library. This needs no code: see the
+- **More kinds of project and roles** in the studio library. This needs no code: see the
   [good first issues](docs/launch/good-first-issues.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Package managers in the preview** other than npm.
 
 ## Not planned
 
-- **A hosted service**, or running companies for other people. Worklings runs on your computer, with your own Claude
-  Code and your own plan or key.
+- **Changing how Claude Code works in a default job:** no prompt appended, no tools taken away, no approvals stricter
+  than Claude Code's own. The contract test fails any change that does.
+- **A team of roles as the default,** unless a bench shows it beats one session.
+- **A hosted service**, or running jobs for other people. Worklings runs on your computer, with your own Claude Code
+  and your own plan or key.
 - **Handling sign-in.** Worklings never touches credentials.
-- **People rewriting Worklings' own code from inside a company**, except when Worklings' own repository is the
-  company's project.
 - **Voice.**
 - **Bought art.** The art is CC0 packs only; see [CREDITS.md](CREDITS.md).

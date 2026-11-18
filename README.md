@@ -8,12 +8,13 @@
 <p align="center"><strong>Claude Code, with an office around it.</strong></p>
 
 <p align="center">
-  <a href="docs/launch/film/hero.mp4"><img src="docs/launch/film/teaser.gif" width="720" alt="From the launch film: Claude Code at work in a small CLI's office with two helpers and their cost, its todo list on the task board, and its npm test prompt allowed on a phone. Links to the whole film"></a>
+  <a href="docs/launch/film/hero.mp4"><img src="docs/launch/film/teaser.gif" width="720" alt="From the launch film: a made-up company gathers in its 3D office, then a real Claude Code job: three helpers walk over to its desk, each with its live cost, its npm test prompt is allowed on a phone, and it finishes with 38 tests passing. Links to the whole film"></a>
 </p>
 
-*Watch [the launch film](docs/launch/film/hero.mp4) (39 seconds): three real Claude Code jobs started from one sentence
-each, a small CLI followed from its office to its last words, and its `npm test` prompt answered on a phone. Shots
-that run faster than real time say so; [how it was made](docs/launch/film/how-it-was-made.md).*
+*Watch [the launch film](docs/launch/film/hero.mp4) (30 seconds): the lobby and a busy office from the demo's made-up
+company, then one real Claude Code job, its helpers and their cost, and its `npm test` prompt allowed on a phone. Each
+shot says whether it is demo data or a real run, and nothing is sped up;
+[how it was made](docs/launch/film/how-it-was-made.md).*
 
 <p align="center">
   <a href="https://www.npmjs.com/package/worklings"><img alt="npm" src="https://img.shields.io/npm/v/worklings"></a>
@@ -60,9 +61,10 @@ Worklings itself never pushes or deploys. It asks exactly when your Claude Code 
 
 You need Node 22 or later. Anything beyond the demo also needs [Claude Code](https://code.claude.com/docs), signed in.
 
-1. **The live demo, with nothing to install:** <https://zeusstudiodev.github.io/worklings/>. It is a made-up café
-   company that runs entirely in your browser, with no Claude Code and no server. It is a company of roles, with a CEO
-   and an org, so it shows the office and its boards rather than a single Claude Code job.
+1. **The live demo, with nothing to install:** <https://zeusstudiodev.github.io/worklings/>. It runs entirely in
+   your browser, with no Claude Code and no server. "Try it: start a project" replays a real recorded Claude Code run
+   from the start form to the finished result, and stops at its permission prompts for your tap. The lobby's other
+   companies are made up, including a café run by a team of roles.
 2. **As a Claude Code plugin:**
 
    ```bash
@@ -182,6 +184,8 @@ This shows no difference that 20 pairs can detect. It doesn't prove the two are 
 better. The launch is also held to plain `claude -p` by a test
 ([test/parity-contract.test.ts](test/parity-contract.test.ts)); the differences it allows are listed in
 [src/core/plain.ts](src/core/plain.ts).
+
+Why Worklings doesn't change how Claude Code works, with every benchmark behind that choice: [docs/benchmark.md](docs/benchmark.md).
 
 ## The team (experimental)
 
@@ -506,7 +510,7 @@ Point it only at runs you trust: it reads the company's log without checking its
 - **macOS and Linux** have not run the full tests or a real job; Windows is where Worklings was built.
 - **Sessions are not sandboxed** (see above), and Claude Code is the only agent tool supported.
 - **The team** is an experiment that has not beaten one session.
-- The version is 0.2.0. Claude Code's internal protocols can change under it.
+- The version is 0.3.1. Claude Code's internal protocols can change under it.
 
 [ROADMAP.md](ROADMAP.md) has what comes next and what Worklings will not do.
 

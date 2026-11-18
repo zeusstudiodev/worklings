@@ -109,7 +109,7 @@ export function StudioChat({ studio, actions, online, now, announce, onBack }: S
       <h2 id={`${id}-title`} className="panel-title" tabIndex={-1} data-panel-heading>
         Studio chat
       </h2>
-      <p className="studio__intro">Ask across every company. It reads them and asks their CEOs; it never approves or changes anything, and tells you where to click instead.</p>
+      <p className="studio__intro">Ask across every company. It reads them all and can message a team's CEO; a single Claude Code job hears only you. It never approves or changes anything, and tells you where to click instead.</p>
       <div className="studio__meta">
         <label className="studio__model">
           <span>Runs on</span>
